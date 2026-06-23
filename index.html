@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LVS-GSM HAWB Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #0d1117; color: #e2e8f0; min-height: 100vh; }
+
+/* ── Modal ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; z-index: 200; }
+.modal-overlay.hidden { display: none; }
+.modal { background: #161b27; border: 1px solid #2d3448; border-radius: 14px; padding: 2rem; width: 90%; max-width: 380px; }
+.modal h2 { font-size: 1.1rem; margin-bottom: .4rem; }
+.modal p { font-size: .83rem; color: #94a3b8; margin-bottom: 1.5rem; line-height: 1.5; }
+
+/* ── Header ── */
+header { background: #161b27; border-bottom: 1px solid #2d3448; padding: .9rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.logo { font-weight: 700; font-size: 1rem; letter-spacing: .04em; flex-shrink: 0; }
+.header-right { display: flex; align-items: center; gap: .6rem; }
+.operator-pill { font-size: .78rem; color: #94a3b8; cursor: pointer; padding: .35rem .75rem; background: #0d1117; border: 1px solid #2d3448; border-radius: 99px; }
+.operator-pill:hover { border-color: #60a5fa; }
+.operator-pill span { color: #60a5fa; font-weight: 600; }
+.sync-pill { font-size: .72rem; padding: .3rem .65rem; border-radius: 99px; display: flex; align-items: center; gap: .35rem; border: 1px solid transparent; }
+.sync-pill .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.sync-online  { border-color: #065f46; color: #34d399; }
+.sync-online  .dot { background: #34d399; }
+.sync-syncing { border-color: #1e3a6e; color: #60a5fa; }
+.sync-syncing .dot { background: #60a5fa; animation: pulse 1s infinite; }
+.sync-error   { border-color: #7f1d1d; color: #f87171; }
+.sync-error   .dot { background: #f87171; }
+.sync-offline { border-color: #2d3448; color: #64748b; }
+.sync-offline .dot { background: #64748b; }
+@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.3 } }
+
+/* ── Phase tabs ── */
+.phase-tabs { display: flex; background: #161b27; border-bottom: 1px solid #2d3448; }
+.phase-tab { flex: 1; padding: .85rem; text-align: center; font-size: .82rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; transition: all .15s; white-space: nowrap; }
+.phase-tab:hover { color: #94a3b8; }
+.phase-tab.active { color: #60a5fa; border-bottom-color: #60a5fa; background: #0d1117; }
+
+/* ── Layout ── */
+main { max-width: 820px; margin: 0 auto; padding: 1.5rem; }
+
+/* ── Card ── */
+.card { background: #161b27; border: 1px solid #2d3448; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
+.card-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #475569; margin-bottom: 1rem; }
+
+/* ── Form ── */
+input[type="text"], select, textarea {
+  width: 100%; background: #0d1117; border: 1px solid #2d3448;
+  border-radius: 8px; color: #e2e8f0; padding: .7rem .9rem;
+  font-size: .88rem; font-family: inherit;
+}
+input[type="text"]:focus, select:focus, textarea:focus { outline: none; border-color: #60a5fa; }
+textarea { min-height: 110px; resize: vertical; font-family: 'Menlo','Consolas',monospace; font-size: .78rem; line-height: 1.5; }
+select { cursor: pointer; }
+
+/* ── Buttons ── */
+.btn { display: inline-flex; align-items: center; gap: .35rem; padding: .58rem 1rem; border-radius: 8px; border: none; font-size: .83rem; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-primary   { background: #2563eb; color: #fff; }
+.btn-primary:hover   { background: #1d4ed8; }
+.btn-secondary { background: #161b27; border: 1px solid #2d3448; color: #e2e8f0; }
+.btn-secondary:hover { background: #1e2437; }
+.btn-success   { background: #059669; color: #fff; }
+.btn-success:hover   { background: #047857; }
+.btn-danger    { background: #161b27; border: 1px solid #7f1d1d; color: #f87171; }
+.btn-danger:hover    { background: #1f0e0e; }
+.btn:disabled  { opacity: .35; cursor: not-allowed; }
+
+/* ── File upload ── */
+.file-drop { border: 2px dashed #2d3448; border-radius: 8px; padding: 1.1rem; text-align: center; cursor: pointer; transition: border-color .15s; font-size: .84rem; color: #94a3b8; display: block; }
+.file-drop:hover { border-color: #3b82f6; color: #e2e8f0; }
+.file-drop.loaded { border-color: #059669; border-style: solid; }
+.file-drop input { display: none; }
+.file-drop .fname { font-size: .76rem; margin-top: .35rem; }
+.file-drop .fname.ok { color: #34d399; }
+
+/* ── Session bar ── */
+.session-bar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.session-bar select { flex: 1; min-width: 160px; }
+
+/* ── Link banner ── */
+.link-banner { background: #0f1f40; border: 1px solid #1e3a6e; border-radius: 8px; padding: .75rem 1rem; margin-bottom: .75rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; font-size: .82rem; color: #93c5fd; }
+.link-banner select { background: #0d1117; border-color: #1e3a6e; color: #e2e8f0; flex: 1; min-width: 140px; padding: .45rem .7rem; font-size: .82rem; }
+.link-banner strong { color: #60a5fa; white-space: nowrap; }
+
+/* ── Stats ── */
+.stats { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: .75rem; }
+.stat { flex: 1; min-width: 80px; background: #0d1117; border: 1px solid #2d3448; border-radius: 8px; padding: .7rem .9rem; }
+.stat-val { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+.stat-label { font-size: .72rem; color: #64748b; margin-top: .25rem; }
+.green { color: #34d399; }
+.red   { color: #f87171; }
+.amber { color: #fbbf24; }
+.cyan  { color: #67e8f9; }
+
+/* ── Progress ── */
+.progress-wrap { margin-bottom: 1.1rem; }
+.progress-bar  { height: 5px; background: #2d3448; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; background: #059669; border-radius: 3px; transition: width .4s; }
+.progress-label { font-size: .74rem; color: #64748b; margin-top: .3rem; text-align: right; }
+
+/* ── Toolbar ── */
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+.filter-group { display: flex; gap: .4rem; flex-wrap: wrap; }
+.filter-btn { padding: .3rem .7rem; border-radius: 6px; border: 1px solid #2d3448; background: #0d1117; color: #64748b; font-size: .76rem; cursor: pointer; transition: all .15s; }
+.filter-btn:hover  { color: #94a3b8; }
+.filter-btn.active { border-color: #3b82f6; color: #60a5fa; background: #0f1f40; }
+
+/* ── CCN cards ── */
+.ccn-list { display: flex; flex-direction: column; gap: .6rem; }
+.ccn-card { background: #0d1117; border: 1px solid #2d3448; border-radius: 8px; overflow: hidden; }
+.ccn-header { padding: .7rem 1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; gap: .75rem; }
+.ccn-header:hover { background: #121820; }
+.ccn-id   { font-family: 'Menlo','Consolas',monospace; font-size: .84rem; font-weight: 700; }
+.ccn-meta { font-size: .72rem; color: #64748b; margin-top: .1rem; }
+.ccn-right { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
+.badge { font-size: .72rem; font-weight: 600; padding: .18rem .55rem; border-radius: 99px; white-space: nowrap; }
+.badge-complete { background: #052e16; color: #34d399; }
+.badge-partial  { background: #2d1a00; color: #fbbf24; }
+.badge-empty    { background: #1e2437; color: #64748b; }
+.badge-flagged  { background: #2d1a00; color: #fbbf24; }
+.ccn-body { padding: .5rem 1rem .85rem; border-top: 1px solid #1a2030; display: none; }
+.ccn-body.open { display: block; }
+
+/* ── HAWB rows ── */
+.hawb-row { display: flex; align-items: center; justify-content: space-between; padding: .32rem 0; border-bottom: 1px solid #131a26; font-size: .79rem; gap: .5rem; }
+.hawb-row:last-child { border-bottom: none; }
+.hawb-left { min-width: 0; }
+.hawb-tracking { font-family: 'Menlo','Consolas',monospace; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hawb-carton   { font-size: .7rem; color: #475569; margin-top: .1rem; }
+.hawb-status   { font-size: .74rem; font-weight: 600; flex-shrink: 0; }
+.s-scanned { color: #34d399; }
+.s-missing  { color: #f87171; }
+.s-exam     { color: #fbbf24; }
+.s-hold     { color: #67e8f9; }
+
+/* ── Two-col file upload ── */
+.file-pair { display: flex; gap: .75rem; flex-wrap: wrap; }
+.file-pair > label { flex: 1; min-width: 200px; }
+
+/* ── Empty state ── */
+.empty { text-align: center; padding: 3rem 1rem; color: #334155; }
+.empty .icon { font-size: 2.5rem; margin-bottom: .75rem; }
+.empty p { font-size: .85rem; }
+
+/* ══════════════════════════════ HISTORY / CALENDAR ══════════════════════════ */
+.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+.cal-nav h2 { font-size: 1rem; font-weight: 600; }
+.cal-nav .btn { padding: .4rem .8rem; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-dow  { text-align: center; font-size: .7rem; font-weight: 600; color: #475569; padding: .4rem 0; text-transform: uppercase; letter-spacing: .06em; }
+.cal-day  { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; cursor: default; font-size: .84rem; color: #475569; min-height: 44px; }
+.cal-day.has-sessions { cursor: pointer; color: #e2e8f0; background: #161b27; border: 1px solid #2d3448; }
+.cal-day.has-sessions:hover { background: #1e2437; border-color: #3b82f6; }
+.cal-day.selected { background: #0f1f40 !important; border-color: #3b82f6 !important; color: #60a5fa !important; }
+.cal-day.today { outline: 1px solid #334155; outline-offset: -1px; }
+.cal-dot-row { display: flex; gap: 3px; margin-top: 3px; }
+.cal-dot { width: 5px; height: 5px; border-radius: 50%; }
+.dot-prescan { background: #34d399; }
+.dot-cbsa    { background: #60a5fa; }
+.day-sessions { margin-top: 1.25rem; }
+.day-sessions h3 { font-size: .8rem; color: #64748b; margin-bottom: .75rem; text-transform: uppercase; letter-spacing: .07em; }
+.session-card { background: #0d1117; border: 1px solid #2d3448; border-radius: 8px; padding: .85rem 1rem; margin-bottom: .6rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.session-card-left h4 { font-size: .88rem; font-weight: 600; }
+.session-card-left p  { font-size: .74rem; color: #64748b; margin-top: .2rem; }
+.phase-tag { font-size: .7rem; font-weight: 700; padding: .18rem .55rem; border-radius: 99px; }
+.phase-tag.prescan { background: #052e16; color: #34d399; }
+.phase-tag.cbsa    { background: #0f1f40; color: #60a5fa; }
+.operator-tag { font-size: .7rem; color: #64748b; }
+
+@media (max-width: 560px) {
+  main { padding: 1rem; }
+  .stat-val { font-size: 1.25rem; }
+  .file-pair > label { min-width: 100%; }
+  .cal-day { font-size: .75rem; min-height: 36px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Operator modal ── -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal">
+    <h2>Welcome to LVS-GSM Tracker</h2>
+    <p>Enter your name — it will appear on all exports and session records.</p>
+    <input type="text" id="nameInput" placeholder="Your name" maxlength="40" autocomplete="off">
+    <br><br>
+    <button class="btn btn-primary" style="width:100%" onclick="saveOperator()">Continue</button>
+  </div>
+</div>
+
+<header>
+  <div class="logo">LVS-GSM Tracker</div>
+  <div class="header-right">
+    <div class="sync-pill sync-offline" id="syncPill">
+      <div class="dot"></div>
+      <span id="syncLabel">Connecting…</span>
+    </div>
+    <div class="operator-pill" onclick="showNameModal()">Operator: <span id="operatorDisplay">—</span></div>
+  </div>
+</header>
+
+<div class="phase-tabs">
+  <div class="phase-tab active" id="tab-prescan" onclick="switchPhase('prescan')">Phase 1 — Physical Receipt</div>
+  <div class="phase-tab"        id="tab-cbsa"    onclick="switchPhase('cbsa')">Phase 2 — CBSA Check</div>
+  <div class="phase-tab"        id="tab-history" onclick="switchPhase('history')">History</div>
+</div>
+
+<main>
+
+  <!-- ════════════════════════════════════════ PHASE 1 ════ -->
+  <div id="phase-prescan">
+    <div class="card">
+      <div class="card-title">Session</div>
+      <div class="session-bar">
+        <select id="prescan-sel" onchange="loadSession('prescan',this.value)">
+          <option value="">— select or create a session —</option>
+        </select>
+        <button class="btn btn-secondary" onclick="newSession('prescan')">+ New</button>
+        <button class="btn btn-danger"    onclick="deleteSession('prescan')">Delete</button>
+      </div>
+    </div>
+
+    <div id="prescan-ws" style="display:none">
+      <div class="card">
+        <div class="card-title">1 · Upload Deconsolidated File</div>
+        <label class="file-drop" id="prescan-decon-drop">
+          <input type="file" accept=".xlsx,.csv" onchange="loadDecon('prescan',this)">
+          <div>Click to upload <strong>Deconsolidated XLSX</strong></div>
+          <div class="fname" id="prescan-decon-fname">No file selected</div>
+        </label>
+      </div>
+
+      <div class="card" id="prescan-paste-card" style="display:none">
+        <div class="card-title">2 · Paste Batch Scans</div>
+        <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Scan parcels into your Google Doc, then copy and paste the contents below.</p>
+        <textarea id="prescan-paste" placeholder="Paste scanned tracking IDs here…" oninput="onPasteInput('prescan')"></textarea>
+      </div>
+
+      <div id="prescan-results" style="display:none">
+        <div class="stats" id="prescan-stats"></div>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="prescan-prog"></div></div>
+          <div class="progress-label" id="prescan-prog-label"></div>
+        </div>
+        <div class="toolbar">
+          <div class="filter-group" id="prescan-filters">
+            <button class="filter-btn active" onclick="setFilter('prescan','all',this)">All</button>
+            <button class="filter-btn"        onclick="setFilter('prescan','incomplete',this)">Incomplete</button>
+            <button class="filter-btn"        onclick="setFilter('prescan','complete',this)">Complete</button>
+          </div>
+          <button class="btn btn-success" onclick="exportExcel('prescan')">Export Excel</button>
+        </div>
+        <div class="ccn-list" id="prescan-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════ PHASE 2 ════ -->
+  <div id="phase-cbsa" style="display:none">
+    <div class="card">
+      <div class="card-title">Session</div>
+      <div class="session-bar">
+        <select id="cbsa-sel" onchange="loadSession('cbsa',this.value)">
+          <option value="">— select or create a session —</option>
+        </select>
+        <button class="btn btn-secondary" onclick="newSession('cbsa')">+ New</button>
+        <button class="btn btn-danger"    onclick="deleteSession('cbsa')">Delete</button>
+      </div>
+    </div>
+
+    <div id="cbsa-ws" style="display:none">
+      <div class="card">
+        <div class="card-title">1 · Upload Files</div>
+        <div class="link-banner">
+          <strong>Link Phase 1 session:</strong>
+          <select id="cbsa-link-sel" onchange="linkPrescan(this.value)">
+            <option value="">— pick a Phase 1 session to load its decon —</option>
+          </select>
+        </div>
+        <div class="file-pair">
+          <label class="file-drop" id="cbsa-decon-drop">
+            <input type="file" accept=".xlsx,.csv" onchange="loadDecon('cbsa',this)">
+            <div>Deconsolidated XLSX</div>
+            <div class="fname" id="cbsa-decon-fname">No file selected — or link Phase 1 above</div>
+          </label>
+          <label class="file-drop" id="cbsa-rns-drop">
+            <input type="file" accept=".csv,.xlsx" onchange="loadRNS(this)">
+            <div>RNS CSV — BorderConnect</div>
+            <div class="fname" id="cbsa-rns-fname">No file selected</div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card" id="cbsa-paste-card" style="display:none">
+        <div class="card-title">2 · Paste Batch Scans</div>
+        <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Paste scanned tracking IDs from your Google Doc. Parcels not yet <em>Released</em> will be flagged.</p>
+        <textarea id="cbsa-paste" placeholder="Paste scanned tracking IDs here…" oninput="onPasteInput('cbsa')"></textarea>
+      </div>
+
+      <div id="cbsa-results" style="display:none">
+        <div class="stats" id="cbsa-stats"></div>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" id="cbsa-prog"></div></div>
+          <div class="progress-label" id="cbsa-prog-label"></div>
+        </div>
+        <div class="toolbar">
+          <div class="filter-group" id="cbsa-filters">
+            <button class="filter-btn active" onclick="setFilter('cbsa','all',this)">All</button>
+            <button class="filter-btn"        onclick="setFilter('cbsa','flagged',this)">Flagged Only</button>
+            <button class="filter-btn"        onclick="setFilter('cbsa','incomplete',this)">Incomplete</button>
+          </div>
+          <button class="btn btn-success" onclick="exportExcel('cbsa')">Export Report</button>
+        </div>
+        <div class="ccn-list" id="cbsa-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════ HISTORY ════ -->
+  <div id="phase-history" style="display:none">
+    <div class="card">
+      <div class="cal-nav">
+        <button class="btn btn-secondary" onclick="calMove(-1)">&#8592;</button>
+        <h2 id="cal-title"></h2>
+        <button class="btn btn-secondary" onclick="calMove(1)">&#8594;</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="day-sessions" id="day-sessions" style="display:none">
+      <h3 id="day-sessions-title"></h3>
+      <div id="day-sessions-list"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Supabase
+// ─────────────────────────────────────────────────────────────────────────────
+const SB_URL = 'https://wzwcfvmhnqwhmfjdcsxj.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6d2Nmdm1obnF3aG1mamRjc3hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTc4MTksImV4cCI6MjA5NjU5MzgxOX0.4ABH_t8-DG9Sh-Ts293pJKvO4CsO8bCM1pqjt59G5Xc';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Local state
+// ─────────────────────────────────────────────────────────────────────────────
+const LS = 'lvsgsm_v1';
+function defaultState() { return { operator: '', sessions: { prescan: {}, cbsa: {} } }; }
+function loadState() { try { return JSON.parse(localStorage.getItem(LS)) || defaultState(); } catch { return defaultState(); } }
+function saveLocal() { localStorage.setItem(LS, JSON.stringify(app)); }
+
+let app = loadState();
+
+// Runtime (not persisted)
+const rt = { cbsa: { rns: null } };
+const manifestCache = { prescan: null, cbsa: null };
+const filters = { prescan: 'all', cbsa: 'all' };
+const pasteDebounce = { prescan: null, cbsa: null };
+
+// Calendar state
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let calSelected = null;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sync status UI
+// ─────────────────────────────────────────────────────────────────────────────
+function setSyncStatus(status, text) {
+  const pill  = document.getElementById('syncPill');
+  const label = document.getElementById('syncLabel');
+  pill.className = `sync-pill sync-${status}`;
+  label.textContent = text || { online:'Synced', syncing:'Syncing…', error:'Sync error', offline:'Offline' }[status];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Supabase helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function rowToSession(row) {
+  return {
+    id:              row.id,
+    name:            row.name,
+    phase:           row.phase,
+    operator:        row.operator || '',
+    createdAt:       row.created_at,
+    manifest:        row.manifest && Object.keys(row.manifest).length ? row.manifest : null,
+    rawPaste:        row.raw_paste || '',
+    linkedPrescanId: row.linked_prescan_id || null,
+  };
+}
+
+function sessionToRow(sess) {
+  return {
+    id:                sess.id,
+    name:              sess.name,
+    phase:             sess.phase,
+    operator:          sess.operator || app.operator,
+    created_at:        sess.createdAt,
+    manifest:          sess.manifest || {},
+    raw_paste:         sess.rawPaste || '',
+    linked_prescan_id: sess.linkedPrescanId || null,
+    updated_at:        new Date().toISOString(),
+  };
+}
+
+async function pushSession(sess) {
+  setSyncStatus('syncing');
+  const { error } = await sb.from('shipments').upsert(sessionToRow(sess));
+  setSyncStatus(error ? 'error' : 'online');
+  if (error) console.error('Supabase push error:', error);
+}
+
+async function deleteSessionRemote(id) {
+  setSyncStatus('syncing');
+  const { error } = await sb.from('shipments').delete().eq('id', id);
+  setSyncStatus(error ? 'error' : 'online');
+}
+
+// Merge a remote row into local state; return true if something changed
+function mergeRow(row) {
+  const sess  = rowToSession(row);
+  const phase = sess.phase;
+  if (!app.sessions[phase]) return false;
+  const existing = app.sessions[phase][sess.id];
+  // Use updated_at to decide which wins (remote wins if newer or no local)
+  const remoteTs = new Date(row.updated_at).getTime();
+  const localTs  = existing?._updatedAt || 0;
+  if (!existing || remoteTs >= localTs) {
+    app.sessions[phase][sess.id] = { ...sess, _updatedAt: remoteTs };
+    return true;
+  }
+  return false;
+}
+
+// Pull all sessions from Supabase and merge into local state
+async function syncFromSupabase() {
+  setSyncStatus('syncing');
+  const { data, error } = await sb.from('shipments').select('*').order('created_at', { ascending: false });
+  if (error) { setSyncStatus('error'); console.error(error); return; }
+  let changed = false;
+  data.forEach(row => { if (mergeRow(row)) changed = true; });
+  if (changed) { saveLocal(); refreshDropdown('prescan'); refreshDropdown('cbsa'); }
+  setSyncStatus('online');
+}
+
+// Realtime subscription
+function subscribeRealtime() {
+  sb.channel('shipments-all')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shipments' }, ({ new: row }) => {
+      if (mergeRow(row)) { saveLocal(); onRemoteChange(rowToSession(row)); }
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'shipments' }, ({ new: row }) => {
+      if (mergeRow(row)) { saveLocal(); onRemoteChange(rowToSession(row)); }
+    })
+    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'shipments' }, ({ old: row }) => {
+      const phase = row.id?.startsWith('cbsa') ? 'cbsa' : 'prescan';
+      if (app.sessions[phase]?.[row.id]) {
+        delete app.sessions[phase][row.id];
+        saveLocal();
+        refreshDropdown(phase);
+        // If we had this session open, close workspace
+        if (document.getElementById(`${phase}-sel`).value === row.id) {
+          loadSession(phase, '');
+          document.getElementById(`${phase}-sel`).value = '';
+        }
+      }
+    })
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') setSyncStatus('online');
+    });
+}
+
+// Called when a remote update arrives for a session
+function onRemoteChange(sess) {
+  const phase = sess.phase;
+  refreshDropdown(phase);
+  if (document.getElementById('tab-history').classList.contains('active')) renderCalendar();
+
+  // If this session is currently open, update paste and re-render
+  const openId = document.getElementById(`${phase}-sel`).value;
+  if (openId !== sess.id) return;
+
+  const ta = document.getElementById(`${phase}-paste`);
+  // Only update paste if the textarea isn't focused (don't stomp on active typing)
+  if (document.activeElement !== ta) {
+    ta.value = sess.rawPaste || '';
+    processPaste(phase);
+  }
+
+  // If manifest changed and we don't have it cached yet, load it
+  if (sess.manifest && !manifestCache[phase]) {
+    manifestCache[phase] = sess.manifest;
+    const total = Object.values(sess.manifest).reduce((a, c) => a + c.length, 0);
+    setFileOK(`${phase}-decon-drop`, `${phase}-decon-fname`,
+      `${sess.name} — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
+    checkReady(phase);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Operator
+// ─────────────────────────────────────────────────────────────────────────────
+function init() {
+  if (!app.operator) {
+    document.getElementById('nameModal').classList.remove('hidden');
+  } else {
+    document.getElementById('nameModal').classList.add('hidden');
+    document.getElementById('operatorDisplay').textContent = app.operator;
+  }
+  refreshDropdown('prescan');
+  refreshDropdown('cbsa');
+  syncFromSupabase().then(() => subscribeRealtime());
+}
+
+function showNameModal() {
+  document.getElementById('nameInput').value = app.operator || '';
+  document.getElementById('nameModal').classList.remove('hidden');
+  document.getElementById('nameInput').focus();
+}
+function saveOperator() {
+  const v = document.getElementById('nameInput').value.trim();
+  if (!v) return;
+  app.operator = v;
+  saveLocal();
+  document.getElementById('operatorDisplay').textContent = v;
+  document.getElementById('nameModal').classList.add('hidden');
+  syncFromSupabase().then(() => subscribeRealtime());
+}
+document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveOperator(); });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase switching
+// ─────────────────────────────────────────────────────────────────────────────
+function switchPhase(phase) {
+  ['prescan','cbsa','history'].forEach(p => {
+    document.getElementById(`phase-${p}`).style.display = p === phase ? '' : 'none';
+    document.getElementById(`tab-${p}`).classList.toggle('active', p === phase);
+  });
+  if (phase === 'history') renderCalendar();
+  if (phase === 'cbsa') refreshLinkDropdown();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sessions
+// ─────────────────────────────────────────────────────────────────────────────
+function refreshDropdown(phase) {
+  const sel = document.getElementById(`${phase}-sel`);
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— select or create a session —</option>';
+  Object.values(app.sessions[phase])
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.operator && s.operator !== app.operator
+        ? `${s.name} (${s.operator})`
+        : s.name;
+      sel.appendChild(o);
+    });
+  if (cur && app.sessions[phase][cur]) sel.value = cur;
+}
+
+function refreshLinkDropdown() {
+  const sel = document.getElementById('cbsa-link-sel');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— pick a Phase 1 session to load its decon —</option>';
+  Object.values(app.sessions.prescan)
+    .filter(s => s.manifest)
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.id;
+      o.textContent = s.operator && s.operator !== app.operator ? `${s.name} (${s.operator})` : s.name;
+      sel.appendChild(o);
+    });
+  if (cur) sel.value = cur;
+}
+
+async function newSession(phase) {
+  const name = prompt('Session name (e.g. "YYZ-2026-06-23 AM"):');
+  if (!name || !name.trim()) return;
+  const id   = `${phase}_${Date.now()}`;
+  const sess = { id, name: name.trim(), phase, operator: app.operator, createdAt: Date.now(), rawPaste: '', manifest: null, linkedPrescanId: null };
+  app.sessions[phase][id] = sess;
+  saveLocal();
+  await pushSession(sess);
+  refreshDropdown(phase);
+  document.getElementById(`${phase}-sel`).value = id;
+  loadSession(phase, id);
+}
+
+function loadSession(phase, id) {
+  const ws = document.getElementById(`${phase}-ws`);
+  if (!id) { ws.style.display = 'none'; return; }
+  ws.style.display = '';
+  manifestCache[phase] = null;
+  if (phase === 'cbsa') rt.cbsa.rns = null;
+  resetFileUI(phase);
+  document.getElementById(`${phase}-paste-card`).style.display = 'none';
+  document.getElementById(`${phase}-results`).style.display = 'none';
+
+  const sess = app.sessions[phase][id];
+  document.getElementById(`${phase}-paste`).value = sess.rawPaste || '';
+
+  if (sess.manifest) {
+    manifestCache[phase] = sess.manifest;
+    const total = Object.values(sess.manifest).reduce((a, c) => a + c.length, 0);
+    setFileOK(`${phase}-decon-drop`, `${phase}-decon-fname`,
+      `${sess.name} — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
+    checkReady(phase);
+  }
+
+  if (phase === 'cbsa') {
+    refreshLinkDropdown();
+    document.getElementById('cbsa-link-sel').value = sess.linkedPrescanId || '';
+    if (sess.linkedPrescanId) linkPrescan(sess.linkedPrescanId, true);
+  }
+}
+
+async function deleteSession(phase) {
+  const id = document.getElementById(`${phase}-sel`).value;
+  if (!id) return;
+  const sess = app.sessions[phase][id];
+  if (!confirm(`Delete session "${sess.name}"? This cannot be undone.`)) return;
+  delete app.sessions[phase][id];
+  saveLocal();
+  await deleteSessionRemote(id);
+  refreshDropdown(phase);
+  loadSession(phase, '');
+}
+
+function currentSession(phase) {
+  const id = document.getElementById(`${phase}-sel`).value;
+  return id ? app.sessions[phase][id] : null;
+}
+
+function resetFileUI(phase) {
+  document.getElementById(`${phase}-decon-drop`).className = 'file-drop';
+  const fn = document.getElementById(`${phase}-decon-fname`);
+  fn.textContent = phase === 'cbsa' ? 'No file selected — or link Phase 1 above' : 'No file selected';
+  fn.className = 'fname';
+  if (phase === 'cbsa') {
+    document.getElementById('cbsa-rns-drop').className  = 'file-drop';
+    document.getElementById('cbsa-rns-fname').textContent = 'No file selected';
+    document.getElementById('cbsa-rns-fname').className  = 'fname';
+  }
+}
+
+function linkPrescan(prescanId, silent = false) {
+  const sess = currentSession('cbsa');
+  if (!sess) return;
+  if (!prescanId) {
+    sess.linkedPrescanId = null;
+    manifestCache.cbsa = sess.manifest || null;
+    saveLocal(); pushSession(sess);
+    checkReady('cbsa');
+    return;
+  }
+  const prescan = app.sessions.prescan[prescanId];
+  if (!prescan?.manifest) {
+    if (!silent) alert('That Phase 1 session has no manifest saved yet — upload the decon file in Phase 1 first.');
+    return;
+  }
+  sess.linkedPrescanId = prescanId;
+  manifestCache.cbsa = prescan.manifest;
+  saveLocal(); pushSession(sess);
+  const total = Object.values(prescan.manifest).reduce((a, c) => a + c.length, 0);
+  setFileOK('cbsa-decon-drop', 'cbsa-decon-fname',
+    `Linked from "${prescan.name}" — ${Object.keys(prescan.manifest).length} MAWBs, ${total} HAWBs`);
+  checkReady('cbsa');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// norm
+// ─────────────────────────────────────────────────────────────────────────────
+function norm(v) { return String(v ?? '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// File parsing
+// ─────────────────────────────────────────────────────────────────────────────
+function readWorkbook(file) {
+  return new Promise((res, rej) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        res(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' }));
+      } catch(err) { rej(err); }
+    };
+    reader.onerror = rej;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function buildManifest(rows) {
+  if (!rows.length) return null;
+  const keys   = Object.keys(rows[0]);
+  const ccnCol = keys.find(k => /ccn|cargo.?control/i.test(k));
+  const trkCol = keys.find(k => /reference|tracking|hawb/i.test(k));
+  const ctnCol = keys.find(k => /carton|box/i.test(k));
+  if (!ccnCol || !trkCol) return null;
+  const map = {};
+  rows.forEach(r => {
+    const ccn = norm(r[ccnCol]), trk = norm(r[trkCol]);
+    if (!ccn || !trk) return;
+    if (!map[ccn]) map[ccn] = [];
+    map[ccn].push({ ccn, tracking: trk, carton: String(r[ctnCol] ?? '') });
+  });
+  return Object.keys(map).length ? map : null;
+}
+
+function buildRNS(rows) {
+  if (!rows.length) return null;
+  const keys      = Object.keys(rows[0]);
+  const ccnCol    = keys.find(k => /cargo.?control|ccn/i.test(k));
+  const statusCol = keys.find(k => /status/i.test(k));
+  if (!ccnCol || !statusCol) return null;
+  const map = {};
+  rows.forEach(r => { const ccn = norm(r[ccnCol]); if (ccn) map[ccn] = String(r[statusCol] ?? '').trim(); });
+  return Object.keys(map).length ? map : null;
+}
+
+async function loadDecon(phase, input) {
+  const file = input.files[0]; if (!file) return;
+  input.value = '';
+  try {
+    const rows     = await readWorkbook(file);
+    const manifest = buildManifest(rows);
+    if (!manifest) { alert('Could not detect CCN / Reference columns. Please check the file.'); return; }
+    const sess = currentSession(phase);
+    if (sess) { sess.manifest = manifest; saveLocal(); pushSession(sess); }
+    manifestCache[phase] = manifest;
+    const total = Object.values(manifest).reduce((a, c) => a + c.length, 0);
+    setFileOK(`${phase}-decon-drop`, `${phase}-decon-fname`,
+      `${file.name} — ${Object.keys(manifest).length} MAWBs, ${total} HAWBs`);
+    checkReady(phase);
+  } catch(e) { alert('Error reading file: ' + e.message); }
+}
+
+async function loadRNS(input) {
+  const file = input.files[0]; if (!file) return;
+  input.value = '';
+  try {
+    const rows = await readWorkbook(file);
+    const rns  = buildRNS(rows);
+    if (!rns) { alert('Could not detect Cargo Control Number / Status columns.'); return; }
+    rt.cbsa.rns = rns;
+    setFileOK('cbsa-rns-drop', 'cbsa-rns-fname', `${file.name} — ${Object.keys(rns).length} CCNs`);
+    checkReady('cbsa');
+  } catch(e) { alert('Error reading RNS file: ' + e.message); }
+}
+
+function setFileOK(dropId, fnameId, text) {
+  document.getElementById(dropId).className = 'file-drop loaded';
+  const el = document.getElementById(fnameId);
+  el.textContent = '✓ ' + text;
+  el.className = 'fname ok';
+}
+
+function checkReady(phase) {
+  const ready = phase === 'prescan'
+    ? !!manifestCache.prescan
+    : !!(manifestCache.cbsa && rt.cbsa.rns);
+  document.getElementById(`${phase}-paste-card`).style.display = ready ? '' : 'none';
+  if (ready) processPaste(phase);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Paste — debounced push to Supabase
+// ─────────────────────────────────────────────────────────────────────────────
+function onPasteInput(phase) {
+  processPaste(phase);
+  clearTimeout(pasteDebounce[phase]);
+  pasteDebounce[phase] = setTimeout(() => {
+    const sess = currentSession(phase);
+    if (sess) pushSession(sess);
+  }, 600);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Paste processing
+// ─────────────────────────────────────────────────────────────────────────────
+function processPaste(phase) {
+  const sess     = currentSession(phase);
+  const manifest = manifestCache[phase];
+  if (!sess || !manifest) return;
+
+  const raw = document.getElementById(`${phase}-paste`).value;
+  sess.rawPaste = raw;
+  saveLocal();
+
+  const tokens  = [...new Set(raw.split(/[\s,;\n\r]+/).map(norm).filter(Boolean))];
+  const scanned = new Set(tokens);
+
+  const results = Object.entries(manifest).map(([ccn, hawbs]) => {
+    const rows = hawbs.map(h => {
+      const hit = scanned.has(h.tracking) || scanned.has(h.ccn);
+      let status = hit ? 'scanned' : 'missing';
+      let rnsLabel = '';
+      if (phase === 'cbsa' && hit && rt.cbsa.rns) {
+        const s = rt.cbsa.rns[h.ccn] || rt.cbsa.rns[ccn] || '';
+        rnsLabel = s;
+        if (s && s.toLowerCase() !== 'released') status = /exam/i.test(s) ? 'exam' : 'hold';
+      }
+      return { ...h, status, rnsLabel };
+    });
+    const scannedCount = rows.filter(r => r.status !== 'missing').length;
+    const flagCount    = rows.filter(r => r.status === 'exam' || r.status === 'hold').length;
+    return { ccn, rows, scannedCount, total: rows.length, flagCount };
+  });
+
+  renderResults(phase, results);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render results
+// ─────────────────────────────────────────────────────────────────────────────
+function renderResults(phase, results) {
+  document.getElementById(`${phase}-results`).style.display = '';
+  const totalHawbs   = results.reduce((a, c) => a + c.total, 0);
+  const totalScanned = results.reduce((a, c) => a + c.scannedCount, 0);
+  const totalFlagged = results.reduce((a, c) => a + c.flagCount, 0);
+  const pct = totalHawbs ? Math.round(totalScanned / totalHawbs * 100) : 0;
+
+  let statsHTML = `
+    <div class="stat"><div class="stat-val">${results.length}</div><div class="stat-label">MAWBs</div></div>
+    <div class="stat"><div class="stat-val">${totalHawbs}</div><div class="stat-label">Total HAWBs</div></div>
+    <div class="stat"><div class="stat-val green">${totalScanned}</div><div class="stat-label">Scanned</div></div>
+    <div class="stat"><div class="stat-val red">${totalHawbs - totalScanned}</div><div class="stat-label">Missing</div></div>`;
+  if (phase === 'cbsa') statsHTML += `<div class="stat"><div class="stat-val amber">${totalFlagged}</div><div class="stat-label">Flagged</div></div>`;
+  document.getElementById(`${phase}-stats`).innerHTML = statsHTML;
+  document.getElementById(`${phase}-prog`).style.width = pct + '%';
+  document.getElementById(`${phase}-prog-label`).textContent = `${pct}% scanned (${totalScanned} of ${totalHawbs})`;
+
+  const f = filters[phase];
+  let visible = results;
+  if (f === 'incomplete') visible = results.filter(r => r.scannedCount < r.total);
+  if (f === 'complete')   visible = results.filter(r => r.scannedCount === r.total && r.total > 0);
+  if (f === 'flagged')    visible = results.filter(r => r.flagCount > 0);
+
+  const listEl = document.getElementById(`${phase}-list`);
+  if (!visible.length) {
+    listEl.innerHTML = '<div class="empty"><div class="icon">—</div><p>No MAWBs match this filter.</p></div>';
+    return;
+  }
+  listEl.innerHTML = visible.map(({ ccn, rows, scannedCount, total, flagCount }) => {
+    const complete   = scannedCount === total && total > 0;
+    const empty      = scannedCount === 0;
+    const badgeClass = complete ? 'badge-complete' : empty ? 'badge-empty' : 'badge-partial';
+    const flagBadge  = flagCount ? `<span class="badge badge-flagged">⚠ ${flagCount} flagged</span>` : '';
+    const hawbRows   = rows.map(r => {
+      const lbl = { scanned:'✓ Scanned', missing:'✗ Missing', exam:'⚠ Exam Required', hold:'⚠ '+(r.rnsLabel||'Not Released') }[r.status] || r.status;
+      const cls  = { scanned:'s-scanned', missing:'s-missing', exam:'s-exam', hold:'s-hold' }[r.status] || '';
+      return `<div class="hawb-row">
+        <div class="hawb-left">
+          <div class="hawb-tracking">${r.tracking}</div>
+          ${r.carton ? `<div class="hawb-carton">Carton ${r.carton}</div>` : ''}
+        </div>
+        <div class="hawb-status ${cls}">${lbl}</div>
+      </div>`;
+    }).join('');
+    return `<div class="ccn-card">
+      <div class="ccn-header" onclick="toggleCard(this)">
+        <div><div class="ccn-id">${ccn}</div><div class="ccn-meta">${total} HAWB${total!==1?'s':''}</div></div>
+        <div class="ccn-right">${flagBadge}<span class="badge ${badgeClass}">${scannedCount}/${total}</span></div>
+      </div>
+      <div class="ccn-body">${hawbRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(header) { header.nextElementSibling.classList.toggle('open'); }
+function setFilter(phase, f, btn) {
+  filters[phase] = f;
+  document.querySelectorAll(`#${phase}-filters .filter-btn`).forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  processPaste(phase);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Export
+// ─────────────────────────────────────────────────────────────────────────────
+function exportExcel(phase) {
+  const sess     = currentSession(phase);
+  const manifest = manifestCache[phase];
+  if (!sess || !manifest) { alert('Upload files and paste scans before exporting.'); return; }
+
+  const raw    = document.getElementById(`${phase}-paste`).value;
+  const tokens = raw.split(/[\s,;\n\r]+/).map(norm).filter(Boolean);
+  const scanned = new Set(tokens);
+  const wb = XLSX.utils.book_new();
+  const date = new Date().toISOString().slice(0,10);
+
+  const sumHdr = ['MAWB / CCN','Total HAWBs','Scanned','Missing'];
+  if (phase === 'cbsa') sumHdr.push('Flagged','RNS Status');
+  const sumRows = [sumHdr];
+  Object.entries(manifest).forEach(([ccn, hawbs]) => {
+    const sc  = hawbs.filter(h => scanned.has(h.tracking) || scanned.has(h.ccn)).length;
+    const row = [ccn, hawbs.length, sc, hawbs.length - sc];
+    if (phase === 'cbsa') {
+      const fl = hawbs.filter(h => {
+        if (!(scanned.has(h.tracking)||scanned.has(h.ccn))) return false;
+        const s = rt.cbsa.rns?.[h.ccn]||rt.cbsa.rns?.[ccn]||'';
+        return s && s.toLowerCase() !== 'released';
+      }).length;
+      row.push(fl, rt.cbsa.rns?.[ccn]||'');
+    }
+    sumRows.push(row);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumRows), 'Summary');
+
+  const detHdr = ['MAWB / CCN','Carton','Tracking ID','Scan Status'];
+  if (phase === 'cbsa') detHdr.push('CBSA Status');
+  const detRows = [detHdr];
+  Object.entries(manifest).forEach(([ccn, hawbs]) => {
+    hawbs.forEach(h => {
+      const hit        = scanned.has(h.tracking)||scanned.has(h.ccn);
+      const cbsaStatus = phase==='cbsa' ? (rt.cbsa.rns?.[h.ccn]||rt.cbsa.rns?.[ccn]||'') : '';
+      let   scanStatus = hit ? 'Scanned' : 'Missing';
+      if (phase==='cbsa' && hit && cbsaStatus && cbsaStatus.toLowerCase()!=='released') scanStatus='Flagged';
+      const row = [ccn, h.carton, h.tracking, scanStatus];
+      if (phase==='cbsa') row.push(cbsaStatus);
+      detRows.push(row);
+    });
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(detRows), 'Detail');
+
+  const allTrk = new Set(Object.values(manifest).flat().map(h=>h.tracking));
+  const allCCN = new Set(Object.keys(manifest));
+  const unexpected = tokens.filter(t=>!allTrk.has(t)&&!allCCN.has(t));
+  if (unexpected.length) {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Scanned — Not in Manifest'],...unexpected.map(t=>[t])]), 'Not in Manifest');
+  }
+
+  const label    = phase==='prescan' ? 'Receipt' : 'CBSA';
+  const filename = `LVS-GSM_${label}_${sess.name}_${date}_${app.operator}.xlsx`.replace(/[/\\:*?"<>|]/g,'-');
+  XLSX.writeFile(wb, filename);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Calendar / History
+// ─────────────────────────────────────────────────────────────────────────────
+function calMove(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth=0; calYear++; }
+  if (calMonth < 0)  { calMonth=11; calYear--; }
+  calSelected = null;
+  document.getElementById('day-sessions').style.display = 'none';
+  renderCalendar();
+}
+
+function sessionsByDate() {
+  const map = {};
+  ['prescan','cbsa'].forEach(phase => {
+    Object.values(app.sessions[phase]).forEach(s => {
+      const d   = new Date(s.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if (!map[key]) map[key] = [];
+      map[key].push(s);
+    });
+  });
+  return map;
+}
+
+function renderCalendar() {
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('cal-title').textContent = `${MONTHS[calMonth]} ${calYear}`;
+
+  const byDate      = sessionsByDate();
+  const firstDow    = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const todayStr    = (() => { const t=new Date(); return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`; })();
+
+  let html = DAYS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for (let i=0; i<firstDow; i++) html += '<div class="cal-day"></div>';
+  for (let d=1; d<=daysInMonth; d++) {
+    const key  = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const sess = byDate[key] || [];
+    const has  = sess.length > 0;
+    const dots = has ? `<div class="cal-dot-row">
+      ${sess.some(s=>s.phase==='prescan')?'<div class="cal-dot dot-prescan"></div>':''}
+      ${sess.some(s=>s.phase==='cbsa')   ?'<div class="cal-dot dot-cbsa"></div>':''}
+    </div>` : '';
+    const cls   = ['cal-day', has&&'has-sessions', key===todayStr&&'today', key===calSelected&&'selected'].filter(Boolean).join(' ');
+    const click = has ? `onclick="calSelectDay('${key}')"` : '';
+    html += `<div class="${cls}" ${click}>${d}${dots}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function calSelectDay(key) {
+  calSelected = key;
+  renderCalendar();
+  const byDate   = sessionsByDate();
+  const sessions = (byDate[key]||[]).sort((a,b)=>a.createdAt-b.createdAt);
+  const [year,month,day] = key.split('-');
+  const dateLabel = new Date(+year,+month-1,+day).toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('day-sessions-title').textContent = dateLabel;
+  const listEl = document.getElementById('day-sessions-list');
+  listEl.innerHTML = sessions.map(s => {
+    const time  = new Date(s.createdAt).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+    const mawbs = s.manifest ? Object.keys(s.manifest).length : '—';
+    const hawbs = s.manifest ? Object.values(s.manifest).reduce((a,c)=>a+c.length,0) : '—';
+    const scans = s.rawPaste ? [...new Set(s.rawPaste.split(/[\s,;\n\r]+/).map(norm).filter(Boolean))].length : 0;
+    const phase = s.phase==='prescan'?'Phase 1':'Phase 2';
+    return `<div class="session-card">
+      <div class="session-card-left">
+        <h4>${s.name}</h4>
+        <p>${time} · ${mawbs} MAWBs · ${hawbs} HAWBs · ${scans} scans</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0">
+        ${s.operator ? `<span class="operator-tag">${s.operator}</span>` : ''}
+        <span class="phase-tag ${s.phase}">${phase}</span>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty"><p>No sessions on this day.</p></div>';
+  document.getElementById('day-sessions').style.display = '';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boot
+// ─────────────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
