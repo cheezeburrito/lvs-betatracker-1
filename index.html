@@ -793,15 +793,17 @@ function openNewSessModal(phase){
   document.getElementById('newSessCustomer').value='';
   const linkWrap=document.getElementById('newSessLinkWrap');
   if(phase==='cbsa'){
-    const prescanSessions=Object.values(app.sessions.prescan).filter(s=>s.manifest).sort((a,b)=>b.createdAt-a.createdAt);
-    if(prescanSessions.length){
-      const sel=document.getElementById('newSessLink');
-      sel.innerHTML='<option value="">— none —</option>'+prescanSessions.map(s=>`<option value="${s.id}">${s.name}${s.customer?' ('+s.customer+')':''}</option>`).join('');
-      // Pre-select most recent Phase 1
-      sel.value=prescanSessions[0].id;
-      onNewSessLinkPick(prescanSessions[0].id);
-      linkWrap.style.display='';
-    } else {linkWrap.style.display='none';}
+    // Phase 2 requires a completed Phase 1 session
+    const completedPrescans=Object.values(app.sessions.prescan).filter(s=>s.manifest&&s.completed).sort((a,b)=>b.createdAt-a.createdAt);
+    if(!completedPrescans.length){
+      alert('Phase 1 must be completed before starting Phase 2.\n\nComplete a Phase 1 session first, then return here.');
+      return;
+    }
+    const sel=document.getElementById('newSessLink');
+    sel.innerHTML='<option value="">— select Phase 1 session —</option>'+completedPrescans.map(s=>`<option value="${s.id}">${s.name}${s.customer?' · '+s.customer:''}</option>`).join('');
+    sel.value=completedPrescans[0].id;
+    onNewSessLinkPick(completedPrescans[0].id);
+    linkWrap.style.display='';
   } else {linkWrap.style.display='none';}
   document.getElementById('newSessionModal').classList.remove('hidden');
   setTimeout(()=>document.getElementById('newSessName').focus(),50);
@@ -842,18 +844,20 @@ document.getElementById('newSessName').addEventListener('keydown',e=>{if(e.key==
 function refreshDropdown(phase){
   const sel=document.getElementById(`${phase}-sel`), cur=sel.value;
   sel.innerHTML='<option value="">— select or create a session —</option>';
-  Object.values(app.sessions[phase]).sort((a,b)=>b.createdAt-a.createdAt).forEach(s=>{
+  // Only show active (incomplete) sessions in the dropdown
+  Object.values(app.sessions[phase]).filter(s=>!s.completed).sort((a,b)=>b.createdAt-a.createdAt).forEach(s=>{
     const o=document.createElement('option'); o.value=s.id;
     const other=s.operator&&s.operator!==app.operator;
-    o.textContent=(other?`${s.name} (${s.operator})`:s.name)+(s.customer?' · '+s.customer:'')+(s.completed?' ✓':'');
+    o.textContent=(other?`${s.name} (${s.operator})`:s.name)+(s.customer?' · '+s.customer:'');
     sel.appendChild(o);
   });
-  if(cur&&app.sessions[phase][cur]) sel.value=cur;
+  if(cur&&app.sessions[phase][cur]&&!app.sessions[phase][cur].completed) sel.value=cur;
 }
 function refreshLinkDropdown(){
   const sel=document.getElementById('cbsa-link-sel'), cur=sel.value;
-  sel.innerHTML='<option value="">— pick a Phase 1 session —</option>';
-  Object.values(app.sessions.prescan).filter(s=>s.manifest).sort((a,b)=>b.createdAt-a.createdAt).forEach(s=>{
+  sel.innerHTML='<option value="">— pick a completed Phase 1 session —</option>';
+  // Only completed Phase 1 sessions can be linked to Phase 2
+  Object.values(app.sessions.prescan).filter(s=>s.manifest&&s.completed).sort((a,b)=>b.createdAt-a.createdAt).forEach(s=>{
     const o=document.createElement('option'); o.value=s.id;
     const other=s.operator&&s.operator!==app.operator;
     o.textContent=other?`${s.name} (${s.operator})`:s.name;
@@ -927,18 +931,28 @@ function renderCompleteBar(phase,sess){
   const inner=document.getElementById(`${phase}-complete-inner`);
   if(!manifestCache[phase]){bar.style.display='none';return;}
   bar.style.display='';
-  if(sess.completed){
-    inner.className='complete-bar done';
-    inner.innerHTML=`<p class="done-label">✓ Session marked complete by ${sess.operator||'operator'}</p>`;
+  if(phase==='prescan'){
+    inner.className='complete-bar';
+    inner.innerHTML=`<div><p style="font-weight:600;margin-bottom:.25rem">Phase 1 done?</p><p style="font-size:.78rem;opacity:.8">Completing Phase 1 unlocks Phase 2 for this shipment.</p></div><button class="btn btn-success" onclick="markComplete('prescan')" style="font-size:.9rem;padding:.65rem 1.4rem">✓ Complete Phase 1</button>`;
   } else {
     inner.className='complete-bar';
-    inner.innerHTML=`<p>${phase==='prescan'?'All scans accounted for?':'Processing done?'} Mark this session as complete.</p><button class="btn btn-success" onclick="markComplete('${phase}')">✓ Mark Complete</button>`;
+    inner.innerHTML=`<div><p style="font-weight:600;margin-bottom:.25rem">Phase 2 done?</p><p style="font-size:.78rem;opacity:.8">Completing Phase 2 will move this shipment to History.</p></div><button class="btn btn-success" onclick="markComplete('cbsa')" style="font-size:.9rem;padding:.65rem 1.4rem">✓ Complete Phase 2</button>`;
   }
 }
 async function markComplete(phase){
   const sess=currentSession(phase); if(!sess) return;
-  if(confirm('Save an Excel export before marking this session complete?\n\nOK = Export then complete   Cancel = Complete only')) exportExcel(phase);
-  sess.completed=true; saveLocal(); await pushSession(sess); refreshDropdown(phase); renderCompleteBar(phase,sess);
+  if(confirm('Export a report before marking complete?\n\nOK = Export then complete   Cancel = Complete only')) exportExcel(phase);
+  sess.completed=true; saveLocal(); await pushSession(sess);
+  // Remove from active dropdown and clear workspace
+  refreshDropdown(phase);
+  loadSession(phase,'');
+  if(phase==='prescan'){
+    // Prompt to start Phase 2
+    setTimeout(()=>alert(`✓ Phase 1 "${sess.name}" is complete.\n\nSwitch to Phase 2 to begin the CBSA check.`),100);
+  } else {
+    // Phase 2 complete → go to History
+    switchPhase('history');
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
