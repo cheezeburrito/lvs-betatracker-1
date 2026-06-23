@@ -277,18 +277,6 @@ select { cursor: pointer; }
         <button class="btn btn-secondary" style="flex:1" onclick="closeAdminModal()">Cancel</button>
         <button class="btn btn-primary"   style="flex:1" onclick="doAdminLogin()">Log In</button>
       </div>
-      <div class="modal-divider" style="margin-top:1rem"><span>first time?</span></div>
-      <button class="btn btn-secondary" style="width:100%" onclick="showCreateFirstAdmin()">Create first admin account</button>
-      <div id="createFirstAdminWrap" style="display:none;margin-top:.75rem">
-        <label class="field-label">New username</label>
-        <input type="text" id="firstAdminUser" placeholder="Username" autocomplete="off">
-        <div style="margin-top:.5rem">
-          <label class="field-label">New password</label>
-          <input type="password" id="firstAdminPass" placeholder="Password">
-        </div>
-        <button class="btn btn-success" style="width:100%;margin-top:.75rem" onclick="createFirstAdmin()">Create Admin</button>
-        <p id="firstAdminErr" style="font-size:.78rem;color:#f87171;margin-top:.4rem;display:none"></p>
-      </div>
     </div>
 
     <!-- Panel view -->
@@ -1308,29 +1296,12 @@ function openAdminModal(){
     document.getElementById('adminLoginView').style.display='';
     document.getElementById('adminPanelView').style.display='none';
     document.getElementById('adminLoginErr').style.display='none';
-    document.getElementById('createFirstAdminWrap').style.display='none';
     document.getElementById('adminUser').value='';
     document.getElementById('adminPass').value='';
   }
   document.getElementById('adminModal').classList.remove('hidden');
 }
 function closeAdminModal(){document.getElementById('adminModal').classList.add('hidden');}
-function showCreateFirstAdmin(){
-  document.getElementById('createFirstAdminWrap').style.display=
-    document.getElementById('createFirstAdminWrap').style.display==='none'?'':'none';
-}
-async function createFirstAdmin(){
-  const username=document.getElementById('firstAdminUser').value.trim();
-  const password=document.getElementById('firstAdminPass').value;
-  const errEl=document.getElementById('firstAdminErr');
-  if(!username||!password){errEl.textContent='Username and password required.';errEl.style.display='';return;}
-  // Check if any admin exists already
-  const {count}=await sb.from('admins').select('*',{count:'exact',head:true});
-  if(count>0&&!isAdmin){errEl.textContent='Admin accounts already exist. Ask an existing admin.';errEl.style.display='';return;}
-  const {error}=await sb.from('admins').insert({username,password});
-  if(error){errEl.textContent='Error: '+error.message;errEl.style.display='';return;}
-  isAdmin=true;adminUser=username;showAdminPanel();
-}
 async function doAdminLogin(){
   const username=document.getElementById('adminUser').value.trim();
   const password=document.getElementById('adminPass').value;
