@@ -10,29 +10,53 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: system-ui, -apple-system, sans-serif; background: #0d1117; color: #e2e8f0; min-height: 100vh; }
 
-/* ── Modal ── */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; z-index: 200; }
+/* ── Modals ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
 .modal-overlay.hidden { display: none; }
-.modal { background: #161b27; border: 1px solid #2d3448; border-radius: 14px; padding: 2rem; width: 90%; max-width: 400px; }
-.modal h2 { font-size: 1.1rem; margin-bottom: .4rem; }
-.modal p  { font-size: .83rem; color: #94a3b8; margin-bottom: 1rem; line-height: 1.5; }
+.modal { background: #161b27; border: 1px solid #2d3448; border-radius: 14px; padding: 2rem; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+.modal.wide { max-width: 620px; }
+.modal h2 { font-size: 1.05rem; margin-bottom: .4rem; }
+.modal p.sub { font-size: .83rem; color: #94a3b8; margin-bottom: 1rem; line-height: 1.5; }
 .modal-divider { display: flex; align-items: center; gap: .75rem; margin: .85rem 0; }
 .modal-divider span { font-size: .75rem; color: #475569; white-space: nowrap; }
-.modal-divider::before, .modal-divider::after { content:''; flex:1; height:1px; background:#2d3448; }
+.modal-divider::before,.modal-divider::after { content:''; flex:1; height:1px; background:#2d3448; }
+.modal-row { display: flex; gap: .6rem; margin-top: 1rem; }
+.field-label { font-size: .76rem; color: #64748b; display: block; margin-bottom: .3rem; }
+
+/* ── Admin tabs ── */
+.admin-tabs { display: flex; border-bottom: 1px solid #2d3448; margin-bottom: 1.25rem; gap: 0; }
+.admin-tab { padding: .6rem 1rem; font-size: .82rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; }
+.admin-tab:hover { color: #94a3b8; }
+.admin-tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+.admin-section { display: none; }
+.admin-section.active { display: block; }
+
+/* ── Admin list items ── */
+.admin-list { display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1rem; }
+.admin-item { background: #0d1117; border: 1px solid #2d3448; border-radius: 8px; padding: .65rem .9rem; display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: .84rem; }
+.admin-item-left { min-width: 0; }
+.admin-item-left h4 { font-size: .84rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-item-left p  { font-size: .72rem; color: #64748b; margin-top: .15rem; }
+.admin-item-actions { display: flex; gap: .4rem; flex-shrink: 0; }
+.add-row { display: flex; gap: .5rem; margin-top: .75rem; }
+.add-row input { flex: 1; }
 
 /* ── Header ── */
 header { background: #161b27; border-bottom: 1px solid #2d3448; padding: .9rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.logo  { font-weight: 700; font-size: 1rem; letter-spacing: .04em; flex-shrink: 0; }
+.logo { font-weight: 700; font-size: 1rem; letter-spacing: .04em; flex-shrink: 0; }
 .header-right { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
 .operator-pill { font-size: .78rem; color: #94a3b8; cursor: pointer; padding: .35rem .75rem; background: #0d1117; border: 1px solid #2d3448; border-radius: 99px; }
 .operator-pill:hover { border-color: #60a5fa; }
 .operator-pill span { color: #60a5fa; font-weight: 600; }
+.admin-btn { font-size: .78rem; padding: .35rem .7rem; background: #0d1117; border: 1px solid #2d3448; border-radius: 99px; cursor: pointer; color: #94a3b8; transition: all .15s; }
+.admin-btn:hover { border-color: #fbbf24; color: #fbbf24; }
+.admin-btn.active { border-color: #fbbf24; color: #fbbf24; background: #1c1400; }
 .sync-pill { font-size: .72rem; padding: .3rem .65rem; border-radius: 99px; display: flex; align-items: center; gap: .35rem; border: 1px solid transparent; }
 .sync-pill .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.sync-online  { border-color: #065f46; color: #34d399; } .sync-online  .dot { background: #34d399; }
-.sync-syncing { border-color: #1e3a6e; color: #60a5fa; } .sync-syncing .dot { background: #60a5fa; animation: pulse 1s infinite; }
-.sync-error   { border-color: #7f1d1d; color: #f87171; } .sync-error   .dot { background: #f87171; }
-.sync-offline { border-color: #2d3448; color: #64748b; } .sync-offline .dot { background: #64748b; }
+.sync-online  { border-color:#065f46; color:#34d399; } .sync-online  .dot { background:#34d399; }
+.sync-syncing { border-color:#1e3a6e; color:#60a5fa; } .sync-syncing .dot { background:#60a5fa; animation:pulse 1s infinite; }
+.sync-error   { border-color:#7f1d1d; color:#f87171; } .sync-error   .dot { background:#f87171; }
+.sync-offline { border-color:#2d3448; color:#64748b; } .sync-offline .dot { background:#64748b; }
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
 
 /* ── Phase tabs ── */
@@ -43,165 +67,303 @@ header { background: #161b27; border-bottom: 1px solid #2d3448; padding: .9rem 1
 
 /* ── Layout ── */
 main { max-width: 820px; margin: 0 auto; padding: 1.5rem; }
-
-/* ── Card ── */
 .card { background: #161b27; border: 1px solid #2d3448; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
 .card-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #475569; margin-bottom: 1rem; }
 
 /* ── Form ── */
-input[type="text"], select, textarea {
+input[type="text"],input[type="password"],input[type="date"],select,textarea {
   width: 100%; background: #0d1117; border: 1px solid #2d3448;
   border-radius: 8px; color: #e2e8f0; padding: .7rem .9rem; font-size: .88rem; font-family: inherit;
 }
-input[type="text"]:focus, select:focus, textarea:focus { outline: none; border-color: #60a5fa; }
+input[type="text"]:focus,input[type="password"]:focus,input[type="date"]:focus,select:focus,textarea:focus { outline: none; border-color: #60a5fa; }
+input[type="date"] { color-scheme: dark; }
 textarea { resize: vertical; font-family: 'Menlo','Consolas',monospace; font-size: .78rem; line-height: 1.5; }
 select { cursor: pointer; }
 
 /* ── Buttons ── */
 .btn { display: inline-flex; align-items: center; gap: .35rem; padding: .58rem 1rem; border-radius: 8px; border: none; font-size: .83rem; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; }
-.btn-primary   { background: #2563eb; color: #fff; } .btn-primary:hover   { background: #1d4ed8; }
-.btn-secondary { background: #161b27; border: 1px solid #2d3448; color: #e2e8f0; } .btn-secondary:hover { background: #1e2437; }
-.btn-success   { background: #059669; color: #fff; } .btn-success:hover   { background: #047857; }
-.btn-warning   { background: #161b27; border: 1px solid #78350f; color: #fbbf24; } .btn-warning:hover   { background: #1c1400; }
-.btn-danger    { background: #161b27; border: 1px solid #7f1d1d; color: #f87171; } .btn-danger:hover    { background: #1f0e0e; }
-.btn:disabled  { opacity: .35; cursor: not-allowed; }
+.btn-primary   { background:#2563eb;color:#fff; }  .btn-primary:hover   { background:#1d4ed8; }
+.btn-secondary { background:#161b27;border:1px solid #2d3448;color:#e2e8f0; } .btn-secondary:hover { background:#1e2437; }
+.btn-success   { background:#059669;color:#fff; }  .btn-success:hover   { background:#047857; }
+.btn-warning   { background:#161b27;border:1px solid #78350f;color:#fbbf24; } .btn-warning:hover { background:#1c1400; }
+.btn-danger    { background:#161b27;border:1px solid #7f1d1d;color:#f87171; } .btn-danger:hover  { background:#1f0e0e; }
+.btn-sm { padding:.35rem .7rem; font-size:.76rem; }
+.btn:disabled { opacity:.35;cursor:not-allowed; }
 
 /* ── File upload ── */
-.file-drop { border: 2px dashed #2d3448; border-radius: 8px; padding: 1.1rem; text-align: center; cursor: pointer; transition: border-color .15s; font-size: .84rem; color: #94a3b8; display: block; }
-.file-drop:hover { border-color: #3b82f6; color: #e2e8f0; }
-.file-drop.loaded { border-color: #059669; border-style: solid; }
-.file-drop input { display: none; }
-.file-drop .fname { font-size: .76rem; margin-top: .35rem; }
-.file-drop .fname.ok { color: #34d399; }
+.file-drop { border:2px dashed #2d3448;border-radius:8px;padding:1.1rem;text-align:center;cursor:pointer;transition:border-color .15s;font-size:.84rem;color:#94a3b8;display:block; }
+.file-drop:hover { border-color:#3b82f6;color:#e2e8f0; }
+.file-drop.loaded { border-color:#059669;border-style:solid; }
+.file-drop input { display:none; }
+.file-drop .fname { font-size:.76rem;margin-top:.35rem; }
+.file-drop .fname.ok { color:#34d399; }
 
 /* ── Session bar ── */
-.session-bar { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
-.session-bar select { flex: 1; min-width: 160px; }
-.active-users { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; margin-top: .6rem; min-height: 24px; }
-.user-pill { font-size: .72rem; padding: .2rem .6rem; border-radius: 99px; background: #0f1f40; border: 1px solid #1e3a6e; color: #93c5fd; display: flex; align-items: center; gap: .3rem; }
-.user-pill::before { content:''; width:6px; height:6px; border-radius:50%; background:#34d399; display:inline-block; }
-.active-users-label { font-size: .72rem; color: #475569; }
+.session-bar { display:flex;gap:.6rem;align-items:center;flex-wrap:wrap; }
+.session-bar select { flex:1;min-width:160px; }
+.active-users { display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-top:.6rem;min-height:20px; }
+.user-pill { font-size:.72rem;padding:.2rem .6rem;border-radius:99px;background:#0f1f40;border:1px solid #1e3a6e;color:#93c5fd;display:flex;align-items:center;gap:.3rem; }
+.user-pill::before { content:'';width:6px;height:6px;border-radius:50%;background:#34d399;display:inline-block; }
+.active-users-label { font-size:.72rem;color:#475569; }
+
+/* ── Customer tag on session ── */
+.customer-tag { display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;padding:.18rem .55rem;border-radius:99px;background:#1e2437;border:1px solid #2d3448;color:#94a3b8;margin-top:.4rem; }
 
 /* ── Link banner ── */
-.link-banner { background: #0f1f40; border: 1px solid #1e3a6e; border-radius: 8px; padding: .75rem 1rem; margin-bottom: .75rem; display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; font-size: .82rem; color: #93c5fd; }
-.link-banner select { background: #0d1117; border-color: #1e3a6e; color: #e2e8f0; flex: 1; min-width: 140px; padding: .45rem .7rem; font-size: .82rem; }
-.link-banner strong { color: #60a5fa; white-space: nowrap; }
+.link-banner { background:#0f1f40;border:1px solid #1e3a6e;border-radius:8px;padding:.75rem 1rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;font-size:.82rem;color:#93c5fd; }
+.link-banner select { background:#0d1117;border-color:#1e3a6e;color:#e2e8f0;flex:1;min-width:140px;padding:.45rem .7rem;font-size:.82rem; }
+.link-banner strong { color:#60a5fa;white-space:nowrap; }
 
 /* ── Stats ── */
-.stats { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: .75rem; }
-.stat { flex: 1; min-width: 80px; background: #0d1117; border: 1px solid #2d3448; border-radius: 8px; padding: .7rem .9rem; }
-.stat-val { font-size: 1.6rem; font-weight: 700; line-height: 1; }
-.stat-label { font-size: .72rem; color: #64748b; margin-top: .25rem; }
-.green{color:#34d399} .red{color:#f87171} .amber{color:#fbbf24} .cyan{color:#67e8f9}
+.stats { display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem; }
+.stat { flex:1;min-width:80px;background:#0d1117;border:1px solid #2d3448;border-radius:8px;padding:.7rem .9rem; }
+.stat-val { font-size:1.6rem;font-weight:700;line-height:1; }
+.stat-label { font-size:.72rem;color:#64748b;margin-top:.25rem; }
+.green{color:#34d399}.red{color:#f87171}.amber{color:#fbbf24}.cyan{color:#67e8f9}
 
 /* ── Progress ── */
-.progress-wrap { margin-bottom: 1.1rem; }
-.progress-bar  { height: 5px; background: #2d3448; border-radius: 3px; overflow: hidden; }
-.progress-fill { height: 100%; background: #059669; border-radius: 3px; transition: width .4s; }
-.progress-label { font-size: .74rem; color: #64748b; margin-top: .3rem; text-align: right; }
+.progress-wrap { margin-bottom:1.1rem; }
+.progress-bar  { height:5px;background:#2d3448;border-radius:3px;overflow:hidden; }
+.progress-fill { height:100%;background:#059669;border-radius:3px;transition:width .4s; }
+.progress-label { font-size:.74rem;color:#64748b;margin-top:.3rem;text-align:right; }
 
 /* ── Toolbar ── */
-.toolbar { display: flex; align-items: center; justify-content: space-between; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.filter-group { display: flex; gap: .4rem; flex-wrap: wrap; }
-.filter-btn { padding: .3rem .7rem; border-radius: 6px; border: 1px solid #2d3448; background: #0d1117; color: #64748b; font-size: .76rem; cursor: pointer; transition: all .15s; }
-.filter-btn:hover { color: #94a3b8; }
-.filter-btn.active { border-color: #3b82f6; color: #60a5fa; background: #0f1f40; }
+.toolbar { display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem; }
+.filter-group { display:flex;gap:.4rem;flex-wrap:wrap; }
+.filter-btn { padding:.3rem .7rem;border-radius:6px;border:1px solid #2d3448;background:#0d1117;color:#64748b;font-size:.76rem;cursor:pointer;transition:all .15s; }
+.filter-btn:hover { color:#94a3b8; }
+.filter-btn.active { border-color:#3b82f6;color:#60a5fa;background:#0f1f40; }
 
 /* ── CCN cards ── */
-.ccn-list { display: flex; flex-direction: column; gap: .6rem; }
-.ccn-card { background: #0d1117; border: 1px solid #2d3448; border-radius: 8px; overflow: hidden; }
-.ccn-header { padding: .7rem 1rem; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; gap: .75rem; }
-.ccn-header:hover { background: #121820; }
-.ccn-id   { font-family: 'Menlo','Consolas',monospace; font-size: .84rem; font-weight: 700; }
-.ccn-meta { font-size: .72rem; color: #64748b; margin-top: .1rem; }
-.ccn-right { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
-.badge { font-size: .72rem; font-weight: 600; padding: .18rem .55rem; border-radius: 99px; white-space: nowrap; }
-.badge-complete { background: #052e16; color: #34d399; }
-.badge-partial  { background: #2d1a00; color: #fbbf24; }
-.badge-empty    { background: #1e2437; color: #64748b; }
-.badge-flagged  { background: #2d1a00; color: #fbbf24; }
-.ccn-body { padding: .5rem 1rem .85rem; border-top: 1px solid #1a2030; display: none; }
-.ccn-body.open { display: block; }
-
-/* ── HAWB rows ── */
-.hawb-row { display: flex; align-items: center; justify-content: space-between; padding: .32rem 0; border-bottom: 1px solid #131a26; font-size: .79rem; gap: .5rem; }
-.hawb-row:last-child { border-bottom: none; }
-.hawb-left { min-width: 0; }
-.hawb-tracking { font-family: 'Menlo','Consolas',monospace; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hawb-carton   { font-size: .7rem; color: #475569; margin-top: .1rem; }
-.hawb-status   { font-size: .74rem; font-weight: 600; flex-shrink: 0; }
-.s-scanned{color:#34d399} .s-missing{color:#f87171} .s-exam{color:#fbbf24} .s-hold{color:#67e8f9}
+.ccn-list { display:flex;flex-direction:column;gap:.6rem; }
+.ccn-card { background:#0d1117;border:1px solid #2d3448;border-radius:8px;overflow:hidden; }
+.ccn-header { padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;gap:.75rem; }
+.ccn-header:hover { background:#121820; }
+.ccn-id   { font-family:'Menlo','Consolas',monospace;font-size:.84rem;font-weight:700; }
+.ccn-meta { font-size:.72rem;color:#64748b;margin-top:.1rem; }
+.ccn-right { display:flex;align-items:center;gap:.4rem;flex-shrink:0; }
+.badge { font-size:.72rem;font-weight:600;padding:.18rem .55rem;border-radius:99px;white-space:nowrap; }
+.badge-complete{background:#052e16;color:#34d399} .badge-partial{background:#2d1a00;color:#fbbf24}
+.badge-empty{background:#1e2437;color:#64748b}    .badge-flagged{background:#2d1a00;color:#fbbf24}
+.ccn-body { padding:.5rem 1rem .85rem;border-top:1px solid #1a2030;display:none; }
+.ccn-body.open { display:block; }
+.hawb-row { display:flex;align-items:center;justify-content:space-between;padding:.32rem 0;border-bottom:1px solid #131a26;font-size:.79rem;gap:.5rem; }
+.hawb-row:last-child { border-bottom:none; }
+.hawb-left { min-width:0; }
+.hawb-tracking { font-family:'Menlo','Consolas',monospace;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.hawb-carton   { font-size:.7rem;color:#475569;margin-top:.1rem; }
+.hawb-status   { font-size:.74rem;font-weight:600;flex-shrink:0; }
+.s-scanned{color:#34d399}.s-missing{color:#f87171}.s-exam{color:#fbbf24}.s-hold{color:#67e8f9}
 
 /* ── Notes ── */
-.notes-textarea { min-height: 70px; font-family: system-ui, sans-serif !important; font-size: .84rem !important; }
+.notes-textarea { min-height:70px;font-family:system-ui,sans-serif!important;font-size:.84rem!important; }
 
-/* ── Complete banner ── */
-.complete-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; background: #052e16; border: 1px solid #065f46; border-radius: 8px; padding: .85rem 1.1rem; margin-bottom: 1rem; }
-.complete-bar.done { background: #0a2a1a; border-color: #065f46; }
-.complete-bar p { font-size: .83rem; color: #34d399; }
-.complete-bar p.done-label { color: #6ee7b7; font-size: .8rem; }
+/* ── Complete bar ── */
+.complete-bar { display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;background:#052e16;border:1px solid #065f46;border-radius:8px;padding:.85rem 1.1rem;margin-bottom:1rem; }
+.complete-bar.done { background:#0a2a1a; }
+.complete-bar p { font-size:.83rem;color:#34d399; }
+.complete-bar p.done-label { color:#6ee7b7;font-size:.8rem; }
 
 /* ── File pair ── */
-.file-pair { display: flex; gap: .75rem; flex-wrap: wrap; }
-.file-pair > label { flex: 1; min-width: 200px; }
+.file-pair { display:flex;gap:.75rem;flex-wrap:wrap; }
+.file-pair>label { flex:1;min-width:200px; }
 
 /* ── Empty ── */
-.empty { text-align: center; padding: 3rem 1rem; color: #334155; }
-.empty .icon { font-size: 2.5rem; margin-bottom: .75rem; }
-.empty p { font-size: .85rem; }
+.empty { text-align:center;padding:3rem 1rem;color:#334155; }
+.empty .icon { font-size:2.5rem;margin-bottom:.75rem; }
+.empty p { font-size:.85rem; }
 
-/* ══════════════════════════════ HISTORY ══════════════════════════════ */
-.cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-.cal-nav h2 { font-size: 1rem; font-weight: 600; }
-.cal-nav .btn { padding: .4rem .8rem; }
-.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.cal-dow  { text-align: center; font-size: .7rem; font-weight: 600; color: #475569; padding: .4rem 0; text-transform: uppercase; letter-spacing: .06em; }
-.cal-day  { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; cursor: default; font-size: .84rem; color: #475569; min-height: 44px; }
-.cal-day.has-sessions { cursor: pointer; color: #e2e8f0; background: #161b27; border: 1px solid #2d3448; }
-.cal-day.has-sessions:hover { background: #1e2437; border-color: #3b82f6; }
-.cal-day.selected { background: #0f1f40 !important; border-color: #3b82f6 !important; color: #60a5fa !important; }
-.cal-day.today { outline: 1px solid #334155; outline-offset: -1px; }
-.cal-dot-row { display: flex; gap: 3px; margin-top: 3px; }
-.cal-dot { width: 5px; height: 5px; border-radius: 50%; }
-.dot-prescan{background:#34d399} .dot-cbsa{background:#60a5fa}
-.day-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.25rem; margin-bottom: .75rem; flex-wrap: wrap; }
-.day-header h3 { font-size: .8rem; color: #64748b; text-transform: uppercase; letter-spacing: .07em; }
-.session-card { background: #0d1117; border: 1px solid #2d3448; border-radius: 8px; padding: .85rem 1rem; margin-bottom: .6rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.session-card.done { border-color: #065f46; opacity: .8; }
-.session-card-left h4 { font-size: .88rem; font-weight: 600; }
-.session-card-left p  { font-size: .74rem; color: #64748b; margin-top: .2rem; }
-.phase-tag { font-size: .7rem; font-weight: 700; padding: .18rem .55rem; border-radius: 99px; }
-.phase-tag.prescan { background: #052e16; color: #34d399; }
-.phase-tag.cbsa    { background: #0f1f40; color: #60a5fa; }
-.done-tag { font-size: .7rem; font-weight: 700; padding: .18rem .55rem; border-radius: 99px; background: #052e16; color: #34d399; }
-.operator-tag { font-size: .7rem; color: #64748b; }
+/* ══════ HISTORY ══════ */
+.cal-nav { display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem; }
+.cal-nav h2 { font-size:1rem;font-weight:600; }
+.cal-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:2px; }
+.cal-dow  { text-align:center;font-size:.7rem;font-weight:600;color:#475569;padding:.4rem 0;text-transform:uppercase;letter-spacing:.06em; }
+.cal-day  { aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:default;font-size:.84rem;color:#475569;min-height:44px; }
+.cal-day.has-sessions { cursor:pointer;color:#e2e8f0;background:#161b27;border:1px solid #2d3448; }
+.cal-day.has-sessions:hover { background:#1e2437;border-color:#3b82f6; }
+.cal-day.selected { background:#0f1f40!important;border-color:#3b82f6!important;color:#60a5fa!important; }
+.cal-day.today { outline:1px solid #334155;outline-offset:-1px; }
+.cal-dot-row { display:flex;gap:3px;margin-top:3px; }
+.cal-dot { width:5px;height:5px;border-radius:50%; }
+.dot-prescan{background:#34d399}.dot-cbsa{background:#60a5fa}
+.day-header { display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:1.25rem;margin-bottom:.75rem;flex-wrap:wrap; }
+.day-header h3 { font-size:.8rem;color:#64748b;text-transform:uppercase;letter-spacing:.07em; }
+.session-card { background:#0d1117;border:1px solid #2d3448;border-radius:8px;padding:.85rem 1rem;margin-bottom:.6rem;display:flex;align-items:center;justify-content:space-between;gap:1rem; }
+.session-card.done { border-color:#065f46;opacity:.8; }
+.session-card-left h4 { font-size:.88rem;font-weight:600; }
+.session-card-left p  { font-size:.74rem;color:#64748b;margin-top:.2rem; }
+.phase-tag { font-size:.7rem;font-weight:700;padding:.18rem .55rem;border-radius:99px; }
+.phase-tag.prescan{background:#052e16;color:#34d399} .phase-tag.cbsa{background:#0f1f40;color:#60a5fa}
+.done-tag { font-size:.7rem;font-weight:700;padding:.18rem .55rem;border-radius:99px;background:#052e16;color:#34d399; }
+.operator-tag { font-size:.7rem;color:#64748b; }
 
-@media (max-width: 560px) {
-  main { padding: 1rem; }
-  .stat-val { font-size: 1.25rem; }
-  .file-pair > label { min-width: 100%; }
-  .cal-day { font-size: .75rem; min-height: 36px; }
+/* ── Date range section ── */
+.date-range-row { display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap; }
+.date-range-row .field { display:flex;flex-direction:column;gap:.3rem; }
+.date-range-row label { font-size:.75rem;color:#64748b; }
+.date-range-row input[type="date"] { width:auto;min-width:140px; }
+
+@media(max-width:560px){
+  main{padding:1rem}
+  .stat-val{font-size:1.25rem}
+  .file-pair>label{min-width:100%}
+  .cal-day{font-size:.75rem;min-height:36px}
 }
 </style>
 </head>
 <body>
 
-<!-- ── Operator modal ── -->
+<!-- ══ Operator modal ══ -->
 <div class="modal-overlay" id="nameModal">
   <div class="modal">
     <h2>Welcome to LVS-GSM Tracker</h2>
     <div id="knownUsersWrap" style="display:none">
-      <p>Select your name to continue.</p>
+      <p class="sub">Select your name or add a new one below.</p>
+      <label class="field-label">Known operators</label>
       <select id="knownUserSel" onchange="onKnownUserPick(this.value)">
         <option value="">— select your name —</option>
       </select>
-      <div class="modal-divider"><span>or add new</span></div>
+      <div class="modal-divider"><span>or type a new name</span></div>
     </div>
     <div id="newUserWrap">
-      <p id="newUserPrompt">Enter your name — it appears on all exports and records.</p>
+      <p class="sub" id="newUserPrompt">Enter your name — it appears on all exports and records.</p>
+      <label class="field-label">Name</label>
       <input type="text" id="nameInput" placeholder="Your name" maxlength="40" autocomplete="off">
     </div>
     <button class="btn btn-primary" style="width:100%;margin-top:1rem" onclick="saveOperator()">Continue</button>
+  </div>
+</div>
+
+<!-- ══ New session modal ══ -->
+<div class="modal-overlay hidden" id="newSessionModal">
+  <div class="modal">
+    <h2 id="newSessTitle">New Session</h2>
+    <p class="sub">Fill in the details for this shipment session.</p>
+    <label class="field-label">Session name</label>
+    <input type="text" id="newSessName" placeholder="e.g. YYZ-2026-06-23 AM" autocomplete="off">
+    <div style="margin-top:.75rem">
+      <label class="field-label">Customer</label>
+      <input type="text" id="newSessCustomer" placeholder="e.g. Amazon, Shein, Temu…" autocomplete="off">
+    </div>
+    <div id="newSessLinkWrap" style="display:none;margin-top:.75rem">
+      <label class="field-label">Link Phase 1 session (optional)</label>
+      <select id="newSessLink" onchange="onNewSessLinkPick(this.value)">
+        <option value="">— none —</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeNewSessModal()">Cancel</button>
+      <button class="btn btn-primary"   style="flex:1" onclick="confirmNewSession()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Admin modal ══ -->
+<div class="modal-overlay hidden" id="adminModal">
+  <div class="modal wide">
+
+    <!-- Login view -->
+    <div id="adminLoginView">
+      <h2>Admin Login</h2>
+      <p class="sub">Enter your admin credentials to manage users and sessions.</p>
+      <label class="field-label">Username</label>
+      <input type="text" id="adminUser" placeholder="Admin username" autocomplete="off">
+      <div style="margin-top:.75rem">
+        <label class="field-label">Password</label>
+        <input type="password" id="adminPass" placeholder="Password">
+      </div>
+      <p id="adminLoginErr" style="font-size:.78rem;color:#f87171;margin-top:.5rem;display:none">Incorrect credentials.</p>
+      <div class="modal-row">
+        <button class="btn btn-secondary" style="flex:1" onclick="closeAdminModal()">Cancel</button>
+        <button class="btn btn-primary"   style="flex:1" onclick="doAdminLogin()">Log In</button>
+      </div>
+      <div class="modal-divider" style="margin-top:1rem"><span>first time?</span></div>
+      <button class="btn btn-secondary" style="width:100%" onclick="showCreateFirstAdmin()">Create first admin account</button>
+      <div id="createFirstAdminWrap" style="display:none;margin-top:.75rem">
+        <label class="field-label">New username</label>
+        <input type="text" id="firstAdminUser" placeholder="Username" autocomplete="off">
+        <div style="margin-top:.5rem">
+          <label class="field-label">New password</label>
+          <input type="password" id="firstAdminPass" placeholder="Password">
+        </div>
+        <button class="btn btn-success" style="width:100%;margin-top:.75rem" onclick="createFirstAdmin()">Create Admin</button>
+        <p id="firstAdminErr" style="font-size:.78rem;color:#f87171;margin-top:.4rem;display:none"></p>
+      </div>
+    </div>
+
+    <!-- Panel view -->
+    <div id="adminPanelView" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h2>Admin Panel <span id="adminPanelUser" style="font-size:.8rem;color:#60a5fa;font-weight:400"></span></h2>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-secondary btn-sm" onclick="closeAdminModal()">Close</button>
+          <button class="btn btn-danger btn-sm" onclick="adminLogout()">Log out</button>
+        </div>
+      </div>
+      <div class="admin-tabs">
+        <div class="admin-tab active" onclick="adminTab('users',this)">Users</div>
+        <div class="admin-tab"        onclick="adminTab('sessions',this)">Sessions</div>
+        <div class="admin-tab"        onclick="adminTab('admins',this)">Admins</div>
+      </div>
+
+      <!-- Users tab -->
+      <div class="admin-section active" id="admin-tab-users">
+        <div class="admin-list" id="adminUserList"></div>
+        <div class="add-row">
+          <input type="text" id="addUserInput" placeholder="New operator name" maxlength="40">
+          <button class="btn btn-success btn-sm" onclick="adminAddUser()">Add</button>
+        </div>
+      </div>
+
+      <!-- Sessions tab -->
+      <div class="admin-section" id="admin-tab-sessions">
+        <div style="display:flex;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap">
+          <button class="filter-btn active" onclick="adminSessFilter('all',this)">All</button>
+          <button class="filter-btn" onclick="adminSessFilter('prescan',this)">Phase 1</button>
+          <button class="filter-btn" onclick="adminSessFilter('cbsa',this)">Phase 2</button>
+          <button class="filter-btn" onclick="adminSessFilter('done',this)">Completed</button>
+        </div>
+        <div class="admin-list" id="adminSessList" style="max-height:350px;overflow-y:auto"></div>
+      </div>
+
+      <!-- Admins tab -->
+      <div class="admin-section" id="admin-tab-admins">
+        <div class="admin-list" id="adminAdminList"></div>
+        <div style="background:#0d1117;border:1px solid #2d3448;border-radius:8px;padding:.85rem;margin-top:.75rem">
+          <p style="font-size:.8rem;font-weight:600;margin-bottom:.6rem">Add new admin</p>
+          <input type="text"     id="newAdminUser" placeholder="Username" style="margin-bottom:.5rem" autocomplete="off">
+          <input type="password" id="newAdminPass" placeholder="Password" style="margin-bottom:.5rem">
+          <button class="btn btn-success btn-sm" onclick="adminAddAdmin()">Create Admin</button>
+          <p id="newAdminErr" style="font-size:.78rem;color:#f87171;margin-top:.4rem;display:none"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Edit session modal (admin) ══ -->
+<div class="modal-overlay hidden" id="editSessModal">
+  <div class="modal">
+    <h2>Edit Session</h2>
+    <input type="hidden" id="editSessId">
+    <label class="field-label" style="margin-top:.5rem">Session name</label>
+    <input type="text" id="editSessName" autocomplete="off">
+    <div style="margin-top:.75rem">
+      <label class="field-label">Customer</label>
+      <input type="text" id="editSessCustomer" autocomplete="off">
+    </div>
+    <div style="margin-top:.75rem">
+      <label class="field-label">Notes</label>
+      <textarea id="editSessNotes" style="min-height:60px"></textarea>
+    </div>
+    <div style="margin-top:.75rem;display:flex;align-items:center;gap:.5rem">
+      <input type="checkbox" id="editSessCompleted" style="width:auto;padding:0">
+      <label style="font-size:.84rem;cursor:pointer" for="editSessCompleted">Mark as completed</label>
+    </div>
+    <div class="modal-row">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeEditSessModal()">Cancel</button>
+      <button class="btn btn-primary"   style="flex:1" onclick="saveEditSession()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -209,6 +371,7 @@ select { cursor: pointer; }
   <div class="logo">LVS-GSM Tracker</div>
   <div class="header-right">
     <div class="sync-pill sync-offline" id="syncPill"><div class="dot"></div><span id="syncLabel">Connecting…</span></div>
+    <button class="admin-btn" id="adminBtn" onclick="openAdminModal()">⚙ Admin</button>
     <div class="operator-pill" onclick="showNameModal()">Operator: <span id="operatorDisplay">—</span></div>
   </div>
 </header>
@@ -229,7 +392,7 @@ select { cursor: pointer; }
         <select id="prescan-sel" onchange="loadSession('prescan',this.value)">
           <option value="">— select or create a session —</option>
         </select>
-        <button class="btn btn-secondary" onclick="newSession('prescan')">+ New</button>
+        <button class="btn btn-secondary" onclick="openNewSessModal('prescan')">+ New</button>
         <button class="btn btn-danger"    onclick="deleteSession('prescan')">Delete</button>
       </div>
       <div class="active-users" id="prescan-users"></div>
@@ -274,10 +437,7 @@ select { cursor: pointer; }
       </div>
 
       <div id="prescan-complete-bar" style="display:none;margin-top:1rem">
-        <div class="complete-bar" id="prescan-complete-inner">
-          <p>All scans accounted for? Mark this session as complete.</p>
-          <button class="btn btn-success" onclick="markComplete('prescan')">✓ Mark Complete</button>
-        </div>
+        <div class="complete-bar" id="prescan-complete-inner"></div>
       </div>
     </div>
   </div>
@@ -290,7 +450,7 @@ select { cursor: pointer; }
         <select id="cbsa-sel" onchange="loadSession('cbsa',this.value)">
           <option value="">— select or create a session —</option>
         </select>
-        <button class="btn btn-secondary" onclick="newSession('cbsa')">+ New</button>
+        <button class="btn btn-secondary" onclick="openNewSessModal('cbsa')">+ New</button>
         <button class="btn btn-danger"    onclick="deleteSession('cbsa')">Delete</button>
       </div>
       <div class="active-users" id="cbsa-users"></div>
@@ -302,7 +462,7 @@ select { cursor: pointer; }
         <div class="link-banner">
           <strong>Link Phase 1 session:</strong>
           <select id="cbsa-link-sel" onchange="linkPrescan(this.value)">
-            <option value="">— pick a Phase 1 session to load its decon —</option>
+            <option value="">— pick a Phase 1 session —</option>
           </select>
         </div>
         <div class="file-pair">
@@ -348,16 +508,23 @@ select { cursor: pointer; }
       </div>
 
       <div id="cbsa-complete-bar" style="display:none;margin-top:1rem">
-        <div class="complete-bar" id="cbsa-complete-inner">
-          <p>Processing done? Mark this session as complete.</p>
-          <button class="btn btn-success" onclick="markComplete('cbsa')">✓ Mark Complete</button>
-        </div>
+        <div class="complete-bar" id="cbsa-complete-inner"></div>
       </div>
     </div>
   </div>
 
   <!-- ════ HISTORY ════ -->
   <div id="phase-history" style="display:none">
+
+    <!-- Customer filter -->
+    <div class="card">
+      <div class="card-title">Filter by Customer</div>
+      <div class="filter-group" id="customer-filters">
+        <button class="filter-btn active" onclick="setCustomerFilter('all',this)">All</button>
+      </div>
+    </div>
+
+    <!-- Calendar -->
     <div class="card">
       <div class="cal-nav">
         <button class="btn btn-secondary" onclick="calMove(-1)">&#8592;</button>
@@ -366,6 +533,8 @@ select { cursor: pointer; }
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </div>
+
+    <!-- Day sessions -->
     <div id="day-sessions" style="display:none">
       <div class="day-header">
         <h3 id="day-sessions-title"></h3>
@@ -373,6 +542,24 @@ select { cursor: pointer; }
       </div>
       <div id="day-sessions-list"></div>
     </div>
+
+    <!-- Non-released date range report -->
+    <div class="card" style="margin-top:1.25rem">
+      <div class="card-title">Non-Released Report</div>
+      <p style="font-size:.82rem;color:#94a3b8;margin-bottom:1rem">Export all non-released packages from CBSA sessions within a date range.</p>
+      <div class="date-range-row">
+        <div class="field">
+          <label>From</label>
+          <input type="date" id="report-from">
+        </div>
+        <div class="field">
+          <label>To</label>
+          <input type="date" id="report-to">
+        </div>
+        <button class="btn btn-warning" onclick="exportNonReleased()">Export Non-Released</button>
+      </div>
+    </div>
+
   </div>
 
 </main>
@@ -386,460 +573,425 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const sb = supabase.createClient(SB_URL, SB_KEY);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Local state
+// State
 // ─────────────────────────────────────────────────────────────────────────────
-const LS      = 'lvsgsm_v1';
-const LS_OPS  = 'lvsgsm_operators';
-
-function defaultState() { return { operator: '', sessions: { prescan: {}, cbsa: {} } }; }
-function loadState()    { try { return JSON.parse(localStorage.getItem(LS)) || defaultState(); } catch { return defaultState(); } }
+const LS = 'lvsgsm_v1';
+function defaultState() { return { operator:'', sessions:{ prescan:{}, cbsa:{} } }; }
+function loadState()    { try{ return JSON.parse(localStorage.getItem(LS))||defaultState(); }catch{ return defaultState(); } }
 function saveLocal()    { localStorage.setItem(LS, JSON.stringify(app)); }
-
-function loadOperators()   { try { return JSON.parse(localStorage.getItem(LS_OPS)) || []; } catch { return []; } }
-function saveOperators(ops){ localStorage.setItem(LS_OPS, JSON.stringify(ops)); }
-
 let app = loadState();
-const rt = { cbsa: { rns: null } };
-const manifestCache  = { prescan: null, cbsa: null };
-const filters        = { prescan: 'all', cbsa: 'all' };
-const pasteDebounce  = { prescan: null, cbsa: null };
-const notesDebounce  = { prescan: null, cbsa: null };
 
-let calYear = new Date().getFullYear(), calMonth = new Date().getMonth(), calSelected = null;
-let calDaySessions = [];   // sessions for the selected day (for exportDay)
+// Runtime
+const rt = { cbsa:{ rns:null } };
+const manifestCache  = { prescan:null, cbsa:null };
+const filters        = { prescan:'all', cbsa:'all' };
+const pasteDebounce  = { prescan:null,  cbsa:null  };
+const notesDebounce  = { prescan:null,  cbsa:null  };
+
+// Operators (Supabase-synced)
+let knownOperators = [];
+
+// Admin state
+let isAdmin = false, adminUser = '';
+
+// Calendar
+let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calSelected=null, calDaySessions=[];
+let customerFilter = 'all';
+let adminSessFilterVal = 'all';
 
 // Presence
 let presenceChannel = null;
 
+// Pending new session phase
+let pendingNewSessPhase = null;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sync status
 // ─────────────────────────────────────────────────────────────────────────────
-function setSyncStatus(s, txt) {
-  document.getElementById('syncPill').className = `sync-pill sync-${s}`;
-  document.getElementById('syncLabel').textContent = txt || {online:'Synced',syncing:'Syncing…',error:'Sync error',offline:'Offline'}[s];
+function setSyncStatus(s,txt){
+  document.getElementById('syncPill').className=`sync-pill sync-${s}`;
+  document.getElementById('syncLabel').textContent=txt||{online:'Synced',syncing:'Syncing…',error:'Sync error',offline:'Offline'}[s];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Supabase helpers
+// Row converters
 // ─────────────────────────────────────────────────────────────────────────────
-function rowToSession(r) {
+function rowToSession(r){
   return {
-    id: r.id, name: r.name, phase: r.phase, operator: r.operator || '',
-    createdAt: r.created_at,
-    manifest:  r.manifest && Object.keys(r.manifest).length ? r.manifest : null,
-    rawPaste:  r.raw_paste || '',
-    notes:     r.notes || '',
-    completed: !!r.completed,
-    linkedPrescanId: r.linked_prescan_id || null,
+    id:r.id, name:r.name, phase:r.phase, operator:r.operator||'',
+    createdAt:r.created_at, customer:r.customer||'',
+    manifest: r.manifest&&Object.keys(r.manifest).length?r.manifest:null,
+    rawPaste:r.raw_paste||'', notes:r.notes||'',
+    rnsData:r.rns_data||{}, completed:!!r.completed,
+    linkedPrescanId:r.linked_prescan_id||null,
   };
 }
-function sessionToRow(s) {
+function sessionToRow(s){
   return {
-    id: s.id, name: s.name, phase: s.phase, operator: s.operator || app.operator,
-    created_at: s.createdAt, manifest: s.manifest || {},
-    raw_paste: s.rawPaste || '', notes: s.notes || '',
-    completed: !!s.completed,
-    linked_prescan_id: s.linkedPrescanId || null,
-    updated_at: new Date().toISOString(),
+    id:s.id, name:s.name, phase:s.phase, operator:s.operator||app.operator,
+    created_at:s.createdAt, customer:s.customer||'',
+    manifest:s.manifest||{}, raw_paste:s.rawPaste||'', notes:s.notes||'',
+    rns_data:s.rnsData||{}, completed:!!s.completed,
+    linked_prescan_id:s.linkedPrescanId||null,
+    updated_at:new Date().toISOString(),
   };
 }
-async function pushSession(sess) {
+async function pushSession(sess){
   setSyncStatus('syncing');
-  const { error } = await sb.from('shipments').upsert(sessionToRow(sess));
-  setSyncStatus(error ? 'error' : 'online');
+  const {error}=await sb.from('shipments').upsert(sessionToRow(sess));
+  setSyncStatus(error?'error':'online');
 }
-async function deleteSessionRemote(id) {
+async function deleteSessionRemote(id){
   setSyncStatus('syncing');
-  const { error } = await sb.from('shipments').delete().eq('id', id);
-  setSyncStatus(error ? 'error' : 'online');
+  await sb.from('shipments').delete().eq('id',id);
+  setSyncStatus('online');
 }
-function mergeRow(row) {
-  const sess = rowToSession(row);
-  if (!app.sessions[sess.phase]) return false;
-  const existing = app.sessions[sess.phase][sess.id];
-  const remoteTs = new Date(row.updated_at).getTime();
-  if (!existing || remoteTs >= (existing._updatedAt || 0)) {
-    app.sessions[sess.phase][sess.id] = { ...sess, _updatedAt: remoteTs };
+function mergeRow(row){
+  const sess=rowToSession(row);
+  if(!app.sessions[sess.phase]) return false;
+  const existing=app.sessions[sess.phase][sess.id];
+  const remoteTs=new Date(row.updated_at).getTime();
+  if(!existing||remoteTs>=(existing._updatedAt||0)){
+    app.sessions[sess.phase][sess.id]={...sess,_updatedAt:remoteTs};
     return true;
   }
   return false;
 }
-async function syncFromSupabase() {
+async function syncFromSupabase(){
   setSyncStatus('syncing');
-  const { data, error } = await sb.from('shipments').select('*').order('created_at', { ascending: false });
-  if (error) { setSyncStatus('error'); return; }
-  let changed = false;
-  data.forEach(r => { if (mergeRow(r)) changed = true; });
-  if (changed) { saveLocal(); refreshDropdown('prescan'); refreshDropdown('cbsa'); }
+  const {data,error}=await sb.from('shipments').select('*').order('created_at',{ascending:false});
+  if(error){setSyncStatus('error');return;}
+  let changed=false;
+  data.forEach(r=>{if(mergeRow(r))changed=true;});
+  if(changed){saveLocal();refreshDropdown('prescan');refreshDropdown('cbsa');}
   setSyncStatus('online');
 }
-function subscribeRealtime() {
+function subscribeRealtime(){
   sb.channel('shipments-all')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shipments' }, ({ new: r }) => {
-      if (mergeRow(r)) { saveLocal(); onRemoteChange(rowToSession(r)); }
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'shipments'},({new:r})=>{if(mergeRow(r)){saveLocal();onRemoteChange(rowToSession(r));}})
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'shipments'},({new:r})=>{if(mergeRow(r)){saveLocal();onRemoteChange(rowToSession(r));}})
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'shipments'},({old:r})=>{
+      const phase=r.id?.startsWith('cbsa')?'cbsa':'prescan';
+      if(app.sessions[phase]?.[r.id]){delete app.sessions[phase][r.id];saveLocal();refreshDropdown(phase);if(document.getElementById(`${phase}-sel`).value===r.id)loadSession(phase,'');}
     })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'shipments' }, ({ new: r }) => {
-      if (mergeRow(r)) { saveLocal(); onRemoteChange(rowToSession(r)); }
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'shipments' }, ({ old: r }) => {
-      const phase = r.id?.startsWith('cbsa') ? 'cbsa' : 'prescan';
-      if (app.sessions[phase]?.[r.id]) {
-        delete app.sessions[phase][r.id];
-        saveLocal(); refreshDropdown(phase);
-        if (document.getElementById(`${phase}-sel`).value === r.id) loadSession(phase, '');
-      }
-    })
-    .subscribe(s => { if (s === 'SUBSCRIBED') setSyncStatus('online'); });
+    .subscribe(s=>{if(s==='SUBSCRIBED')setSyncStatus('online');});
 }
-function onRemoteChange(sess) {
-  const phase = sess.phase;
+function onRemoteChange(sess){
+  const phase=sess.phase;
   refreshDropdown(phase);
-  if (document.getElementById('tab-history').classList.contains('active')) renderCalendar();
-  const openId = document.getElementById(`${phase}-sel`).value;
-  if (openId !== sess.id) return;
-  // Update notes if not focused
-  const notesEl = document.getElementById(`${phase}-notes`);
-  if (document.activeElement !== notesEl) notesEl.value = sess.notes || '';
-  // Update paste if not focused
-  const ta = document.getElementById(`${phase}-paste`);
-  if (document.activeElement !== ta) { ta.value = sess.rawPaste || ''; processPaste(phase); }
-  // Update completed state
-  renderCompleteBar(phase, sess);
-  // Load manifest if now available
-  if (sess.manifest && !manifestCache[phase]) {
-    manifestCache[phase] = sess.manifest;
-    const total = Object.values(sess.manifest).reduce((a,c)=>a+c.length,0);
+  if(!document.getElementById('tab-history').classList.contains('active')||true) {} // always refresh cal if open
+  if(document.getElementById('phase-history').style.display!=='none') renderCalendar();
+  const openId=document.getElementById(`${phase}-sel`).value;
+  if(openId!==sess.id) return;
+  const notesEl=document.getElementById(`${phase}-notes`);
+  if(document.activeElement!==notesEl) notesEl.value=sess.notes||'';
+  const ta=document.getElementById(`${phase}-paste`);
+  if(document.activeElement!==ta){ta.value=sess.rawPaste||'';processPaste(phase);}
+  renderCompleteBar(phase,sess);
+  if(sess.manifest&&!manifestCache[phase]){
+    manifestCache[phase]=sess.manifest;
+    const total=Object.values(sess.manifest).reduce((a,c)=>a+c.length,0);
     setFileOK(`${phase}-decon-drop`,`${phase}-decon-fname`,`${sess.name} — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
     checkReady(phase);
   }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Operators (Supabase-synced)
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadOperatorsFromDB(){
+  const {data}=await sb.from('operators').select('name').order('name');
+  if(data) knownOperators=[...new Set([...data.map(r=>r.name),...knownOperators])];
+}
+async function addOperatorToDB(name){
+  if(knownOperators.includes(name)) return;
+  await sb.from('operators').upsert({name});
+  knownOperators.push(name);
+}
+async function deleteOperatorFromDB(name){
+  await sb.from('operators').delete().eq('name',name);
+  knownOperators=knownOperators.filter(n=>n!==name);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Presence
 // ─────────────────────────────────────────────────────────────────────────────
-async function joinPresence(phase, sessionId) {
-  if (presenceChannel) { await presenceChannel.unsubscribe(); presenceChannel = null; }
-  renderActiveUsers(phase, []);
-  if (!sessionId || !app.operator) return;
-  presenceChannel = sb.channel(`presence:${sessionId}`);
-  presenceChannel
-    .on('presence', { event: 'sync' }, () => {
-      const state = presenceChannel.presenceState();
-      const others = Object.values(state).flat().map(u => u.name).filter(n => n !== app.operator);
-      renderActiveUsers(phase, others);
-    })
-    .subscribe(async status => {
-      if (status === 'SUBSCRIBED') await presenceChannel.track({ name: app.operator });
-    });
+async function joinPresence(phase,sessionId){
+  if(presenceChannel){await presenceChannel.unsubscribe();presenceChannel=null;}
+  renderActiveUsers(phase,[]);
+  if(!sessionId||!app.operator) return;
+  presenceChannel=sb.channel(`presence:${sessionId}`);
+  presenceChannel.on('presence',{event:'sync'},()=>{
+    const state=presenceChannel.presenceState();
+    const others=Object.values(state).flat().map(u=>u.name).filter(n=>n!==app.operator);
+    renderActiveUsers(phase,others);
+  }).subscribe(async s=>{if(s==='SUBSCRIBED') await presenceChannel.track({name:app.operator});});
 }
-function renderActiveUsers(phase, users) {
-  const el = document.getElementById(`${phase}-users`);
-  if (!users.length) { el.innerHTML = ''; return; }
-  el.innerHTML = `<span class="active-users-label">Also viewing:</span>` +
-    users.map(u => `<span class="user-pill">${u}</span>`).join('');
+function renderActiveUsers(phase,users){
+  const el=document.getElementById(`${phase}-users`);
+  el.innerHTML=users.length?`<span class="active-users-label">Also viewing:</span>`+users.map(u=>`<span class="user-pill">${u}</span>`).join(''):'';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Operator / known users
+// Operator modal
 // ─────────────────────────────────────────────────────────────────────────────
-function init() {
-  if (!app.operator) {
+function init(){
+  if(!app.operator){
     showNameModal();
   } else {
     document.getElementById('nameModal').classList.add('hidden');
-    document.getElementById('operatorDisplay').textContent = app.operator;
-    syncFromSupabase().then(() => subscribeRealtime());
+    document.getElementById('operatorDisplay').textContent=app.operator;
+    startSync();
   }
   refreshDropdown('prescan');
   refreshDropdown('cbsa');
 }
-
-function showNameModal() {
-  const ops = loadOperators();
-  const knownWrap = document.getElementById('knownUsersWrap');
-  const newWrap   = document.getElementById('newUserWrap');
-  const prompt    = document.getElementById('newUserPrompt');
-  if (ops.length) {
-    const sel = document.getElementById('knownUserSel');
-    sel.innerHTML = '<option value="">— select your name —</option>' + ops.map(o=>`<option value="${o}">${o}</option>`).join('');
-    sel.value = app.operator || '';
-    knownWrap.style.display = '';
-    newWrap.style.display = '';
-    prompt.textContent = 'Or type a new name:';
+async function startSync(){
+  await loadOperatorsFromDB();
+  await syncFromSupabase();
+  subscribeRealtime();
+}
+function showNameModal(){
+  const wrap=document.getElementById('knownUsersWrap');
+  const nwrap=document.getElementById('newUserWrap');
+  const prompt=document.getElementById('newUserPrompt');
+  if(knownOperators.length){
+    const sel=document.getElementById('knownUserSel');
+    sel.innerHTML='<option value="">— select your name —</option>'+knownOperators.map(o=>`<option value="${o}">${o}</option>`).join('');
+    sel.value=app.operator||'';
+    wrap.style.display='';
+    prompt.textContent='Or type a new name:';
   } else {
-    knownWrap.style.display = 'none';
-    newWrap.style.display = '';
-    prompt.textContent = 'Enter your name — it appears on all exports and records.';
+    wrap.style.display='none';
+    prompt.textContent='Enter your name — it appears on all exports and records.';
   }
-  document.getElementById('nameInput').value = '';
+  document.getElementById('nameInput').value='';
   document.getElementById('nameModal').classList.remove('hidden');
 }
-
-function onKnownUserPick(val) {
-  if (val) document.getElementById('nameInput').value = '';
-}
-
-function saveOperator() {
-  const fromList = document.getElementById('knownUserSel').value;
-  const typed    = document.getElementById('nameInput').value.trim();
-  const name     = typed || fromList;
-  if (!name) return;
-  // Add to known operators list
-  const ops = loadOperators();
-  if (!ops.includes(name)) { ops.push(name); saveOperators(ops); }
-  app.operator = name;
-  saveLocal();
-  document.getElementById('operatorDisplay').textContent = name;
+function onKnownUserPick(val){if(val) document.getElementById('nameInput').value='';}
+async function saveOperator(){
+  const fromList=document.getElementById('knownUserSel').value;
+  const typed=document.getElementById('nameInput').value.trim();
+  const name=typed||fromList;
+  if(!name) return;
+  await addOperatorToDB(name);
+  app.operator=name; saveLocal();
+  document.getElementById('operatorDisplay').textContent=name;
   document.getElementById('nameModal').classList.add('hidden');
-  syncFromSupabase().then(() => subscribeRealtime());
+  startSync();
 }
-document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key==='Enter') saveOperator(); });
+document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')saveOperator();});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase switching
 // ─────────────────────────────────────────────────────────────────────────────
-function switchPhase(phase) {
-  ['prescan','cbsa','history'].forEach(p => {
-    document.getElementById(`phase-${p}`).style.display = p===phase?'':'none';
-    document.getElementById(`tab-${p}`).classList.toggle('active', p===phase);
+function switchPhase(phase){
+  ['prescan','cbsa','history'].forEach(p=>{
+    document.getElementById(`phase-${p}`).style.display=p===phase?'':'none';
+    document.getElementById(`tab-${p}`).classList.toggle('active',p===phase);
   });
-  if (phase==='history') renderCalendar();
-  if (phase==='cbsa')    refreshLinkDropdown();
+  if(phase==='history'){renderCustomerFilters();renderCalendar();}
+  if(phase==='cbsa') refreshLinkDropdown();
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// New session modal
+// ─────────────────────────────────────────────────────────────────────────────
+function openNewSessModal(phase){
+  pendingNewSessPhase=phase;
+  document.getElementById('newSessTitle').textContent=phase==='prescan'?'New Phase 1 Session':'New Phase 2 Session';
+  document.getElementById('newSessName').value='';
+  document.getElementById('newSessCustomer').value='';
+  const linkWrap=document.getElementById('newSessLinkWrap');
+  if(phase==='cbsa'){
+    const prescanSessions=Object.values(app.sessions.prescan).filter(s=>s.manifest).sort((a,b)=>b.createdAt-a.createdAt);
+    if(prescanSessions.length){
+      const sel=document.getElementById('newSessLink');
+      sel.innerHTML='<option value="">— none —</option>'+prescanSessions.map(s=>`<option value="${s.id}">${s.name}${s.customer?' ('+s.customer+')':''}</option>`).join('');
+      // Pre-select most recent Phase 1
+      sel.value=prescanSessions[0].id;
+      onNewSessLinkPick(prescanSessions[0].id);
+      linkWrap.style.display='';
+    } else {linkWrap.style.display='none';}
+  } else {linkWrap.style.display='none';}
+  document.getElementById('newSessionModal').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('newSessName').focus(),50);
+}
+function onNewSessLinkPick(id){
+  if(!id) return;
+  const ps=app.sessions.prescan[id];
+  if(ps){
+    if(!document.getElementById('newSessName').value) document.getElementById('newSessName').value=ps.name;
+    if(!document.getElementById('newSessCustomer').value) document.getElementById('newSessCustomer').value=ps.customer||'';
+  }
+}
+function closeNewSessModal(){document.getElementById('newSessionModal').classList.add('hidden');}
+async function confirmNewSession(){
+  const name=document.getElementById('newSessName').value.trim();
+  const customer=document.getElementById('newSessCustomer').value.trim();
+  if(!name){alert('Session name is required.');return;}
+  const phase=pendingNewSessPhase;
+  const id=`${phase}_${Date.now()}`;
+  let linkedId=null;
+  if(phase==='cbsa'){
+    const pick=document.getElementById('newSessLink').value;
+    if(pick) linkedId=pick;
+  }
+  const sess={id,name,phase,operator:app.operator,customer,createdAt:Date.now(),rawPaste:'',notes:'',manifest:null,rnsData:{},completed:false,linkedPrescanId:linkedId};
+  app.sessions[phase][id]=sess; saveLocal();
+  await pushSession(sess);
+  closeNewSessModal();
+  refreshDropdown(phase);
+  document.getElementById(`${phase}-sel`).value=id;
+  loadSession(phase,id);
+}
+document.getElementById('newSessName').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('newSessCustomer').focus();});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sessions
 // ─────────────────────────────────────────────────────────────────────────────
-function refreshDropdown(phase) {
-  const sel = document.getElementById(`${phase}-sel`);
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">— select or create a session —</option>';
-  Object.values(app.sessions[phase])
-    .sort((a,b) => b.createdAt - a.createdAt)
-    .forEach(s => {
-      const o = document.createElement('option');
-      o.value = s.id;
-      const other = s.operator && s.operator !== app.operator;
-      o.textContent = other ? `${s.name} (${s.operator})` : s.name;
-      if (s.completed) o.textContent += ' ✓';
-      sel.appendChild(o);
-    });
-  if (cur && app.sessions[phase][cur]) sel.value = cur;
+function refreshDropdown(phase){
+  const sel=document.getElementById(`${phase}-sel`), cur=sel.value;
+  sel.innerHTML='<option value="">— select or create a session —</option>';
+  Object.values(app.sessions[phase]).sort((a,b)=>b.createdAt-a.createdAt).forEach(s=>{
+    const o=document.createElement('option'); o.value=s.id;
+    const other=s.operator&&s.operator!==app.operator;
+    o.textContent=(other?`${s.name} (${s.operator})`:s.name)+(s.customer?` · ${s.customer}':'')+(s.completed?' ✓':'');
+    sel.appendChild(o);
+  });
+  if(cur&&app.sessions[phase][cur]) sel.value=cur;
 }
-
-function refreshLinkDropdown() {
-  const sel = document.getElementById('cbsa-link-sel');
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">— pick a Phase 1 session to load its decon —</option>';
-  Object.values(app.sessions.prescan)
-    .filter(s => s.manifest)
-    .sort((a,b) => b.createdAt - a.createdAt)
-    .forEach(s => {
-      const o = document.createElement('option');
-      o.value = s.id;
-      const other = s.operator && s.operator !== app.operator;
-      o.textContent = other ? `${s.name} (${s.operator})` : s.name;
-      sel.appendChild(o);
-    });
-  if (cur) sel.value = cur;
+function refreshLinkDropdown(){
+  const sel=document.getElementById('cbsa-link-sel'), cur=sel.value;
+  sel.innerHTML='<option value="">— pick a Phase 1 session —</option>';
+  Object.values(app.sessions.prescan).filter(s=>s.manifest).sort((a,b)=>b.createdAt-a.createdAt).forEach(s=>{
+    const o=document.createElement('option'); o.value=s.id;
+    const other=s.operator&&s.operator!==app.operator;
+    o.textContent=other?`${s.name} (${s.operator})`:s.name;
+    if(s.customer) o.textContent+=` · ${s.customer}`;
+    sel.appendChild(o);
+  });
+  if(cur) sel.value=cur;
 }
-
-async function newSession(phase) {
-  if (phase === 'cbsa') {
-    // Offer to link Phase 1 and inherit name
-    const prescanSessions = Object.values(app.sessions.prescan).filter(s => s.manifest).sort((a,b)=>b.createdAt-a.createdAt);
-    let linkedId = null, defaultName = '';
-    if (prescanSessions.length) {
-      const options = prescanSessions.map((s,i) => `${i+1}. ${s.name}`).join('\n');
-      const pick = prompt(`Link a Phase 1 session? Enter number (or leave blank to skip):\n\n${options}`);
-      if (pick !== null) {
-        const idx = parseInt(pick) - 1;
-        if (!isNaN(idx) && prescanSessions[idx]) {
-          linkedId    = prescanSessions[idx].id;
-          defaultName = prescanSessions[idx].name;
-        }
-      }
-    }
-    const name = prompt('Session name:', defaultName || `CBSA-${new Date().toISOString().slice(0,10)}`);
-    if (!name?.trim()) return;
-    const id   = `cbsa_${Date.now()}`;
-    const sess = { id, name: name.trim(), phase: 'cbsa', operator: app.operator, createdAt: Date.now(), rawPaste: '', notes: '', manifest: null, completed: false, linkedPrescanId: linkedId };
-    app.sessions.cbsa[id] = sess;
-    saveLocal();
-    await pushSession(sess);
-    refreshDropdown('cbsa');
-    document.getElementById('cbsa-sel').value = id;
-    loadSession('cbsa', id);
-    return;
-  }
-  const name = prompt('Session name (e.g. "YYZ-2026-06-23 AM"):');
-  if (!name?.trim()) return;
-  const id   = `prescan_${Date.now()}`;
-  const sess = { id, name: name.trim(), phase: 'prescan', operator: app.operator, createdAt: Date.now(), rawPaste: '', notes: '', manifest: null, completed: false, linkedPrescanId: null };
-  app.sessions.prescan[id] = sess;
-  saveLocal();
-  await pushSession(sess);
-  refreshDropdown('prescan');
-  document.getElementById('prescan-sel').value = id;
-  loadSession('prescan', id);
-}
-
-function loadSession(phase, id) {
-  const ws = document.getElementById(`${phase}-ws`);
-  if (!id) {
-    ws.style.display = 'none';
-    joinPresence(phase, null);
-    renderActiveUsers(phase, []);
-    return;
-  }
-  ws.style.display = '';
-  manifestCache[phase] = null;
-  if (phase==='cbsa') rt.cbsa.rns = null;
+function loadSession(phase,id){
+  const ws=document.getElementById(`${phase}-ws`);
+  if(!id){ws.style.display='none';joinPresence(phase,null);renderActiveUsers(phase,[]);return;}
+  ws.style.display='';
+  manifestCache[phase]=null;
+  if(phase==='cbsa') rt.cbsa.rns=null;
   resetFileUI(phase);
-  document.getElementById(`${phase}-paste-card`).style.display   = 'none';
-  document.getElementById(`${phase}-notes-card`).style.display   = 'none';
-  document.getElementById(`${phase}-results`).style.display      = 'none';
-  document.getElementById(`${phase}-complete-bar`).style.display = 'none';
-
-  const sess = app.sessions[phase][id];
-  document.getElementById(`${phase}-paste`).value = sess.rawPaste || '';
-  document.getElementById(`${phase}-notes`).value = sess.notes    || '';
-
-  if (sess.manifest) {
-    manifestCache[phase] = sess.manifest;
-    const total = Object.values(sess.manifest).reduce((a,c)=>a+c.length,0);
+  document.getElementById(`${phase}-paste-card`).style.display='none';
+  document.getElementById(`${phase}-notes-card`).style.display='none';
+  document.getElementById(`${phase}-results`).style.display='none';
+  document.getElementById(`${phase}-complete-bar`).style.display='none';
+  const sess=app.sessions[phase][id];
+  document.getElementById(`${phase}-paste`).value=sess.rawPaste||'';
+  document.getElementById(`${phase}-notes`).value=sess.notes||'';
+  if(sess.manifest){
+    manifestCache[phase]=sess.manifest;
+    const total=Object.values(sess.manifest).reduce((a,c)=>a+c.length,0);
     setFileOK(`${phase}-decon-drop`,`${phase}-decon-fname`,`${sess.name} — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
     checkReady(phase);
   }
-
-  if (phase==='cbsa') {
+  if(phase==='cbsa'){
     refreshLinkDropdown();
-    document.getElementById('cbsa-link-sel').value = sess.linkedPrescanId || '';
-    if (sess.linkedPrescanId) linkPrescan(sess.linkedPrescanId, true);
+    document.getElementById('cbsa-link-sel').value=sess.linkedPrescanId||'';
+    if(sess.linkedPrescanId) linkPrescan(sess.linkedPrescanId,true);
   }
-
-  renderCompleteBar(phase, sess);
-  joinPresence(phase, id);
+  renderCompleteBar(phase,sess);
+  joinPresence(phase,id);
 }
-
-async function deleteSession(phase) {
-  const id = document.getElementById(`${phase}-sel`).value;
-  if (!id) return;
-  const sess = app.sessions[phase][id];
-  if (!confirm(`Delete session "${sess.name}"? This cannot be undone.`)) return;
-  delete app.sessions[phase][id];
-  saveLocal();
+async function deleteSession(phase){
+  const id=document.getElementById(`${phase}-sel`).value; if(!id) return;
+  const sess=app.sessions[phase][id];
+  if(!confirm(`Delete session "${sess.name}"? This cannot be undone.`)) return;
+  delete app.sessions[phase][id]; saveLocal();
   await deleteSessionRemote(id);
-  refreshDropdown(phase);
-  loadSession(phase, '');
+  refreshDropdown(phase); loadSession(phase,'');
 }
-
-function currentSession(phase) {
-  const id = document.getElementById(`${phase}-sel`).value;
-  return id ? app.sessions[phase][id] : null;
+function currentSession(phase){
+  const id=document.getElementById(`${phase}-sel`).value;
+  return id?app.sessions[phase][id]:null;
 }
-
-function resetFileUI(phase) {
-  document.getElementById(`${phase}-decon-drop`).className = 'file-drop';
-  const fn = document.getElementById(`${phase}-decon-fname`);
-  fn.textContent = phase==='cbsa' ? 'No file selected — or link Phase 1 above' : 'No file selected';
-  fn.className = 'fname';
-  if (phase==='cbsa') {
-    document.getElementById('cbsa-rns-drop').className   = 'file-drop';
-    document.getElementById('cbsa-rns-fname').textContent = 'No file selected';
-    document.getElementById('cbsa-rns-fname').className  = 'fname';
-  }
+function resetFileUI(phase){
+  document.getElementById(`${phase}-decon-drop`).className='file-drop';
+  const fn=document.getElementById(`${phase}-decon-fname`);
+  fn.textContent=phase==='cbsa'?'No file selected — or link Phase 1 above':'No file selected'; fn.className='fname';
+  if(phase==='cbsa'){document.getElementById('cbsa-rns-drop').className='file-drop';document.getElementById('cbsa-rns-fname').textContent='No file selected';document.getElementById('cbsa-rns-fname').className='fname';}
 }
-
-function linkPrescan(prescanId, silent=false) {
-  const sess = currentSession('cbsa');
-  if (!sess) return;
-  if (!prescanId) {
-    sess.linkedPrescanId = null; manifestCache.cbsa = sess.manifest || null;
-    saveLocal(); pushSession(sess); checkReady('cbsa'); return;
-  }
-  const prescan = app.sessions.prescan[prescanId];
-  if (!prescan?.manifest) {
-    if (!silent) alert('That Phase 1 session has no manifest yet — upload the decon file in Phase 1 first.');
-    return;
-  }
-  sess.linkedPrescanId = prescanId; manifestCache.cbsa = prescan.manifest;
-  saveLocal(); pushSession(sess);
-  const total = Object.values(prescan.manifest).reduce((a,c)=>a+c.length,0);
+function linkPrescan(prescanId,silent=false){
+  const sess=currentSession('cbsa'); if(!sess) return;
+  if(!prescanId){sess.linkedPrescanId=null;manifestCache.cbsa=sess.manifest||null;saveLocal();pushSession(sess);checkReady('cbsa');return;}
+  const prescan=app.sessions.prescan[prescanId];
+  if(!prescan?.manifest){if(!silent)alert('That Phase 1 session has no manifest yet.');return;}
+  sess.linkedPrescanId=prescanId; manifestCache.cbsa=prescan.manifest; saveLocal(); pushSession(sess);
+  const total=Object.values(prescan.manifest).reduce((a,c)=>a+c.length,0);
   setFileOK('cbsa-decon-drop','cbsa-decon-fname',`Linked from "${prescan.name}" — ${Object.keys(prescan.manifest).length} MAWBs, ${total} HAWBs`);
   checkReady('cbsa');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Complete
+// Complete bar
 // ─────────────────────────────────────────────────────────────────────────────
-function renderCompleteBar(phase, sess) {
-  const bar   = document.getElementById(`${phase}-complete-bar`);
-  const inner = document.getElementById(`${phase}-complete-inner`);
-  if (!manifestCache[phase]) { bar.style.display='none'; return; }
-  bar.style.display = '';
-  if (sess.completed) {
-    inner.className = 'complete-bar done';
-    inner.innerHTML = `<p class="done-label">✓ Session marked complete by ${sess.operator || 'operator'}</p>`;
+function renderCompleteBar(phase,sess){
+  const bar=document.getElementById(`${phase}-complete-bar`);
+  const inner=document.getElementById(`${phase}-complete-inner`);
+  if(!manifestCache[phase]){bar.style.display='none';return;}
+  bar.style.display='';
+  if(sess.completed){
+    inner.className='complete-bar done';
+    inner.innerHTML=`<p class="done-label">✓ Session marked complete by ${sess.operator||'operator'}</p>`;
   } else {
-    inner.className = 'complete-bar';
-    inner.innerHTML = `<p>${phase==='prescan'?'All scans accounted for?':'Processing done?'} Mark this session as complete.</p>
-      <button class="btn btn-success" onclick="markComplete('${phase}')">✓ Mark Complete</button>`;
+    inner.className='complete-bar';
+    inner.innerHTML=`<p>${phase==='prescan'?'All scans accounted for?':'Processing done?'} Mark this session as complete.</p><button class="btn btn-success" onclick="markComplete('${phase}')">✓ Mark Complete</button>`;
   }
 }
-
-async function markComplete(phase) {
-  const sess = currentSession(phase);
-  if (!sess) return;
-  const exportFirst = confirm('Save an Excel export before marking this session complete?\n\nClick OK to export then complete, Cancel to complete without exporting.');
-  if (exportFirst) exportExcel(phase);
-  sess.completed = true;
-  saveLocal();
-  await pushSession(sess);
-  refreshDropdown(phase);
-  renderCompleteBar(phase, sess);
+async function markComplete(phase){
+  const sess=currentSession(phase); if(!sess) return;
+  if(confirm('Save an Excel export before marking this session complete?\n\nOK = Export then complete   Cancel = Complete only')) exportExcel(phase);
+  sess.completed=true; saveLocal(); await pushSession(sess); refreshDropdown(phase); renderCompleteBar(phase,sess);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // norm
 // ─────────────────────────────────────────────────────────────────────────────
-function norm(v) { return String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function norm(v){return String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // File parsing
 // ─────────────────────────────────────────────────────────────────────────────
-function readWorkbook(file) {
-  return new Promise((res,rej) => {
-    const r = new FileReader();
-    r.onload = e => { try { const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'}); res(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''})); } catch(err){rej(err);} };
-    r.onerror = rej; r.readAsArrayBuffer(file);
+function readWorkbook(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});res(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}));}catch(err){rej(err);}};
+    r.onerror=rej; r.readAsArrayBuffer(file);
   });
 }
-function buildManifest(rows) {
-  if (!rows.length) return null;
-  const keys   = Object.keys(rows[0]);
-  const ccnCol = keys.find(k=>/ccn|cargo.?control/i.test(k));
-  const trkCol = keys.find(k=>/reference|tracking|hawb/i.test(k));
-  const ctnCol = keys.find(k=>/carton|box/i.test(k));
-  if (!ccnCol||!trkCol) return null;
+function buildManifest(rows){
+  if(!rows.length) return null;
+  const keys=Object.keys(rows[0]);
+  const ccnCol=keys.find(k=>/ccn|cargo.?control/i.test(k));
+  const trkCol=keys.find(k=>/reference|tracking|hawb/i.test(k));
+  const ctnCol=keys.find(k=>/carton|box/i.test(k));
+  if(!ccnCol||!trkCol) return null;
   const map={};
-  rows.forEach(r=>{ const ccn=norm(r[ccnCol]),trk=norm(r[trkCol]); if(!ccn||!trk)return; if(!map[ccn])map[ccn]=[]; map[ccn].push({ccn,tracking:trk,carton:String(r[ctnCol]??'')}); });
+  rows.forEach(r=>{const ccn=norm(r[ccnCol]),trk=norm(r[trkCol]);if(!ccn||!trk)return;if(!map[ccn])map[ccn]=[];map[ccn].push({ccn,tracking:trk,carton:String(r[ctnCol]??'')});});
   return Object.keys(map).length?map:null;
 }
-function buildRNS(rows) {
-  if (!rows.length) return null;
-  const keys      = Object.keys(rows[0]);
-  const ccnCol    = keys.find(k=>/cargo.?control|ccn/i.test(k));
-  const statusCol = keys.find(k=>/status/i.test(k));
-  if (!ccnCol||!statusCol) return null;
+function buildRNS(rows){
+  if(!rows.length) return null;
+  const keys=Object.keys(rows[0]);
+  const ccnCol=keys.find(k=>/cargo.?control|ccn/i.test(k));
+  const statusCol=keys.find(k=>/status/i.test(k));
+  if(!ccnCol||!statusCol) return null;
   const map={};
-  rows.forEach(r=>{ const ccn=norm(r[ccnCol]); if(ccn) map[ccn]=String(r[statusCol]??'').trim(); });
+  rows.forEach(r=>{const ccn=norm(r[ccnCol]);if(ccn)map[ccn]=String(r[statusCol]??'').trim();});
   return Object.keys(map).length?map:null;
 }
-async function loadDecon(phase, input) {
-  const file=input.files[0]; if(!file)return; input.value='';
-  try {
-    const rows=await readWorkbook(file), manifest=buildManifest(rows);
+async function loadDecon(phase,input){
+  const file=input.files[0];if(!file)return;input.value='';
+  try{
+    const rows=await readWorkbook(file),manifest=buildManifest(rows);
     if(!manifest){alert('Could not detect CCN / Reference columns.');return;}
     const sess=currentSession(phase);
     if(sess){sess.manifest=manifest;saveLocal();pushSession(sess);}
@@ -847,52 +999,49 @@ async function loadDecon(phase, input) {
     const total=Object.values(manifest).reduce((a,c)=>a+c.length,0);
     setFileOK(`${phase}-decon-drop`,`${phase}-decon-fname`,`${file.name} — ${Object.keys(manifest).length} MAWBs, ${total} HAWBs`);
     checkReady(phase);
-  } catch(e){alert('Error reading file: '+e.message);}
+  }catch(e){alert('Error reading file: '+e.message);}
 }
-async function loadRNS(input) {
-  const file=input.files[0]; if(!file)return; input.value='';
-  try {
-    const rows=await readWorkbook(file), rns=buildRNS(rows);
-    if(!rns){alert('Could not detect Cargo Control Number / Status columns.');return;}
+async function loadRNS(input){
+  const file=input.files[0];if(!file)return;input.value='';
+  try{
+    const rows=await readWorkbook(file),rns=buildRNS(rows);
+    if(!rns){alert('Could not detect CCN / Status columns.');return;}
     rt.cbsa.rns=rns;
+    // Persist RNS data in session for historical reporting
+    const sess=currentSession('cbsa');
+    if(sess){sess.rnsData=rns;saveLocal();pushSession(sess);}
     setFileOK('cbsa-rns-drop','cbsa-rns-fname',`${file.name} — ${Object.keys(rns).length} CCNs`);
     checkReady('cbsa');
-  } catch(e){alert('Error reading RNS file: '+e.message);}
+  }catch(e){alert('Error reading RNS file: '+e.message);}
 }
 function setFileOK(dropId,fnameId,text){
   document.getElementById(dropId).className='file-drop loaded';
-  const el=document.getElementById(fnameId); el.textContent='✓ '+text; el.className='fname ok';
+  const el=document.getElementById(fnameId);el.textContent='✓ '+text;el.className='fname ok';
 }
-function checkReady(phase) {
-  const ready = phase==='prescan' ? !!manifestCache.prescan : !!(manifestCache.cbsa&&rt.cbsa.rns);
-  document.getElementById(`${phase}-paste-card`).style.display = ready?'':'none';
-  document.getElementById(`${phase}-notes-card`).style.display = ready?'':'none';
-  const sess = currentSession(phase);
-  if (sess) renderCompleteBar(phase, sess);
-  if (ready) processPaste(phase);
+function checkReady(phase){
+  const ready=phase==='prescan'?!!manifestCache.prescan:!!(manifestCache.cbsa&&rt.cbsa.rns);
+  document.getElementById(`${phase}-paste-card`).style.display=ready?'':'none';
+  document.getElementById(`${phase}-notes-card`).style.display=ready?'':'none';
+  const sess=currentSession(phase);if(sess)renderCompleteBar(phase,sess);
+  if(ready)processPaste(phase);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Paste & Notes — debounced push
+// Paste & Notes
 // ─────────────────────────────────────────────────────────────────────────────
-function onPasteInput(phase) {
+function onPasteInput(phase){
   processPaste(phase);
   clearTimeout(pasteDebounce[phase]);
-  pasteDebounce[phase] = setTimeout(() => { const s=currentSession(phase); if(s) pushSession(s); }, 600);
+  pasteDebounce[phase]=setTimeout(()=>{const s=currentSession(phase);if(s)pushSession(s);},600);
 }
-function onNotesInput(phase) {
-  const sess=currentSession(phase); if(!sess)return;
-  sess.notes = document.getElementById(`${phase}-notes`).value;
-  saveLocal();
+function onNotesInput(phase){
+  const sess=currentSession(phase);if(!sess)return;
+  sess.notes=document.getElementById(`${phase}-notes`).value; saveLocal();
   clearTimeout(notesDebounce[phase]);
-  notesDebounce[phase] = setTimeout(() => pushSession(sess), 800);
+  notesDebounce[phase]=setTimeout(()=>pushSession(sess),800);
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Paste processing
-// ─────────────────────────────────────────────────────────────────────────────
-function processPaste(phase) {
-  const sess=currentSession(phase), manifest=manifestCache[phase];
+function processPaste(phase){
+  const sess=currentSession(phase),manifest=manifestCache[phase];
   if(!sess||!manifest)return;
   const raw=document.getElementById(`${phase}-paste`).value;
   sess.rawPaste=raw; saveLocal();
@@ -901,140 +1050,155 @@ function processPaste(phase) {
   const results=Object.entries(manifest).map(([ccn,hawbs])=>{
     const rows=hawbs.map(h=>{
       const hit=scanned.has(h.tracking)||scanned.has(h.ccn);
-      let status=hit?'scanned':'missing', rnsLabel='';
+      let status=hit?'scanned':'missing',rnsLabel='';
       if(phase==='cbsa'&&hit&&rt.cbsa.rns){
-        const s=rt.cbsa.rns[h.ccn]||rt.cbsa.rns[ccn]||''; rnsLabel=s;
-        if(s&&s.toLowerCase()!=='released') status=/exam/i.test(s)?'exam':'hold';
+        const s=rt.cbsa.rns[h.ccn]||rt.cbsa.rns[ccn]||'';rnsLabel=s;
+        if(s&&s.toLowerCase()!=='released')status=/exam/i.test(s)?'exam':'hold';
       }
       return {...h,status,rnsLabel};
     });
     return {ccn,rows,scannedCount:rows.filter(r=>r.status!=='missing').length,total:rows.length,flagCount:rows.filter(r=>r.status==='exam'||r.status==='hold').length};
   });
-  renderResults(phase, results);
+  renderResults(phase,results);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Render results
 // ─────────────────────────────────────────────────────────────────────────────
-function renderResults(phase, results) {
+function renderResults(phase,results){
   document.getElementById(`${phase}-results`).style.display='';
   const totalHawbs=results.reduce((a,c)=>a+c.total,0);
   const totalScanned=results.reduce((a,c)=>a+c.scannedCount,0);
   const totalFlagged=results.reduce((a,c)=>a+c.flagCount,0);
   const pct=totalHawbs?Math.round(totalScanned/totalHawbs*100):0;
-  let statsHTML=`
-    <div class="stat"><div class="stat-val">${results.length}</div><div class="stat-label">MAWBs</div></div>
+  let stats=`<div class="stat"><div class="stat-val">${results.length}</div><div class="stat-label">MAWBs</div></div>
     <div class="stat"><div class="stat-val">${totalHawbs}</div><div class="stat-label">Total HAWBs</div></div>
     <div class="stat"><div class="stat-val green">${totalScanned}</div><div class="stat-label">Scanned</div></div>
     <div class="stat"><div class="stat-val red">${totalHawbs-totalScanned}</div><div class="stat-label">Missing</div></div>`;
-  if(phase==='cbsa') statsHTML+=`<div class="stat"><div class="stat-val amber">${totalFlagged}</div><div class="stat-label">Flagged</div></div>`;
-  document.getElementById(`${phase}-stats`).innerHTML=statsHTML;
+  if(phase==='cbsa')stats+=`<div class="stat"><div class="stat-val amber">${totalFlagged}</div><div class="stat-label">Flagged</div></div>`;
+  document.getElementById(`${phase}-stats`).innerHTML=stats;
   document.getElementById(`${phase}-prog`).style.width=pct+'%';
   document.getElementById(`${phase}-prog-label`).textContent=`${pct}% scanned (${totalScanned} of ${totalHawbs})`;
   const f=filters[phase];
   let visible=results;
-  if(f==='incomplete') visible=results.filter(r=>r.scannedCount<r.total);
-  if(f==='complete')   visible=results.filter(r=>r.scannedCount===r.total&&r.total>0);
-  if(f==='flagged')    visible=results.filter(r=>r.flagCount>0);
+  if(f==='incomplete')visible=results.filter(r=>r.scannedCount<r.total);
+  if(f==='complete')  visible=results.filter(r=>r.scannedCount===r.total&&r.total>0);
+  if(f==='flagged')   visible=results.filter(r=>r.flagCount>0);
   const listEl=document.getElementById(`${phase}-list`);
   if(!visible.length){listEl.innerHTML='<div class="empty"><div class="icon">—</div><p>No MAWBs match this filter.</p></div>';return;}
   listEl.innerHTML=visible.map(({ccn,rows,scannedCount,total,flagCount})=>{
     const complete=scannedCount===total&&total>0,empty=scannedCount===0;
-    const badgeClass=complete?'badge-complete':empty?'badge-empty':'badge-partial';
-    const flagBadge=flagCount?`<span class="badge badge-flagged">⚠ ${flagCount} flagged</span>`:'';
-    const hawbRows=rows.map(r=>{
+    const bc=complete?'badge-complete':empty?'badge-empty':'badge-partial';
+    const fb=flagCount?`<span class="badge badge-flagged">⚠ ${flagCount} flagged</span>`:'';
+    const hr=rows.map(r=>{
       const lbl={scanned:'✓ Scanned',missing:'✗ Missing',exam:'⚠ Exam Required',hold:'⚠ '+(r.rnsLabel||'Not Released')}[r.status]||r.status;
       const cls={scanned:'s-scanned',missing:'s-missing',exam:'s-exam',hold:'s-hold'}[r.status]||'';
       return `<div class="hawb-row"><div class="hawb-left"><div class="hawb-tracking">${r.tracking}</div>${r.carton?`<div class="hawb-carton">Carton ${r.carton}</div>`:''}</div><div class="hawb-status ${cls}">${lbl}</div></div>`;
     }).join('');
-    return `<div class="ccn-card"><div class="ccn-header" onclick="toggleCard(this)"><div><div class="ccn-id">${ccn}</div><div class="ccn-meta">${total} HAWB${total!==1?'s':''}</div></div><div class="ccn-right">${flagBadge}<span class="badge ${badgeClass}">${scannedCount}/${total}</span></div></div><div class="ccn-body">${hawbRows}</div></div>`;
+    return `<div class="ccn-card"><div class="ccn-header" onclick="toggleCard(this)"><div><div class="ccn-id">${ccn}</div><div class="ccn-meta">${total} HAWB${total!==1?'s':''}</div></div><div class="ccn-right">${fb}<span class="badge ${bc}">${scannedCount}/${total}</span></div></div><div class="ccn-body">${hr}</div></div>`;
   }).join('');
 }
 function toggleCard(h){h.nextElementSibling.classList.toggle('open');}
 function setFilter(phase,f,btn){
   filters[phase]=f;
   document.querySelectorAll(`#${phase}-filters .filter-btn`).forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); processPaste(phase);
+  btn.classList.add('active');processPaste(phase);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Export Excel (single session)
+// Export Excel
 // ─────────────────────────────────────────────────────────────────────────────
-function exportExcel(phase, sess, manifest) {
-  sess     = sess     || currentSession(phase);
-  manifest = manifest || manifestCache[phase];
+function exportExcel(phase,sess,manifest){
+  sess=sess||currentSession(phase); manifest=manifest||manifestCache[phase];
   if(!sess||!manifest){alert('Upload files and paste scans before exporting.');return;}
-  const raw=document.getElementById(`${phase}-paste`)?.value || sess.rawPaste || '';
+  const raw=(document.getElementById(`${phase}-paste`)?.value)||sess.rawPaste||'';
   const tokens=raw.split(/[\s,;\n\r]+/).map(norm).filter(Boolean);
   const scanned=new Set(tokens);
-  const wb=XLSX.utils.book_new(), date=new Date().toISOString().slice(0,10);
+  const wb=XLSX.utils.book_new(),date=new Date().toISOString().slice(0,10);
   const sumHdr=['MAWB / CCN','Total HAWBs','Scanned','Missing'];
-  if(phase==='cbsa') sumHdr.push('Flagged','RNS Status');
+  if(phase==='cbsa')sumHdr.push('Flagged','RNS Status');
   const sumRows=[sumHdr];
   Object.entries(manifest).forEach(([ccn,hawbs])=>{
     const sc=hawbs.filter(h=>scanned.has(h.tracking)||scanned.has(h.ccn)).length;
     const row=[ccn,hawbs.length,sc,hawbs.length-sc];
     if(phase==='cbsa'){
-      const fl=hawbs.filter(h=>{if(!(scanned.has(h.tracking)||scanned.has(h.ccn)))return false;const s=rt.cbsa.rns?.[h.ccn]||rt.cbsa.rns?.[ccn]||'';return s&&s.toLowerCase()!=='released';}).length;
-      row.push(fl,rt.cbsa.rns?.[ccn]||'');
+      const rns=sess.rnsData||rt.cbsa.rns||{};
+      const fl=hawbs.filter(h=>{if(!(scanned.has(h.tracking)||scanned.has(h.ccn)))return false;const s=rns[h.ccn]||rns[ccn]||'';return s&&s.toLowerCase()!=='released';}).length;
+      row.push(fl,rns[ccn]||'');
     }
     sumRows.push(row);
   });
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows),'Summary');
   const detHdr=['MAWB / CCN','Carton','Tracking ID','Scan Status'];
-  if(phase==='cbsa') detHdr.push('CBSA Status');
+  if(phase==='cbsa')detHdr.push('CBSA Status');
   const detRows=[detHdr];
   Object.entries(manifest).forEach(([ccn,hawbs])=>{
     hawbs.forEach(h=>{
       const hit=scanned.has(h.tracking)||scanned.has(h.ccn);
-      const cbsaStatus=phase==='cbsa'?(rt.cbsa.rns?.[h.ccn]||rt.cbsa.rns?.[ccn]||''):'';
+      const rns=sess.rnsData||rt.cbsa.rns||{};
+      const cbsaStatus=phase==='cbsa'?(rns[h.ccn]||rns[ccn]||''):'';
       let scanStatus=hit?'Scanned':'Missing';
-      if(phase==='cbsa'&&hit&&cbsaStatus&&cbsaStatus.toLowerCase()!=='released') scanStatus='Flagged';
-      const row=[ccn,h.carton,h.tracking,scanStatus]; if(phase==='cbsa') row.push(cbsaStatus); detRows.push(row);
+      if(phase==='cbsa'&&hit&&cbsaStatus&&cbsaStatus.toLowerCase()!=='released')scanStatus='Flagged';
+      const row=[ccn,h.carton,h.tracking,scanStatus];if(phase==='cbsa')row.push(cbsaStatus);detRows.push(row);
     });
   });
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(detRows),'Detail');
-  if(sess.notes?.trim()) XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Notes'],[sess.notes]]),'Notes');
+  if(sess.notes?.trim())XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Notes'],[sess.notes]]),'Notes');
   const allTrk=new Set(Object.values(manifest).flat().map(h=>h.tracking));
   const allCCN=new Set(Object.keys(manifest));
   const unexp=tokens.filter(t=>!allTrk.has(t)&&!allCCN.has(t));
-  if(unexp.length) XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Scanned — Not in Manifest'],...unexp.map(t=>[t])]),'Not in Manifest');
+  if(unexp.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Scanned — Not in Manifest'],...unexp.map(t=>[t])]),'Not in Manifest');
   const label=phase==='prescan'?'Receipt':'CBSA';
-  XLSX.writeFile(wb,`LVS-GSM_${label}_${sess.name}_${date}_${app.operator}.xlsx`.replace(/[/\\:*?"<>|]/g,'-'));
+  const customer=sess.customer?`_${sess.customer}`:'';
+  XLSX.writeFile(wb,`LVS-GSM_${label}${customer}_${sess.name}_${date}_${app.operator}.xlsx`.replace(/[/\\:*?"<>|]/g,'-'));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Calendar / History
 // ─────────────────────────────────────────────────────────────────────────────
 function calMove(dir){
-  calMonth+=dir; if(calMonth>11){calMonth=0;calYear++;} if(calMonth<0){calMonth=11;calYear--;}
-  calSelected=null; document.getElementById('day-sessions').style.display='none'; renderCalendar();
+  calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}
+  calSelected=null;document.getElementById('day-sessions').style.display='none';renderCalendar();
 }
-function sessionsByDate(){
+function allSessionsByDate(){
   const map={};
   ['prescan','cbsa'].forEach(phase=>{
     Object.values(app.sessions[phase]).forEach(s=>{
+      if(customerFilter!=='all'&&s.customer!==customerFilter) return;
       const d=new Date(s.createdAt);
       const key=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      if(!map[key]) map[key]=[];
-      map[key].push(s);
+      if(!map[key])map[key]=[];map[key].push(s);
     });
   });
   return map;
+}
+function renderCustomerFilters(){
+  const customers=new Set();
+  ['prescan','cbsa'].forEach(p=>Object.values(app.sessions[p]).forEach(s=>{if(s.customer)customers.add(s.customer);}));
+  const el=document.getElementById('customer-filters');
+  const active=customerFilter;
+  el.innerHTML=`<button class="filter-btn${active==='all'?' active':''}" onclick="setCustomerFilter('all',this)">All</button>`+
+    [...customers].sort().map(c=>`<button class="filter-btn${active===c?' active':''}" onclick="setCustomerFilter('${c.replace(/'/g,"\\'")}',this)">${c}</button>`).join('');
+}
+function setCustomerFilter(c,btn){
+  customerFilter=c;
+  document.querySelectorAll('#customer-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  calSelected=null;document.getElementById('day-sessions').style.display='none';renderCalendar();
 }
 function renderCalendar(){
   const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   document.getElementById('cal-title').textContent=`${MONTHS[calMonth]} ${calYear}`;
-  const byDate=sessionsByDate();
+  const byDate=allSessionsByDate();
   const firstDow=new Date(calYear,calMonth,1).getDay();
   const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
   const todayStr=(()=>{const t=new Date();return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;})();
   let html=DAYS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
-  for(let i=0;i<firstDow;i++) html+='<div class="cal-day"></div>';
+  for(let i=0;i<firstDow;i++)html+='<div class="cal-day"></div>';
   for(let d=1;d<=daysInMonth;d++){
     const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const sess=byDate[key]||[]; const has=sess.length>0;
+    const sess=byDate[key]||[],has=sess.length>0;
     const dots=has?`<div class="cal-dot-row">${sess.some(s=>s.phase==='prescan')?'<div class="cal-dot dot-prescan"></div>':''}${sess.some(s=>s.phase==='cbsa')?'<div class="cal-dot dot-cbsa"></div>':''}</div>`:'';
     const cls=['cal-day',has&&'has-sessions',key===todayStr&&'today',key===calSelected&&'selected'].filter(Boolean).join(' ');
     html+=`<div class="${cls}" ${has?`onclick="calSelectDay('${key}')"`:''}>${d}${dots}</div>`;
@@ -1042,8 +1206,8 @@ function renderCalendar(){
   document.getElementById('cal-grid').innerHTML=html;
 }
 function calSelectDay(key){
-  calSelected=key; renderCalendar();
-  const byDate=sessionsByDate();
+  calSelected=key;renderCalendar();
+  const byDate=allSessionsByDate();
   calDaySessions=(byDate[key]||[]).sort((a,b)=>a.createdAt-b.createdAt);
   const [year,month,day]=key.split('-');
   const dateLabel=new Date(+year,+month-1,+day).toLocaleDateString('en-CA',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -1055,12 +1219,14 @@ function calSelectDay(key){
     const hawbs=s.manifest?Object.values(s.manifest).reduce((a,c)=>a+c.length,0):'—';
     const scans=s.rawPaste?[...new Set(s.rawPaste.split(/[\s,;\n\r]+/).map(norm).filter(Boolean))].length:0;
     const phase=s.phase==='prescan'?'Phase 1':'Phase 2';
-    const notesSnippet=s.notes?.trim()?`<div style="font-size:.72rem;color:#94a3b8;margin-top:.3rem;font-style:italic">"${s.notes.slice(0,80)}${s.notes.length>80?'…':''}"</div>`:'';
+    const custTag=s.customer?`<span class="customer-tag">📦 ${s.customer}</span>`:'';
+    const noteSnip=s.notes?.trim()?`<div style="font-size:.72rem;color:#94a3b8;margin-top:.3rem;font-style:italic">"${s.notes.slice(0,80)}${s.notes.length>80?'…':''}"</div>`:'';
     return `<div class="session-card${s.completed?' done':''}">
       <div class="session-card-left">
         <h4>${s.name}</h4>
-        <p>${time} · ${mawbs} MAWBs · ${hawbs} HAWBs · ${scans} scans</p>
-        ${notesSnippet}
+        ${custTag}
+        <p style="margin-top:.3rem">${time} · ${mawbs} MAWBs · ${hawbs} HAWBs · ${scans} scans</p>
+        ${noteSnip}
       </div>
       <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
         ${s.operator?`<span class="operator-tag">${s.operator}</span>`:''}
@@ -1071,29 +1237,232 @@ function calSelectDay(key){
   }).join('')||'<div class="empty"><p>No sessions on this day.</p></div>';
   document.getElementById('day-sessions').style.display='';
 }
-
-// Export all sessions for the selected day into one workbook
 function exportDay(){
-  if(!calDaySessions.length){alert('No sessions selected. Click a day on the calendar first.');return;}
-  const wb=XLSX.utils.book_new();
-  const date=calSelected||new Date().toISOString().slice(0,10);
+  if(!calDaySessions.length){alert('Click a day on the calendar first.');return;}
+  const wb=XLSX.utils.book_new(),date=calSelected||new Date().toISOString().slice(0,10);
   calDaySessions.forEach(sess=>{
-    const manifest=sess.manifest; if(!manifest) return;
-    const raw=sess.rawPaste||'';
-    const tokens=raw.split(/[\s,;\n\r]+/).map(norm).filter(Boolean);
+    const manifest=sess.manifest;if(!manifest)return;
+    const tokens=(sess.rawPaste||'').split(/[\s,;\n\r]+/).map(norm).filter(Boolean);
     const scanned=new Set(tokens);
-    const label=(sess.phase==='prescan'?'P1':'P2')+' '+sess.name.slice(0,20);
-    const rows=[['MAWB / CCN','Carton','Tracking ID','Scan Status','CBSA Status','Notes']];
+    const rns=sess.rnsData||{};
+    const label=(sess.phase==='prescan'?'P1':'P2')+' '+sess.name.slice(0,18);
+    const rows=[['MAWB','Carton','Tracking ID','Scan Status','CBSA Status','Customer','Notes']];
     Object.entries(manifest).forEach(([ccn,hawbs])=>{
       hawbs.forEach((h,i)=>{
         const hit=scanned.has(h.tracking)||scanned.has(h.ccn);
-        rows.push([ccn,h.carton,h.tracking,hit?'Scanned':'Missing','',i===0?sess.notes||'':'']);
+        const cbsaStatus=rns[h.ccn]||rns[ccn]||'';
+        let scanStatus=hit?'Scanned':'Missing';
+        if(sess.phase==='cbsa'&&hit&&cbsaStatus&&cbsaStatus.toLowerCase()!=='released')scanStatus='Flagged';
+        rows.push([ccn,h.carton,h.tracking,scanStatus,cbsaStatus,i===0?sess.customer||'':'',i===0?sess.notes||'':'']);
       });
     });
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),label.replace(/[\/\\\?\*\[\]]/g,'').slice(0,31));
   });
-  if(!wb.SheetNames.length){alert('No sessions with manifest data found for this day.');return;}
+  if(!wb.SheetNames.length){alert('No sessions with data found for this day.');return;}
   XLSX.writeFile(wb,`LVS-GSM_Day_${date}.xlsx`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Non-Released date range export
+// ─────────────────────────────────────────────────────────────────────────────
+function exportNonReleased(){
+  const fromStr=document.getElementById('report-from').value;
+  const toStr  =document.getElementById('report-to').value;
+  if(!fromStr||!toStr){alert('Select both a From and To date.');return;}
+  const fromTs=new Date(fromStr).setHours(0,0,0,0);
+  const toTs  =new Date(toStr).setHours(23,59,59,999);
+  const sessions=Object.values(app.sessions.cbsa).filter(s=>{
+    const ts=s.createdAt; return ts>=fromTs&&ts<=toTs;
+  });
+  if(!sessions.length){alert('No CBSA sessions found in that date range.');return;}
+  const wb=XLSX.utils.book_new();
+  const rows=[['Date','Session','Customer','Operator','MAWB / CCN','Tracking ID','Carton','CBSA Status','Scan Status']];
+  sessions.sort((a,b)=>a.createdAt-b.createdAt).forEach(sess=>{
+    const manifest=sess.manifest;if(!manifest)return;
+    const rns=sess.rnsData||{};
+    const tokens=(sess.rawPaste||'').split(/[\s,;\n\r]+/).map(norm).filter(Boolean);
+    const scanned=new Set(tokens);
+    const date=new Date(sess.createdAt).toLocaleDateString('en-CA');
+    Object.entries(manifest).forEach(([ccn,hawbs])=>{
+      const ccnStatus=rns[ccn]||'';
+      hawbs.forEach(h=>{
+        const hawbStatus=rns[h.ccn]||ccnStatus;
+        if(!hawbStatus||hawbStatus.toLowerCase()==='released') return; // only non-released
+        const hit=scanned.has(h.tracking)||scanned.has(h.ccn);
+        rows.push([date,sess.name,sess.customer||'',sess.operator||'',ccn,h.tracking,h.carton,hawbStatus,hit?'Scanned':'Not Scanned']);
+      });
+    });
+  });
+  if(rows.length<=1){alert('No non-released packages found in that date range.');return;}
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Non-Released');
+  XLSX.writeFile(wb,`LVS-GSM_NonReleased_${fromStr}_to_${toStr}.xlsx`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin
+// ─────────────────────────────────────────────────────────────────────────────
+function openAdminModal(){
+  if(isAdmin){showAdminPanel();}
+  else{
+    document.getElementById('adminLoginView').style.display='';
+    document.getElementById('adminPanelView').style.display='none';
+    document.getElementById('adminLoginErr').style.display='none';
+    document.getElementById('createFirstAdminWrap').style.display='none';
+    document.getElementById('adminUser').value='';
+    document.getElementById('adminPass').value='';
+  }
+  document.getElementById('adminModal').classList.remove('hidden');
+}
+function closeAdminModal(){document.getElementById('adminModal').classList.add('hidden');}
+function showCreateFirstAdmin(){
+  document.getElementById('createFirstAdminWrap').style.display=
+    document.getElementById('createFirstAdminWrap').style.display==='none'?'':'none';
+}
+async function createFirstAdmin(){
+  const username=document.getElementById('firstAdminUser').value.trim();
+  const password=document.getElementById('firstAdminPass').value;
+  const errEl=document.getElementById('firstAdminErr');
+  if(!username||!password){errEl.textContent='Username and password required.';errEl.style.display='';return;}
+  // Check if any admin exists already
+  const {count}=await sb.from('admins').select('*',{count:'exact',head:true});
+  if(count>0&&!isAdmin){errEl.textContent='Admin accounts already exist. Ask an existing admin.';errEl.style.display='';return;}
+  const {error}=await sb.from('admins').insert({username,password});
+  if(error){errEl.textContent='Error: '+error.message;errEl.style.display='';return;}
+  isAdmin=true;adminUser=username;showAdminPanel();
+}
+async function doAdminLogin(){
+  const username=document.getElementById('adminUser').value.trim();
+  const password=document.getElementById('adminPass').value;
+  const {data}=await sb.from('admins').select('username').eq('username',username).eq('password',password).single();
+  if(data){isAdmin=true;adminUser=username;document.getElementById('adminBtn').classList.add('active');showAdminPanel();}
+  else{document.getElementById('adminLoginErr').style.display='';}
+}
+function adminLogout(){
+  isAdmin=false;adminUser='';
+  document.getElementById('adminBtn').classList.remove('active');
+  closeAdminModal();
+}
+function showAdminPanel(){
+  document.getElementById('adminLoginView').style.display='none';
+  document.getElementById('adminPanelView').style.display='';
+  document.getElementById('adminPanelUser').textContent=`(${adminUser})`;
+  adminTab('users',document.querySelector('.admin-tab'));
+}
+function adminTab(tab,btn){
+  document.querySelectorAll('.admin-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  document.getElementById(`admin-tab-${tab}`).classList.add('active');
+  if(tab==='users')   renderAdminUsers();
+  if(tab==='sessions')renderAdminSessions();
+  if(tab==='admins')  renderAdminAdmins();
+}
+function renderAdminUsers(){
+  const el=document.getElementById('adminUserList');
+  el.innerHTML=knownOperators.map(name=>`<div class="admin-item">
+    <div class="admin-item-left"><h4>${name}</h4></div>
+    <div class="admin-item-actions">
+      <button class="btn btn-danger btn-sm" onclick="adminDeleteUser('${name.replace(/'/g,"\\'")}')">Delete</button>
+    </div>
+  </div>`).join('')||'<p style="font-size:.82rem;color:#64748b">No operators yet.</p>';
+}
+async function adminAddUser(){
+  const name=document.getElementById('addUserInput').value.trim();
+  if(!name)return;
+  await addOperatorToDB(name);
+  document.getElementById('addUserInput').value='';
+  renderAdminUsers();
+}
+async function adminDeleteUser(name){
+  if(!confirm(`Remove operator "${name}"?`))return;
+  await deleteOperatorFromDB(name);
+  renderAdminUsers();
+}
+function renderAdminSessions(){
+  const el=document.getElementById('adminSessList');
+  const all=[...Object.values(app.sessions.prescan),...Object.values(app.sessions.cbsa)].sort((a,b)=>b.createdAt-a.createdAt);
+  const f=adminSessFilterVal;
+  const visible=all.filter(s=>{
+    if(f==='prescan')return s.phase==='prescan';
+    if(f==='cbsa')   return s.phase==='cbsa';
+    if(f==='done')   return s.completed;
+    return true;
+  });
+  el.innerHTML=visible.map(s=>{
+    const date=new Date(s.createdAt).toLocaleDateString('en-CA');
+    const phase=s.phase==='prescan'?'Phase 1':'Phase 2';
+    return `<div class="admin-item">
+      <div class="admin-item-left">
+        <h4>${s.name} ${s.completed?'✓':''}</h4>
+        <p>${date} · ${phase}${s.customer?' · '+s.customer:''} · ${s.operator}</p>
+      </div>
+      <div class="admin-item-actions">
+        <button class="btn btn-secondary btn-sm" onclick="openEditSess('${s.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm"    onclick="adminDeleteSess('${s.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('')||'<p style="font-size:.82rem;color:#64748b">No sessions.</p>';
+}
+function adminSessFilter(f,btn){
+  adminSessFilterVal=f;
+  document.querySelectorAll('#admin-tab-sessions .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderAdminSessions();
+}
+async function adminDeleteSess(id){
+  const phase=id.startsWith('cbsa')?'cbsa':'prescan';
+  const sess=app.sessions[phase]?.[id];
+  if(!sess||!confirm(`Delete session "${sess.name}"?`))return;
+  delete app.sessions[phase][id];saveLocal();
+  await deleteSessionRemote(id);
+  refreshDropdown(phase);renderAdminSessions();
+}
+function openEditSess(id){
+  const phase=id.startsWith('cbsa')?'cbsa':'prescan';
+  const sess=app.sessions[phase]?.[id];if(!sess)return;
+  document.getElementById('editSessId').value=id;
+  document.getElementById('editSessName').value=sess.name;
+  document.getElementById('editSessCustomer').value=sess.customer||'';
+  document.getElementById('editSessNotes').value=sess.notes||'';
+  document.getElementById('editSessCompleted').checked=!!sess.completed;
+  document.getElementById('editSessModal').classList.remove('hidden');
+}
+function closeEditSessModal(){document.getElementById('editSessModal').classList.add('hidden');}
+async function saveEditSession(){
+  const id=document.getElementById('editSessId').value;
+  const phase=id.startsWith('cbsa')?'cbsa':'prescan';
+  const sess=app.sessions[phase]?.[id];if(!sess)return;
+  sess.name     =document.getElementById('editSessName').value.trim()||sess.name;
+  sess.customer =document.getElementById('editSessCustomer').value.trim();
+  sess.notes    =document.getElementById('editSessNotes').value;
+  sess.completed=document.getElementById('editSessCompleted').checked;
+  saveLocal();await pushSession(sess);
+  refreshDropdown(phase);closeEditSessModal();renderAdminSessions();
+}
+async function renderAdminAdmins(){
+  const el=document.getElementById('adminAdminList');
+  const {data}=await sb.from('admins').select('username,created_at').order('created_at');
+  el.innerHTML=(data||[]).map(a=>`<div class="admin-item">
+    <div class="admin-item-left"><h4>${a.username}</h4><p>${new Date(a.created_at).toLocaleDateString('en-CA')}</p></div>
+    <div class="admin-item-actions">
+      ${a.username!==adminUser?`<button class="btn btn-danger btn-sm" onclick="adminDeleteAdmin('${a.username}')">Delete</button>`:'<span style="font-size:.72rem;color:#475569">you</span>'}
+    </div>
+  </div>`).join('')||'<p style="font-size:.82rem;color:#64748b">No admins.</p>';
+}
+async function adminAddAdmin(){
+  const username=document.getElementById('newAdminUser').value.trim();
+  const password=document.getElementById('newAdminPass').value;
+  const errEl=document.getElementById('newAdminErr');
+  if(!username||!password){errEl.textContent='Username and password required.';errEl.style.display='';return;}
+  const {error}=await sb.from('admins').upsert({username,password});
+  if(error){errEl.textContent='Error: '+error.message;errEl.style.display='';return;}
+  errEl.style.display='none';
+  document.getElementById('newAdminUser').value='';document.getElementById('newAdminPass').value='';
+  renderAdminAdmins();
+}
+async function adminDeleteAdmin(username){
+  if(!confirm(`Remove admin "${username}"?`))return;
+  await sb.from('admins').delete().eq('username',username);
+  renderAdminAdmins();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
