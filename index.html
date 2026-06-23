@@ -243,7 +243,9 @@ select { cursor: pointer; }
     <input type="text" id="newSessName" placeholder="e.g. YYZ-2026-06-23 AM" autocomplete="off">
     <div style="margin-top:.75rem">
       <label class="field-label">Customer</label>
-      <input type="text" id="newSessCustomer" placeholder="e.g. Straightship, Porter Airlines, …" autocomplete="off">
+      <select id="newSessCustomer">
+        <option value="">— select customer —</option>
+      </select>
     </div>
     <div id="newSessLinkWrap" style="display:none;margin-top:.75rem">
       <label class="field-label">Link Phase 1 session (optional)</label>
@@ -290,6 +292,7 @@ select { cursor: pointer; }
       </div>
       <div class="admin-tabs">
         <div class="admin-tab active" onclick="adminTab('users',this)">Users</div>
+        <div class="admin-tab"        onclick="adminTab('customers',this)">Customers</div>
         <div class="admin-tab"        onclick="adminTab('sessions',this)">Sessions</div>
         <div class="admin-tab"        onclick="adminTab('admins',this)">Admins</div>
       </div>
@@ -300,6 +303,16 @@ select { cursor: pointer; }
         <div class="add-row">
           <input type="text" id="addUserInput" placeholder="New operator name" maxlength="40">
           <button class="btn btn-success btn-sm" onclick="adminAddUser()">Add</button>
+        </div>
+      </div>
+
+      <!-- Customers tab -->
+      <div class="admin-section" id="admin-tab-customers">
+        <p style="font-size:.8rem;color:#64748b;margin-bottom:.75rem">Operators choose from this list when creating a session.</p>
+        <div class="admin-list" id="adminCustomerList"></div>
+        <div class="add-row">
+          <input type="text" id="addCustomerInput" placeholder="New customer name" maxlength="60">
+          <button class="btn btn-success btn-sm" onclick="adminAddCustomer()">Add</button>
         </div>
       </div>
 
@@ -338,7 +351,9 @@ select { cursor: pointer; }
     <input type="text" id="editSessName" autocomplete="off">
     <div style="margin-top:.75rem">
       <label class="field-label">Customer</label>
-      <input type="text" id="editSessCustomer" autocomplete="off">
+      <select id="editSessCustomer">
+        <option value="">— select customer —</option>
+      </select>
     </div>
     <div style="margin-top:.75rem">
       <label class="field-label">Notes</label>
@@ -578,6 +593,9 @@ const notesDebounce  = { prescan:null,  cbsa:null  };
 // Operators (Supabase-synced)
 let knownOperators = [];
 
+// Customers (Supabase-synced, admin-managed)
+let knownCustomers = [];
+
 // Admin state
 let isAdmin = false, adminUser = '';
 
@@ -690,6 +708,26 @@ async function loadOperatorsFromDB(){
   const {data}=await sb.from('operators').select('name').order('name');
   if(data) knownOperators=[...new Set([...data.map(r=>r.name),...knownOperators])];
 }
+async function loadCustomersFromDB(){
+  const {data}=await sb.from('customers').select('name').order('name');
+  if(data){ knownCustomers=data.map(r=>r.name); populateCustomerDropdowns(); }
+}
+function populateCustomerDropdowns(){
+  const opts='<option value="">— select customer —</option>'+knownCustomers.map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('newSessCustomer').innerHTML=opts;
+  document.getElementById('editSessCustomer').innerHTML=opts;
+}
+async function addCustomerToDB(name){
+  if(knownCustomers.includes(name)) return;
+  await sb.from('customers').upsert({name});
+  knownCustomers.push(name); knownCustomers.sort();
+  populateCustomerDropdowns();
+}
+async function deleteCustomerFromDB(name){
+  await sb.from('customers').delete().eq('name',name);
+  knownCustomers=knownCustomers.filter(n=>n!==name);
+  populateCustomerDropdowns();
+}
 async function addOperatorToDB(name){
   if(knownOperators.includes(name)) return;
   await sb.from('operators').upsert({name});
@@ -734,7 +772,7 @@ function init(){
   refreshDropdown('cbsa');
 }
 async function startSync(){
-  await loadOperatorsFromDB();
+  await Promise.all([loadOperatorsFromDB(), loadCustomersFromDB()]);
   await syncFromSupabase();
   subscribeRealtime();
 }
@@ -1348,9 +1386,10 @@ function adminTab(tab,btn){
   document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
   if(btn)btn.classList.add('active');
   document.getElementById(`admin-tab-${tab}`).classList.add('active');
-  if(tab==='users')   renderAdminUsers();
-  if(tab==='sessions')renderAdminSessions();
-  if(tab==='admins')  renderAdminAdmins();
+  if(tab==='users')     renderAdminUsers();
+  if(tab==='customers') renderAdminCustomers();
+  if(tab==='sessions')  renderAdminSessions();
+  if(tab==='admins')    renderAdminAdmins();
 }
 function renderAdminUsers(){
   const el=document.getElementById('adminUserList');
@@ -1372,6 +1411,27 @@ async function adminDeleteUser(name){
   if(!confirm(`Remove operator "${name}"?`))return;
   await deleteOperatorFromDB(name);
   renderAdminUsers();
+}
+function renderAdminCustomers(){
+  const el=document.getElementById('adminCustomerList');
+  el.innerHTML=knownCustomers.map(name=>`<div class="admin-item">
+    <div class="admin-item-left"><h4>${name}</h4></div>
+    <div class="admin-item-actions">
+      <button class="btn btn-danger btn-sm" onclick="adminDeleteCustomer('${name.replace(/'/g,"\\'")}')">Delete</button>
+    </div>
+  </div>`).join('')||'<p style="font-size:.82rem;color:#64748b">No customers yet. Add one below.</p>';
+}
+async function adminAddCustomer(){
+  const name=document.getElementById('addCustomerInput').value.trim();
+  if(!name)return;
+  await addCustomerToDB(name);
+  document.getElementById('addCustomerInput').value='';
+  renderAdminCustomers();
+}
+async function adminDeleteCustomer(name){
+  if(!confirm(`Remove customer "${name}"?`))return;
+  await deleteCustomerFromDB(name);
+  renderAdminCustomers();
 }
 function renderAdminSessions(){
   const el=document.getElementById('adminSessList');
@@ -1416,6 +1476,7 @@ function openEditSess(id){
   const sess=app.sessions[phase]?.[id];if(!sess)return;
   document.getElementById('editSessId').value=id;
   document.getElementById('editSessName').value=sess.name;
+  populateCustomerDropdowns();
   document.getElementById('editSessCustomer').value=sess.customer||'';
   document.getElementById('editSessNotes').value=sess.notes||'';
   document.getElementById('editSessCompleted').checked=!!sess.completed;
