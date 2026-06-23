@@ -384,6 +384,9 @@ select { cursor: pointer; }
         <button class="btn btn-danger"    onclick="deleteSession('prescan')">Delete</button>
       </div>
       <div class="active-users" id="prescan-users"></div>
+      <div id="prescan-complete-bar" style="display:none;margin-top:.85rem;border-top:1px solid #1e2437;padding-top:.85rem">
+        <div id="prescan-complete-inner"></div>
+      </div>
     </div>
 
     <div id="prescan-ws" style="display:none">
@@ -423,10 +426,6 @@ select { cursor: pointer; }
         </div>
         <div class="ccn-list" id="prescan-list"></div>
       </div>
-
-      <div id="prescan-complete-bar" style="display:none;margin-top:1rem">
-        <div class="complete-bar" id="prescan-complete-inner"></div>
-      </div>
     </div>
   </div>
 
@@ -442,6 +441,9 @@ select { cursor: pointer; }
         <button class="btn btn-danger"    onclick="deleteSession('cbsa')">Delete</button>
       </div>
       <div class="active-users" id="cbsa-users"></div>
+      <div id="cbsa-complete-bar" style="display:none;margin-top:.85rem;border-top:1px solid #1e2437;padding-top:.85rem">
+        <div id="cbsa-complete-inner"></div>
+      </div>
     </div>
 
     <div id="cbsa-ws" style="display:none">
@@ -495,9 +497,6 @@ select { cursor: pointer; }
         <div class="ccn-list" id="cbsa-list"></div>
       </div>
 
-      <div id="cbsa-complete-bar" style="display:none;margin-top:1rem">
-        <div class="complete-bar" id="cbsa-complete-inner"></div>
-      </div>
     </div>
   </div>
 
@@ -932,11 +931,21 @@ function renderCompleteBar(phase,sess){
   if(!manifestCache[phase]){bar.style.display='none';return;}
   bar.style.display='';
   if(phase==='prescan'){
-    inner.className='complete-bar';
-    inner.innerHTML=`<div><p style="font-weight:600;margin-bottom:.25rem">Phase 1 done?</p><p style="font-size:.78rem;opacity:.8">Completing Phase 1 unlocks Phase 2 for this shipment.</p></div><button class="btn btn-success" onclick="markComplete('prescan')" style="font-size:.9rem;padding:.65rem 1.4rem">✓ Complete Phase 1</button>`;
+    inner.innerHTML=`<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <p style="font-size:.8rem;font-weight:700;color:#34d399;margin-bottom:.2rem">Phase 1 complete?</p>
+        <p style="font-size:.75rem;color:#64748b">Unlocks Phase 2 for this shipment.</p>
+      </div>
+      <button class="btn btn-success" onclick="markComplete('prescan')" style="padding:.7rem 1.5rem;font-size:.9rem;font-weight:700;flex-shrink:0">✓ Complete Phase 1</button>
+    </div>`;
   } else {
-    inner.className='complete-bar';
-    inner.innerHTML=`<div><p style="font-weight:600;margin-bottom:.25rem">Phase 2 done?</p><p style="font-size:.78rem;opacity:.8">Completing Phase 2 will move this shipment to History.</p></div><button class="btn btn-success" onclick="markComplete('cbsa')" style="font-size:.9rem;padding:.65rem 1.4rem">✓ Complete Phase 2</button>`;
+    inner.innerHTML=`<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div style="flex:1;min-width:160px">
+        <p style="font-size:.8rem;font-weight:700;color:#60a5fa;margin-bottom:.2rem">Phase 2 complete?</p>
+        <p style="font-size:.75rem;color:#64748b">Moves this shipment to History.</p>
+      </div>
+      <button class="btn btn-success" onclick="markComplete('cbsa')" style="padding:.7rem 1.5rem;font-size:.9rem;font-weight:700;flex-shrink:0">✓ Complete Phase 2</button>
+    </div>`;
   }
 }
 async function markComplete(phase){
