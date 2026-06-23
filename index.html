@@ -773,8 +773,9 @@ async function saveOperator(){
   const fromList=document.getElementById('knownUserSel').value;
   const typed=document.getElementById('nameInput').value.trim();
   const name=typed||fromList;
-  if(!name) return;
-  await addOperatorToDB(name);
+  if(!name){alert('Please enter your name.');return;}
+  // Don't let a Supabase failure block the user from entering the app
+  try{await addOperatorToDB(name);}catch(e){console.warn('Could not sync operator:',e);}
   app.operator=name; saveLocal();
   document.getElementById('operatorDisplay').textContent=name;
   document.getElementById('nameModal').classList.add('hidden');
@@ -856,7 +857,7 @@ function refreshDropdown(phase){
   Object.values(app.sessions[phase]).sort((a,b)=>b.createdAt-a.createdAt).forEach(s=>{
     const o=document.createElement('option'); o.value=s.id;
     const other=s.operator&&s.operator!==app.operator;
-    o.textContent=(other?`${s.name} (${s.operator})`:s.name)+(s.customer?` · ${s.customer}':'')+(s.completed?' ✓':'');
+    o.textContent=(other?`${s.name} (${s.operator})`:s.name)+(s.customer?' · '+s.customer:'')+(s.completed?' ✓':'');
     sel.appendChild(o);
   });
   if(cur&&app.sessions[phase][cur]) sel.value=cur;
