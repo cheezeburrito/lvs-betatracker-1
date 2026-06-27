@@ -271,6 +271,7 @@ select option{background:#111827;}
 const SB_URL = 'https://wzwcfvmhnqwhmfjdcsxj.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6d2Nmdm1obnF3aG1mamRjc3hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTc4MTksImV4cCI6MjA5NjU5MzgxOX0.4ABH_t8-DG9Sh-Ts293pJKvO4CsO8bCM1pqjt59G5Xc';
 const sb = supabase.createClient(SB_URL, SB_KEY);
+const scanChannel = sb.channel('scans-live').subscribe();
 
 function norm(v){ return String(v||'').replace(/[^A-Z0-9]/gi,'').toUpperCase(); }
 
@@ -478,14 +479,20 @@ function addFeedItem(normed,isDup,inManifest){
 
 function deleteScanItem(el,normed){
   const id=el.dataset.id;
+  const sessId=activeSess?.id;
   el.remove();
   seenThisRun.delete(normed);
   scanCount=Math.max(0,scanCount-1);
   document.getElementById('scan-count').textContent=scanCount;
-  if(id) sb.from('scans').delete().eq('id',id).then(({error})=>{if(error)console.warn('del:',error);});
+  if(id){
+    sb.from('scans').delete().eq('id',id).then(({error})=>{if(error)console.warn('del:',error);});
+    // Broadcast so desktop removes it immediately without needing REPLICA IDENTITY FULL
+    scanChannel.send({type:'broadcast',event:'scan_deleted',payload:{tracking:normed,shipment_id:sessId}});
+  }
 }
 
 function clearFeed(){
+  if(!confirm('Clear all scans for this session?\n\nThis will remove all scans from the desktop as well.')) return;
   seenThisRun.clear(); scanCount=0;
   document.getElementById('scan-count').textContent='0';
   document.getElementById('last-scan').className='last-scan';
@@ -493,8 +500,11 @@ function clearFeed(){
     '<div class="empty-feed"><div class="empty-icon">📡</div>Tap the scan field above<br>then point the gun and fire</div>';
   document.getElementById('scan-field').value='';
   document.getElementById('scan-field').focus();
-  // Delete all scans for this session from Supabase
-  if(activeSess) sb.from('scans').delete().eq('shipment_id',activeSess.id).then(({error})=>{if(error)console.warn('clear:',error);});
+  if(activeSess){
+    sb.from('scans').delete().eq('shipment_id',activeSess.id).then(({error})=>{if(error)console.warn('clear:',error);});
+    // Broadcast clear so desktop wipes its feed immediately
+    scanChannel.send({type:'broadcast',event:'scans_cleared',payload:{shipment_id:activeSess.id}});
+  }
 }
 
 // ── INIT ───────────────────────────────────────────────────────────────────

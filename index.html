@@ -895,6 +895,22 @@ function subscribeRealtime(){
       if(r.shipment_id&&r.shipment_id!==activeId)return;
       removeScanFromDesktop(r.tracking);
     })
+    .on('broadcast',{event:'scan_deleted'},({payload:p})=>{
+      const activeId=document.getElementById('prescan-sel').value;
+      if(!activeId||p.shipment_id!==activeId)return;
+      removeScanFromDesktop(p.tracking);
+    })
+    .on('broadcast',{event:'scans_cleared'},({payload:p})=>{
+      const activeId=document.getElementById('prescan-sel').value;
+      if(!activeId||p.shipment_id!==activeId)return;
+      // Wipe the feed and paste area for this session
+      const list=document.getElementById('scanner-feed-list');
+      if(list) list.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
+      const countEl=document.getElementById('scanner-feed-count');
+      if(countEl) countEl.textContent='0';
+      const ta=document.getElementById('prescan-paste');
+      if(ta){ta.value='';const sess=currentSession('prescan');if(sess){sess.rawPaste='';saveLocal();}processPaste('prescan');updateScannerBadge();}
+    })
     .subscribe((status,err)=>{
       console.log('[scanner] channel status:',status,err||'');
       if(status==='SUBSCRIBED') console.log('[scanner] listening for scans ✓');
