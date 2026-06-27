@@ -60,13 +60,15 @@ header { background: #161b27; border-bottom: 1px solid #2d3448; padding: .9rem 1
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
 
 /* ── Phase tabs ── */
-.phase-tabs { display: flex; background: #161b27; border-bottom: 1px solid #2d3448; }
-.phase-tab { flex: 1; padding: .85rem; text-align: center; font-size: .82rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; transition: all .15s; white-space: nowrap; }
+.phase-tabs { display: flex; background: #161b27; border-bottom: 1px solid #2d3448; position: sticky; top: 0; z-index: 100; }
+.phase-tab { flex: 1; padding: .85rem .5rem; text-align: center; font-size: .82rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; color: #64748b; transition: all .15s; white-space: nowrap; }
+.phase-tab .step-label { display: block; font-size: .68rem; color: #334155; font-weight: 400; margin-top: .15rem; letter-spacing: .02em; }
 .phase-tab:hover { color: #94a3b8; }
 .phase-tab.active { color: #60a5fa; border-bottom-color: #60a5fa; background: #0d1117; }
+.phase-tab.active .step-label { color: #1e3a6e; }
 
 /* ── Layout ── */
-main { max-width: 820px; margin: 0 auto; padding: 1.5rem; }
+main { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
 .card { background: #161b27; border: 1px solid #2d3448; border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem; }
 .card-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #475569; margin-bottom: 1rem; }
 
@@ -202,6 +204,26 @@ select { cursor: pointer; }
 .date-range-row .field { display:flex;flex-direction:column;gap:.3rem; }
 .date-range-row label { font-size:.75rem;color:#64748b; }
 .date-range-row input[type="date"] { width:auto;min-width:140px; }
+
+/* ── Session info strip ── */
+.sess-info-strip { display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-top:.75rem; padding:.6rem .9rem; background:#0d1117; border-radius:8px; border:1px solid #1e2437; font-size:.8rem; }
+.sess-info-strip .sess-name { font-weight:700; color:#e2e8f0; font-size:.9rem; flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sess-info-strip .sess-meta { color:#475569; font-size:.75rem; flex-shrink:0; }
+.sess-info-strip .sess-customer { background:#1e3a6e; color:#93c5fd; padding:.15rem .55rem; border-radius:99px; font-size:.72rem; font-weight:600; flex-shrink:0; }
+
+/* ── Empty state ── */
+.empty-state { text-align:center; padding:4rem 1rem 3rem; }
+.empty-state .empty-icon { font-size:3rem; margin-bottom:1rem; opacity:.4; }
+.empty-state h3 { font-size:1rem; font-weight:600; color:#475569; margin-bottom:.5rem; }
+.empty-state p { font-size:.84rem; color:#334155; margin-bottom:1.5rem; }
+
+/* ── Toast ── */
+#toast-container { position:fixed; bottom:1.5rem; right:1.5rem; z-index:999; display:flex; flex-direction:column; gap:.5rem; pointer-events:none; }
+.toast { background:#161b27; border:1px solid #2d3448; border-radius:10px; padding:.75rem 1.1rem; font-size:.84rem; color:#e2e8f0; box-shadow:0 4px 20px rgba(0,0,0,.5); pointer-events:auto; display:flex; align-items:center; gap:.65rem; max-width:340px; animation:slideIn .2s ease; }
+.toast.success { border-color:#065f46; background:#052e16; color:#34d399; }
+.toast.info    { border-color:#1e3a6e; background:#0f1f40; color:#93c5fd; }
+.toast.warn    { border-color:#78350f; background:#1c1400; color:#fbbf24; }
+@keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
 @media(max-width:560px){
   main{padding:1rem}
@@ -379,10 +401,12 @@ select { cursor: pointer; }
   </div>
 </header>
 
+<div id="toast-container"></div>
+
 <div class="phase-tabs">
-  <div class="phase-tab active" id="tab-prescan" onclick="switchPhase('prescan')">Phase 1 — Physical Receipt</div>
-  <div class="phase-tab"        id="tab-cbsa"    onclick="switchPhase('cbsa')">Phase 2 — CBSA Check</div>
-  <div class="phase-tab"        id="tab-history" onclick="switchPhase('history')">History</div>
+  <div class="phase-tab active" id="tab-prescan" onclick="switchPhase('prescan')">Phase 1 — Physical Receipt<span class="step-label">Scan &amp; confirm parcels on hand</span></div>
+  <div class="phase-tab"        id="tab-cbsa"    onclick="switchPhase('cbsa')">Phase 2 — CBSA Check<span class="step-label">Verify customs clearance status</span></div>
+  <div class="phase-tab"        id="tab-history" onclick="switchPhase('history')">History<span class="step-label">Completed shipments</span></div>
 </div>
 
 <main>
@@ -390,7 +414,6 @@ select { cursor: pointer; }
   <!-- ════ PHASE 1 ════ -->
   <div id="phase-prescan">
     <div class="card">
-      <div class="card-title">Session</div>
       <div class="session-bar">
         <select id="prescan-sel" onchange="loadSession('prescan',this.value)">
           <option value="">— select or create a session —</option>
@@ -398,10 +421,18 @@ select { cursor: pointer; }
         <button class="btn btn-secondary" onclick="openNewSessModal('prescan')">+ New</button>
         <button class="btn btn-danger"    onclick="deleteSession('prescan')">Delete</button>
       </div>
+      <div id="prescan-sess-info" style="display:none" class="sess-info-strip"></div>
       <div class="active-users" id="prescan-users"></div>
       <div id="prescan-complete-bar" style="display:none;margin-top:.85rem;border-top:1px solid #1e2437;padding-top:.85rem">
         <div id="prescan-complete-inner"></div>
       </div>
+    </div>
+
+    <div class="empty-state" id="prescan-empty">
+      <div class="empty-icon">📦</div>
+      <h3>No session open</h3>
+      <p>Select an existing session above or start a new one to begin scanning.</p>
+      <button class="btn btn-primary" onclick="openNewSessModal('prescan')">+ New Session</button>
     </div>
 
     <div id="prescan-ws" style="display:none">
@@ -447,7 +478,6 @@ select { cursor: pointer; }
   <!-- ════ PHASE 2 ════ -->
   <div id="phase-cbsa" style="display:none">
     <div class="card">
-      <div class="card-title">Session</div>
       <div class="session-bar">
         <select id="cbsa-sel" onchange="loadSession('cbsa',this.value)">
           <option value="">— select or create a session —</option>
@@ -455,10 +485,18 @@ select { cursor: pointer; }
         <button class="btn btn-secondary" onclick="openNewSessModal('cbsa')">+ New</button>
         <button class="btn btn-danger"    onclick="deleteSession('cbsa')">Delete</button>
       </div>
+      <div id="cbsa-sess-info" style="display:none" class="sess-info-strip"></div>
       <div class="active-users" id="cbsa-users"></div>
       <div id="cbsa-complete-bar" style="display:none;margin-top:.85rem;border-top:1px solid #1e2437;padding-top:.85rem">
         <div id="cbsa-complete-inner"></div>
       </div>
+    </div>
+
+    <div class="empty-state" id="cbsa-empty">
+      <div class="empty-icon">🛃</div>
+      <h3>No session open</h3>
+      <p>Complete a Phase 1 session first, then start Phase 2 to check CBSA clearance.</p>
+      <button class="btn btn-primary" onclick="openNewSessModal('cbsa')">+ New Session</button>
     </div>
 
     <div id="cbsa-ws" style="display:none">
@@ -875,6 +913,17 @@ async function confirmNewSession(){
 }
 document.getElementById('newSessName').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('newSessCustomer').focus();});
 
+// Ctrl+Enter submits the paste textarea
+['prescan-paste','cbsa-paste'].forEach(id=>{
+  document.getElementById(id).addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){
+      e.preventDefault();
+      const phase=id.startsWith('prescan')?'prescan':'cbsa';
+      processPaste(phase);
+    }
+  });
+});
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Sessions
 // ─────────────────────────────────────────────────────────────────────────────
@@ -903,10 +952,39 @@ function refreshLinkDropdown(){
   });
   if(cur) sel.value=cur;
 }
+// ── Toast notifications ──────────────────────────────────────────────────────
+function showToast(msg, type='info', duration=4000){
+  const c=document.getElementById('toast-container');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span style="flex:1">${msg}</span><span style="cursor:pointer;opacity:.6;font-size:.9rem" onclick="this.parentElement.remove()">✕</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300);},duration);
+}
+
+function renderSessInfo(phase, sess){
+  const el=document.getElementById(`${phase}-sess-info`);
+  if(!sess){el.style.display='none';return;}
+  const date=new Date(sess.createdAt).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
+  el.style.display='';
+  el.innerHTML=`
+    <span class="sess-name">${sess.name}</span>
+    ${sess.customer?`<span class="sess-customer">📦 ${sess.customer}</span>`:''}
+    <span class="sess-meta">${sess.operator||''}${sess.operator&&date?' · ':''}${date}</span>`;
+}
+
 function loadSession(phase,id){
   const ws=document.getElementById(`${phase}-ws`);
-  if(!id){ws.style.display='none';joinPresence(phase,null);renderActiveUsers(phase,[]);return;}
+  const empty=document.getElementById(`${phase}-empty`);
+  if(!id){
+    ws.style.display='none';
+    empty.style.display='';
+    renderSessInfo(phase,null);
+    joinPresence(phase,null);renderActiveUsers(phase,[]);
+    return;
+  }
   ws.style.display='';
+  empty.style.display='none';
   manifestCache[phase]=null;
   if(phase==='cbsa') rt.cbsa.rns=null;
   resetFileUI(phase);
@@ -915,6 +993,7 @@ function loadSession(phase,id){
   document.getElementById(`${phase}-results`).style.display='none';
   document.getElementById(`${phase}-complete-bar`).style.display='none';
   const sess=app.sessions[phase][id];
+  renderSessInfo(phase, sess);
   document.getElementById(`${phase}-paste`).value=sess.rawPaste||'';
   document.getElementById(`${phase}-notes`).value=sess.notes||'';
   if(sess.manifest){
@@ -990,14 +1069,12 @@ async function markComplete(phase){
   const sess=currentSession(phase); if(!sess) return;
   if(confirm('Export a report before marking complete?\n\nOK = Export then complete   Cancel = Complete only')) exportExcel(phase);
   sess.completed=true; saveLocal(); await pushSession(sess);
-  // Remove from active dropdown and clear workspace
   refreshDropdown(phase);
   loadSession(phase,'');
   if(phase==='prescan'){
-    // Prompt to start Phase 2
-    setTimeout(()=>alert(`✓ Phase 1 "${sess.name}" is complete.\n\nSwitch to Phase 2 to begin the CBSA check.`),100);
+    showToast(`✓ Phase 1 "${sess.name}" complete — switch to Phase 2 to begin the CBSA check.`, 'success', 6000);
   } else {
-    // Phase 2 complete → go to History
+    showToast(`✓ Phase 2 "${sess.name}" complete — shipment moved to History.`, 'success', 5000);
     switchPhase('history');
   }
 }
