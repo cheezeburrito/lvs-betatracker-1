@@ -191,6 +191,49 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 .history-main { min-width:0; }
 @media(max-width:700px){ .history-layout { grid-template-columns:1fr; } .history-side { position:static; } }
 
+/* ── Prescan two-column layout ── */
+.prescan-layout { display:grid; grid-template-columns:230px 1fr; gap:1rem; align-items:start; }
+.prescan-main { min-width:0; display:flex; flex-direction:column; gap:1rem; }
+@media(max-width:800px){ .prescan-layout { grid-template-columns:1fr; } }
+
+.scanner-feed-panel {
+  position:sticky; top:6rem;
+  background:#0d1424; border:1px solid #1f2d45; border-radius:12px;
+  padding:1rem; display:flex; flex-direction:column; gap:.6rem;
+  min-height:300px;
+}
+.scanner-feed-header {
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:.78rem; font-weight:700; color:#e2e8f0; text-transform:uppercase; letter-spacing:.05em;
+}
+.scanner-feed-dot {
+  width:8px; height:8px; border-radius:50%; background:#334155; flex-shrink:0;
+  transition:background .3s;
+}
+.scanner-feed-dot.live { background:#22c55e; box-shadow:0 0 6px #22c55e; }
+.scanner-feed-meta { font-size:.7rem; color:#64748b; }
+.scanner-feed-count-row { display:flex; align-items:baseline; gap:.4rem; }
+.scanner-feed-count { font-size:2rem; font-weight:800; color:#22c55e; font-variant-numeric:tabular-nums; line-height:1; }
+.scanner-feed-list {
+  flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:.25rem;
+  max-height:420px;
+}
+.scanner-feed-empty { font-size:.75rem; color:#475569; text-align:center; padding:1.5rem .5rem; line-height:1.7; }
+.sfi {
+  display:flex; align-items:center; gap:.5rem;
+  padding:.35rem .5rem; border-radius:6px;
+  background:#111827; border:1px solid #1f2d45;
+  font-size:.72rem; font-family:monospace;
+  animation:sfi-in .12s ease;
+}
+@keyframes sfi-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.sfi-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.sfi-dot.ok  { background:#22c55e; }
+.sfi-dot.warn{ background:#f59e0b; }
+.sfi-dot.dup { background:#60a5fa; }
+.sfi-val { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#cbd5e1; }
+.sfi-op  { font-size:.65rem; color:#475569; flex-shrink:0; }
+
 /* ══════ HISTORY ══════ */
 .cal-nav { display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem; }
 .cal-nav h2 { font-size:1rem;font-weight:600; }
@@ -483,6 +526,24 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
     </div>
 
     <div id="prescan-ws" style="display:none">
+      <div class="prescan-layout">
+      <!-- ── LEFT: Live Scanner Feed ── -->
+      <div class="scanner-feed-panel">
+        <div class="scanner-feed-header">
+          <span>📡 Live Scanner Feed</span>
+          <span class="scanner-feed-dot" id="scanner-feed-dot"></span>
+        </div>
+        <div class="scanner-feed-meta" id="scanner-feed-meta">No scanner connected</div>
+        <div class="scanner-feed-count-row">
+          <span class="scanner-feed-count" id="scanner-feed-count">0</span>
+          <span style="font-size:.72rem;color:#64748b">scans received</span>
+        </div>
+        <div class="scanner-feed-list" id="scanner-feed-list">
+          <div class="scanner-feed-empty">Waiting for scanner…<br><span style="font-size:.7rem;opacity:.6">Open scanner.html on the CipherLab gun</span></div>
+        </div>
+      </div>
+      <!-- ── RIGHT: Main workspace ── -->
+      <div class="prescan-main">
       <div class="card">
         <div class="card-title">1 · Upload Deconsolidated File</div>
         <label class="file-drop" id="prescan-decon-drop">
@@ -523,6 +584,8 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
         </div>
         <div class="ccn-list" id="prescan-list"></div>
       </div>
+      </div><!-- /prescan-main -->
+      </div><!-- /prescan-layout -->
     </div>
   </div>
 
@@ -776,37 +839,94 @@ function subscribeRealtime(){
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'scans'},({new:r})=>{
       const activeId=document.getElementById('prescan-sel').value;
       if(r.session_id!==activeId)return;
-      appendScanToDesktop(r.tracking);
+      appendScanToDesktop(r.tracking, r.operator);
     })
     .subscribe();
 }
 
-function appendScanToDesktop(tracking){
+function appendScanToDesktop(tracking, operator){
   const normed=norm(tracking);
   if(!normed)return;
   const ta=document.getElementById('prescan-paste');
   const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
-  if(existing.has(normed))return;
-  ta.value=ta.value?ta.value+'\n'+normed:normed;
-  const sess=currentSession('prescan');
-  if(sess){sess.rawPaste=ta.value;saveLocal();}
-  processPaste('prescan');
-  updateScannerBadge();
-}
-
-async function loadScansForSession(sessId){
-  try{
-    const{data}=await sb.from('scans').select('tracking').eq('session_id',sessId).order('scanned_at',{ascending:true});
-    if(!data||!data.length)return;
-    const ta=document.getElementById('prescan-paste');
-    const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
-    const newOnes=data.map(r=>norm(r.tracking)).filter(t=>t&&!existing.has(t));
-    if(!newOnes.length){updateScannerBadge();return;}
-    ta.value=ta.value?ta.value+'\n'+newOnes.join('\n'):newOnes.join('\n');
+  const isDup=existing.has(normed);
+  if(!isDup){
+    ta.value=ta.value?ta.value+'\n'+normed:normed;
     const sess=currentSession('prescan');
     if(sess){sess.rawPaste=ta.value;saveLocal();}
     processPaste('prescan');
     updateScannerBadge();
+  }
+  addScannerFeedItem(normed, operator, isDup);
+}
+
+function addScannerFeedItem(normed, operator, isDup){
+  const list=document.getElementById('scanner-feed-list');
+  if(!list)return;
+  // Remove empty state
+  const empty=list.querySelector('.scanner-feed-empty');
+  if(empty)empty.remove();
+  // Activate dot
+  const dot=document.getElementById('scanner-feed-dot');
+  if(dot){dot.classList.add('live');clearTimeout(dot._t);dot._t=setTimeout(()=>dot.classList.remove('live'),3000);}
+  // Update meta
+  if(operator){
+    const meta=document.getElementById('scanner-feed-meta');
+    if(meta)meta.textContent='Scanner: '+operator;
+  }
+  // Update count
+  const countEl=document.getElementById('scanner-feed-count');
+  if(countEl)countEl.textContent=parseInt(countEl.textContent||'0')+1;
+  // Check manifest match
+  const sess=currentSession('prescan');
+  const manifest=manifestCache['prescan'];
+  let inManifest=true;
+  if(manifest){
+    const allT=new Set(Object.values(manifest).flat().map(r=>norm(r.tracking||r.ccn||'')).filter(Boolean));
+    inManifest=allT.has(normed);
+  }
+  const dotCls=isDup?'dup':inManifest?'ok':'warn';
+  const el=document.createElement('div');
+  el.className='sfi';
+  el.innerHTML=`<div class="sfi-dot ${dotCls}"></div><div class="sfi-val">${normed}</div>${operator?`<div class="sfi-op">${operator}</div>`:''}`;
+  list.insertBefore(el,list.firstChild);
+  while(list.children.length>80)list.removeChild(list.lastChild);
+}
+
+async function loadScansForSession(sessId){
+  try{
+    const{data}=await sb.from('scans').select('tracking,operator').eq('session_id',sessId).order('scanned_at',{ascending:true});
+    if(!data||!data.length)return;
+    const ta=document.getElementById('prescan-paste');
+    const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
+    const newOnes=data.filter(r=>norm(r.tracking)&&!existing.has(norm(r.tracking)));
+    if(!newOnes.length){updateScannerBadge();return;}
+    ta.value=ta.value?ta.value+'\n'+newOnes.map(r=>norm(r.tracking)).join('\n'):newOnes.map(r=>norm(r.tracking)).join('\n');
+    const sess=currentSession('prescan');
+    if(sess){sess.rawPaste=ta.value;saveLocal();}
+    processPaste('prescan');
+    updateScannerBadge();
+    // Populate feed panel with historical scans (oldest first = bottom of feed)
+    const countEl=document.getElementById('scanner-feed-count');
+    if(countEl) countEl.textContent='0';
+    const listEl=document.getElementById('scanner-feed-list');
+    if(listEl){const empty=listEl.querySelector('.scanner-feed-empty');if(empty)empty.remove();}
+    // Show most recent 40 in feed (data is asc, so reverse for newest-on-top)
+    const recent=[...data].reverse().slice(0,40);
+    recent.forEach(r=>{
+      const manifest=manifestCache['prescan'];
+      let inManifest=true;
+      if(manifest){const allT=new Set(Object.values(manifest).flat().map(x=>norm(x.tracking||x.ccn||'')).filter(Boolean));inManifest=allT.has(norm(r.tracking));}
+      const el=document.createElement('div');
+      el.className='sfi';
+      const dotCls=inManifest?'ok':'warn';
+      el.innerHTML=`<div class="sfi-dot ${dotCls}"></div><div class="sfi-val">${norm(r.tracking)}</div>${r.operator?`<div class="sfi-op">${r.operator}</div>`:''}`;
+      if(listEl)listEl.appendChild(el);
+    });
+    if(countEl) countEl.textContent=data.length;
+    const meta=document.getElementById('scanner-feed-meta');
+    const ops=[...new Set(data.map(r=>r.operator).filter(Boolean))];
+    if(meta&&ops.length) meta.textContent='Scanner: '+ops.join(', ');
   }catch(e){console.warn('loadScansForSession:',e);}
 }
 
