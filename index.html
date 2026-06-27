@@ -185,6 +185,12 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 .empty .icon { font-size:2.5rem;margin-bottom:.75rem; }
 .empty p { font-size:.85rem; }
 
+/* ── History two-column layout ── */
+.history-layout { display:grid; grid-template-columns:220px 1fr; gap:1rem; align-items:start; }
+.history-side { position:sticky; top:6rem; }
+.history-main { min-width:0; }
+@media(max-width:700px){ .history-layout { grid-template-columns:1fr; } .history-side { position:static; } }
+
 /* ══════ HISTORY ══════ */
 .cal-nav { display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem; }
 .cal-nav h2 { font-size:1rem;font-weight:600; }
@@ -598,51 +604,52 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 
   <!-- ════ HISTORY ════ -->
   <div id="phase-history" style="display:none">
+    <div class="history-layout">
 
-    <!-- Customer filter -->
-    <div class="card">
-      <div class="card-title">Filter by Customer</div>
-      <div class="filter-group" id="customer-filters">
-        <button class="filter-btn active" onclick="setCustomerFilter('all',this)">All</button>
-      </div>
-    </div>
-
-    <!-- Calendar -->
-    <div class="card">
-      <div class="cal-nav">
-        <button class="btn btn-secondary" onclick="calMove(-1)">&#8592;</button>
-        <h2 id="cal-title"></h2>
-        <button class="btn btn-secondary" onclick="calMove(1)">&#8594;</button>
-      </div>
-      <div class="cal-grid" id="cal-grid"></div>
-    </div>
-
-    <!-- Day sessions -->
-    <div id="day-sessions" style="display:none">
-      <div class="day-header">
-        <h3 id="day-sessions-title"></h3>
-        <button class="btn btn-secondary" onclick="exportDay()">Export Day</button>
-      </div>
-      <div id="day-sessions-list"></div>
-    </div>
-
-    <!-- Non-released date range report -->
-    <div class="card" style="margin-top:1.25rem">
-      <div class="card-title">Non-Released Report</div>
-      <p style="font-size:.82rem;color:#94a3b8;margin-bottom:1rem">Export all non-released packages from CBSA sessions within a date range.</p>
-      <div class="date-range-row">
-        <div class="field">
-          <label>From</label>
-          <input type="date" id="report-from">
+      <!-- Left: Non-Released report panel -->
+      <div class="history-side">
+        <div class="card" style="height:100%">
+          <div class="card-title">Non-Released Report</div>
+          <p style="font-size:.82rem;color:#94a3b8;margin-bottom:1.25rem;line-height:1.55">Export all non-released CBSA packages within a date range.</p>
+          <label class="field-label">From</label>
+          <input type="date" id="report-from" style="margin-bottom:.75rem">
+          <label class="field-label">To</label>
+          <input type="date" id="report-to" style="margin-bottom:1.25rem">
+          <button class="btn btn-warning" style="width:100%;padding:.85rem;font-size:.88rem;font-weight:700" onclick="exportNonReleased()">⬇ Export Non-Released</button>
         </div>
-        <div class="field">
-          <label>To</label>
-          <input type="date" id="report-to">
-        </div>
-        <button class="btn btn-warning" onclick="exportNonReleased()">Export Non-Released</button>
       </div>
-    </div>
 
+      <!-- Right: calendar + sessions -->
+      <div class="history-main">
+        <!-- Customer filter -->
+        <div class="card">
+          <div class="card-title">Filter by Customer</div>
+          <div class="filter-group" id="customer-filters">
+            <button class="filter-btn active" onclick="setCustomerFilter('all',this)">All</button>
+          </div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="card">
+          <div class="cal-nav">
+            <button class="btn btn-secondary" onclick="calMove(-1)">&#8592;</button>
+            <h2 id="cal-title"></h2>
+            <button class="btn btn-secondary" onclick="calMove(1)">&#8594;</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <!-- Day sessions -->
+        <div id="day-sessions" style="display:none">
+          <div class="day-header">
+            <h3 id="day-sessions-title"></h3>
+            <button class="btn btn-secondary" onclick="exportDay()">Export Day</button>
+          </div>
+          <div id="day-sessions-list"></div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
 </main>
