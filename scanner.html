@@ -350,6 +350,30 @@ function startScanning(){
   const f=document.getElementById('scan-field');
   f.value='';
   f.focus();
+
+  // Load existing scans from Supabase for this session
+  loadExistingScans(activeSess.id);
+}
+
+async function loadExistingScans(sessId){
+  try{
+    const{data,error}=await sb.from('scans')
+      .select('id,tracking,device')
+      .eq('shipment_id',sessId)
+      .order('scanned_at',{ascending:true});
+    if(error||!data||!data.length)return;
+    data.forEach(r=>{
+      const normed=norm(r.tracking||'');
+      if(!normed)return;
+      const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
+      const isDup=seenThisRun.has(normed);
+      seenThisRun.add(normed);
+      scanCount++;
+      const el=addFeedItem(normed,isDup,inManifest);
+      if(el&&r.id) el.dataset.id=r.id;
+    });
+    document.getElementById('scan-count').textContent=scanCount;
+  }catch(e){console.warn('loadExistingScans:',e);}
 }
 
 function exitScanning(){
