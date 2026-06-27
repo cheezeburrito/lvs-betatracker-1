@@ -901,7 +901,7 @@ function addScannerFeedItem(normed, operator, isDup){
 
 async function loadScansForSession(sessId){
   try{
-    const{data}=await sb.from('scans').select('tracking,operator').eq('session_id',sessId).order('created_at',{ascending:true});
+    const{data}=await sb.from('scans').select('tracking,operator').eq('session_id',sessId);
     if(!data||!data.length)return;
     const ta=document.getElementById('prescan-paste');
     const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
