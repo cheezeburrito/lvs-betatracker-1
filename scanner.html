@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>LVS Scanner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#060a10;
+  --card:#111827;
+  --border:#1f2d45;
+  --accent:#3b82f6;
+  --green:#22c55e;
+  --red:#ef4444;
+  --amber:#f59e0b;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --input-bg:#0a1020;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;overscroll-behavior:none;}
+
+/* ── HEADER ── */
+.header{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;background:#0d1424;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.header-title{font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:.02em;}
+.header-sub{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;}
+.sync-dot.live{background:var(--green);box-shadow:0 0 6px var(--green);}
+
+/* ── SETUP SCREEN ── */
+#setup{padding:1.25rem 1rem;display:flex;flex-direction:column;gap:1rem;}
+.setup-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;}
+input,select{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-size:1rem;outline:none;appearance:none;-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--accent);}
+select option{background:#111827;}
+.btn{width:100%;padding:.875rem;border-radius:10px;border:none;font-size:1rem;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:active{opacity:.8;}
+.btn-secondary{background:transparent;border:1px solid var(--border);color:var(--text);margin-top:.25rem;}
+
+/* ── SCAN SCREEN ── */
+#scan-screen{display:none;flex-direction:column;height:calc(100vh - 57px);}
+
+.session-strip{padding:.6rem 1rem;background:#0a1525;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.4rem;}
+.session-name{font-size:.85rem;font-weight:600;color:#fff;}
+.session-meta{font-size:.72rem;color:var(--muted);}
+.exit-btn{font-size:.75rem;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:.3rem .65rem;cursor:pointer;}
+
+/* scan input area — grows with content, always ready */
+.scan-zone{padding:1rem;flex:1;display:flex;flex-direction:column;gap:.75rem;overflow:hidden;}
+.scan-area-wrap{position:relative;}
+.scan-tip{font-size:.72rem;color:var(--muted);margin-bottom:.4rem;}
+#scan-input{
+  width:100%;min-height:90px;max-height:160px;
+  background:var(--input-bg);border:2px solid var(--border);border-radius:10px;
+  padding:.75rem 1rem;color:var(--text);font-size:1rem;
+  resize:none;outline:none;font-family:monospace;
+  line-height:1.6;
+  /* Keep focus locked — never blur between scans */
+}
+#scan-input:focus{border-color:var(--accent);}
+#scan-input.flash{border-color:var(--green);transition:border-color 0s;}
+
+.counter-row{display:flex;align-items:center;gap:.75rem;justify-content:space-between;}
+.counter{font-size:1.6rem;font-weight:800;color:var(--green);font-variant-numeric:tabular-nums;}
+.counter-label{font-size:.72rem;color:var(--muted);}
+.clear-btn{font-size:.75rem;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:6px;padding:.3rem .65rem;cursor:pointer;}
+
+/* feed */
+.feed-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+.feed{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem;padding-bottom:.5rem;}
+.feed-item{display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:.85rem;font-family:monospace;animation:slidein .15s ease;}
+@keyframes slidein{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.feed-item .fi-status{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;flex-shrink:0;}
+.fi-ok{background:#14532d;color:var(--green);}
+.fi-warn{background:#431407;color:var(--amber);}
+.fi-dup{background:#1e3a5f;color:#93c5fd;}
+.feed-item .fi-val{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.feed-item .fi-time{font-size:.65rem;color:var(--muted);flex-shrink:0;}
+
+/* empty state */
+.empty-feed{text-align:center;color:var(--muted);padding:2rem 1rem;font-size:.85rem;line-height:1.7;}
+.empty-icon{font-size:2.5rem;margin-bottom:.5rem;}
+
+/* toast */
+#toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid var(--border);border-radius:10px;padding:.65rem 1.25rem;font-size:.85rem;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:200;}
+#toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">LVS Scanner</div>
+    <div class="header-sub">Phase 1 · Real-time</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:.6rem;">
+    <div class="sync-dot" id="syncDot"></div>
+    <span style="font-size:.72rem;color:var(--muted)" id="syncLabel">offline</span>
+  </div>
+</div>
+
+<!-- SETUP -->
+<div id="setup">
+  <div>
+    <div class="setup-label">Your name</div>
+    <input id="opInput" type="text" placeholder="e.g. Oscar" autocomplete="off" autocorrect="off" spellcheck="false">
+  </div>
+  <div>
+    <div class="setup-label">Session</div>
+    <select id="sessSelect">
+      <option value="">Loading sessions…</option>
+    </select>
+  </div>
+  <button class="btn btn-primary" onclick="startScanning()">Start Scanning</button>
+  <button class="btn btn-secondary" onclick="refreshSessions()">↻ Refresh Sessions</button>
+</div>
+
+<!-- SCAN SCREEN -->
+<div id="scan-screen">
+  <div class="session-strip">
+    <div>
+      <div class="session-name" id="strip-name">—</div>
+      <div class="session-meta" id="strip-meta">—</div>
+    </div>
+    <button class="exit-btn" onclick="exitScanning()">✕ Exit</button>
+  </div>
+
+  <div class="scan-zone">
+    <!-- The accumulating textarea — never clears, scanner fires into it continuously -->
+    <div class="scan-area-wrap">
+      <div class="scan-tip">Point scanner here — each scan auto-submits instantly</div>
+      <textarea id="scan-input" placeholder="Tap here, then scan…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+    </div>
+
+    <div class="counter-row">
+      <div>
+        <div class="counter" id="scan-count">0</div>
+        <div class="counter-label">scans this session</div>
+      </div>
+      <button class="clear-btn" onclick="clearFeed()">Clear feed</button>
+    </div>
+
+    <div class="feed-label">Live feed</div>
+    <div class="feed" id="feed">
+      <div class="empty-feed">
+        <div class="empty-icon">📡</div>
+        Waiting for first scan…
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL = 'https://wzwcfvmhnqwhmfjdcsxj.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6d2Nmdm1obnF3aG1mamRjc3hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTc4MTksImV4cCI6MjA5NjU5MzgxOX0.4ABH_t8-DG9Sh-Ts293pJKvO4CsO8bCM1pqjt59G5Xc';
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+function norm(v){ return String(v||'').replace(/[^A-Z0-9]/gi,'').toUpperCase(); }
+
+let activeSess = null;      // { id, name, operator, manifest }
+let seenInFeed = new Set(); // track duplicates in this scan run
+let scanCount  = 0;
+let lastLineCount = 0;      // how many lines we've already processed
+
+// ── SYNC DOT ──────────────────────────────────────────────────────────────
+function setSynced(on){
+  document.getElementById('syncDot').className = 'sync-dot' + (on?' live':'');
+  document.getElementById('syncLabel').textContent = on ? 'live' : 'offline';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function toast(msg, dur=2200){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>el.classList.remove('show'), dur);
+}
+
+// ── SESSIONS ──────────────────────────────────────────────────────────────
+async function refreshSessions(){
+  const sel = document.getElementById('sessSelect');
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const { data, error } = await sb
+      .from('shipments')
+      .select('id,name,operator,phase,completed,manifest')
+      .eq('phase','prescan')
+      .eq('completed', false)
+      .order('created_at', { ascending: false });
+
+    if(error) throw error;
+    setSynced(true);
+
+    if(!data || !data.length){
+      sel.innerHTML = '<option value="">No active Phase 1 sessions</option>';
+      return;
+    }
+    sel.innerHTML = data.map(s =>
+      `<option value="${s.id}" data-manifest='${JSON.stringify(s.manifest||[]).replace(/'/g,"&#39;")}' data-operator="${s.operator||''}" data-name="${s.name}">
+        ${s.name}${s.operator?' · '+s.operator:''}
+      </option>`
+    ).join('');
+  } catch(e){
+    sel.innerHTML = '<option value="">Error loading — tap Refresh</option>';
+    setSynced(false);
+    console.warn(e);
+  }
+}
+
+// ── START ──────────────────────────────────────────────────────────────────
+function startScanning(){
+  const op = document.getElementById('opInput').value.trim();
+  const sel = document.getElementById('sessSelect');
+  const opt = sel.options[sel.selectedIndex];
+
+  if(!op){ toast('Enter your name first'); return; }
+  if(!sel.value){ toast('Select a session first'); return; }
+
+  let manifest = [];
+  try{ manifest = JSON.parse(opt.getAttribute('data-manifest')||'[]'); }catch(e){}
+
+  activeSess = {
+    id: sel.value,
+    name: opt.getAttribute('data-name') || sel.value,
+    operator: op,
+    manifest,
+    normedTracking: new Set(manifest.map(r => norm(r.tracking||r.ccn||'')).filter(Boolean))
+  };
+
+  localStorage.setItem('scanner_op', op);
+
+  document.getElementById('strip-name').textContent = activeSess.name;
+  document.getElementById('strip-meta').textContent = `Operator: ${op}`;
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('scan-screen').style.display = 'flex';
+
+  // Reset state
+  seenInFeed.clear();
+  scanCount = 0;
+  lastLineCount = 0;
+  document.getElementById('scan-count').textContent = '0';
+  document.getElementById('feed').innerHTML =
+    '<div class="empty-feed"><div class="empty-icon">📡</div>Waiting for first scan…</div>';
+
+  const ta = document.getElementById('scan-input');
+  ta.value = '';
+  ta.focus();
+}
+
+function exitScanning(){
+  activeSess = null;
+  document.getElementById('scan-screen').style.display = 'none';
+  document.getElementById('setup').style.display = 'flex';
+  document.getElementById('scan-input').value = '';
+  lastLineCount = 0;
+  refreshSessions();
+}
+
+// ── THE CORE: detect new lines, fire immediately ──────────────────────────
+document.getElementById('scan-input').addEventListener('input', function(){
+  const lines = this.value.split('\n');
+  // Only process lines we haven't seen yet
+  // A line is "complete" if it's not the last line (i.e. the scanner has moved on)
+  // OR if the last line ends with a typical scanner suffix char
+  const completedLines = lines.slice(0, lines.length - 1); // everything before last \n
+
+  if(completedLines.length > lastLineCount){
+    const newLines = completedLines.slice(lastLineCount);
+    lastLineCount = completedLines.length;
+    newLines.forEach(line => {
+      const val = line.trim();
+      if(val) handleScan(val);
+    });
+  }
+});
+
+// Re-focus on any tap/click within the scan zone so the textarea never loses focus
+document.getElementById('scan-screen').addEventListener('click', function(e){
+  if(e.target.closest('button')) return; // let buttons work normally
+  document.getElementById('scan-input').focus();
+});
+
+// ── HANDLE A SINGLE SCAN ─────────────────────────────────────────────────
+async function handleScan(raw){
+  if(!activeSess) return;
+  const normed = norm(raw);
+  if(!normed) return;
+
+  // Flash border
+  const ta = document.getElementById('scan-input');
+  ta.classList.add('flash');
+  setTimeout(()=>ta.classList.remove('flash'), 120);
+
+  const isDup = seenInFeed.has(normed);
+  const inManifest = !activeSess.manifest.length || activeSess.normedTracking.has(normed);
+
+  seenInFeed.add(normed);
+  scanCount++;
+  document.getElementById('scan-count').textContent = scanCount;
+
+  // Add to feed (newest on top)
+  addFeedItem(raw, normed, isDup, inManifest);
+
+  // Push to Supabase — fire and forget, never block the UI
+  sb.from('scans').insert({
+    session_id: activeSess.id,
+    tracking: normed,
+    operator: activeSess.operator,
+    scanned_at: new Date().toISOString()
+  }).then(({ error }) => {
+    if(error) console.warn('scan push:', error);
+  });
+}
+
+// ── FEED ──────────────────────────────────────────────────────────────────
+function addFeedItem(raw, normed, isDup, inManifest){
+  const feed = document.getElementById('feed');
+
+  // Remove empty state
+  const empty = feed.querySelector('.empty-feed');
+  if(empty) empty.remove();
+
+  const now = new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+
+  let statusClass, statusIcon, statusTitle;
+  if(isDup){
+    statusClass='fi-dup'; statusIcon='↩'; statusTitle='Duplicate';
+  } else if(inManifest){
+    statusClass='fi-ok'; statusIcon='✓'; statusTitle='Matched';
+  } else {
+    statusClass='fi-warn'; statusIcon='!'; statusTitle='Not in manifest';
+  }
+
+  const item = document.createElement('div');
+  item.className = 'feed-item';
+  item.innerHTML = `
+    <div class="fi-status ${statusClass}" title="${statusTitle}">${statusIcon}</div>
+    <div class="fi-val" title="${raw}">${normed}</div>
+    <div class="fi-time">${now}</div>
+  `;
+
+  // Insert at top
+  feed.insertBefore(item, feed.firstChild);
+
+  // Cap feed at 100 items to avoid DOM bloat
+  while(feed.children.length > 100) feed.removeChild(feed.lastChild);
+}
+
+function clearFeed(){
+  seenInFeed.clear();
+  scanCount = 0;
+  lastLineCount = 0;
+  document.getElementById('scan-count').textContent = '0';
+  document.getElementById('scan-input').value = '';
+  document.getElementById('feed').innerHTML =
+    '<div class="empty-feed"><div class="empty-icon">📡</div>Waiting for first scan…</div>';
+  document.getElementById('scan-input').focus();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+(async function init(){
+  // Restore operator name
+  const savedOp = localStorage.getItem('scanner_op');
+  if(savedOp) document.getElementById('opInput').value = savedOp;
+  await refreshSessions();
+})();
+</script>
+</body>
+</html>
