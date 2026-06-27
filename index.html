@@ -1259,8 +1259,19 @@ function loadSession(phase,id){
   renderSessInfo(phase, sess);
   document.getElementById(`${phase}-paste`).value=sess.rawPaste||'';
   document.getElementById(`${phase}-notes`).value=sess.notes||'';
-  if(phase==='prescan'){loadScansForSession(id);} // merge any gun scans from DB
-  if(phase==='prescan'){updateScannerBadge();}
+  if(phase==='prescan'){
+    // Clear live feed before loading new session's scans
+    const feedList=document.getElementById('scanner-feed-list');
+    if(feedList) feedList.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
+    const feedCount=document.getElementById('scanner-feed-count');
+    if(feedCount) feedCount.textContent='0';
+    const feedMeta=document.getElementById('scanner-feed-meta');
+    if(feedMeta) feedMeta.textContent='No scanner connected';
+    const feedDot=document.getElementById('scanner-feed-dot');
+    if(feedDot) feedDot.classList.remove('live');
+    loadScansForSession(id);
+    updateScannerBadge();
+  }
   if(sess.manifest){
     manifestCache[phase]=sess.manifest;
     const total=Object.values(sess.manifest).reduce((a,c)=>a+c.length,0);
