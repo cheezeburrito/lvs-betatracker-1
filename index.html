@@ -843,8 +843,8 @@ async function saveOperator(){
   const typed=document.getElementById('nameInput').value.trim();
   const name=typed||fromList;
   if(!name){alert('Please enter your name.');return;}
-  // Don't let a Supabase failure block the user from entering the app
-  try{await addOperatorToDB(name);}catch(e){console.warn('Could not sync operator:',e);}
+  // Fire-and-forget — never block the user on a slow/failed network call
+  addOperatorToDB(name).catch(e=>console.warn('operator sync:',e));
   app.operator=name; saveLocal();
   document.getElementById('operatorDisplay').textContent=name;
   document.getElementById('nameModal').classList.add('hidden');
