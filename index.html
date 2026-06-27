@@ -837,11 +837,17 @@ function subscribeRealtime(){
   // Real-time scanner gun scans → append to active prescan paste area live
   sb.channel('scans-live')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'scans'},({new:r})=>{
+      console.log('[scanner] realtime row:', r);
       const activeId=document.getElementById('prescan-sel').value;
-      if(r.session_id!==activeId)return;
+      if(!activeId){console.log('[scanner] no active session, ignoring');return;}
+      if(r.session_id!==activeId){console.log('[scanner] session mismatch:',r.session_id,'vs',activeId);return;}
       appendScanToDesktop(r.tracking, r.operator);
     })
-    .subscribe();
+    .subscribe((status,err)=>{
+      console.log('[scanner] channel status:',status,err||'');
+      if(status==='SUBSCRIBED') console.log('[scanner] listening for scans ✓');
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT') console.warn('[scanner] realtime error:',err);
+    });
 }
 
 function appendScanToDesktop(tracking, operator){
