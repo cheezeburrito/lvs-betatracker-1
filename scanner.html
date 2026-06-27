@@ -185,6 +185,8 @@ function toast(msg, dur=2200){
 }
 
 // ── SESSIONS ──────────────────────────────────────────────────────────────
+let sessionsStore = {}; // id → session row, avoids stuffing JSON into data-* attrs
+
 async function refreshSessions(){
   const sel = document.getElementById('sessSelect');
   sel.innerHTML = '<option value="">Loading…</option>';
@@ -201,13 +203,15 @@ async function refreshSessions(){
 
     if(!data || !data.length){
       sel.innerHTML = '<option value="">No active Phase 1 sessions</option>';
+      sessionsStore = {};
       return;
     }
-    sel.innerHTML = data.map(s =>
-      `<option value="${s.id}" data-manifest='${JSON.stringify(s.manifest||[]).replace(/'/g,"&#39;")}' data-operator="${s.operator||''}" data-name="${s.name}">
-        ${s.name}${s.operator?' · '+s.operator:''}
-      </option>`
+    sessionsStore = {};
+    data.forEach(s => sessionsStore[s.id] = s);
+    sel.innerHTML = '<option value="">— select session —</option>' + data.map(s =>
+      `<option value="${s.id}">${s.name}${s.operator?' · '+s.operator:''}</option>`
     ).join('');
+    if(data.length === 1) sel.value = data[0].id;
   } catch(e){
     sel.innerHTML = '<option value="">Error loading — tap Refresh</option>';
     setSynced(false);
@@ -219,20 +223,20 @@ async function refreshSessions(){
 function startScanning(){
   const op = document.getElementById('opInput').value.trim();
   const sel = document.getElementById('sessSelect');
-  const opt = sel.options[sel.selectedIndex];
 
   if(!op){ toast('Enter your name first'); return; }
   if(!sel.value){ toast('Select a session first'); return; }
 
-  let manifest = [];
-  try{ manifest = JSON.parse(opt.getAttribute('data-manifest')||'[]'); }catch(e){}
+  const row = sessionsStore[sel.value] || {};
+  // manifest is stored as { [ccn]: [{tracking,carton,ccn}] } on desktop
+  const manifest = row.manifest || {};
+  const allTrackings = Object.values(manifest).flat().map(r => norm(r.tracking||r.ccn||'')).filter(Boolean);
 
   activeSess = {
     id: sel.value,
-    name: opt.getAttribute('data-name') || sel.value,
+    name: row.name || sel.value,
     operator: op,
-    manifest,
-    normedTracking: new Set(manifest.map(r => norm(r.tracking||r.ccn||'')).filter(Boolean))
+    normedTracking: new Set(allTrackings)
   };
 
   localStorage.setItem('scanner_op', op);
