@@ -215,6 +215,11 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 .sess-info-strip .sess-meta { color:#475569; font-size:.75rem; flex-shrink:0; }
 .sess-info-strip .sess-customer { background:#1e3a6e; color:#93c5fd; padding:.15rem .55rem; border-radius:99px; font-size:.72rem; font-weight:600; flex-shrink:0; }
 
+/* ── BorderConnect float button ── */
+#bc-btn { position:fixed; right:1.25rem; bottom:5rem; z-index:90; background:#1e3a6e; border:1px solid #3b82f6; border-radius:12px; padding:.75rem 1.1rem; color:#93c5fd; font-size:.8rem; font-weight:600; cursor:pointer; text-decoration:none; display:none; flex-direction:column; align-items:center; gap:.25rem; box-shadow:0 4px 20px rgba(0,0,0,.5); transition:background .15s,transform .15s; max-width:150px; text-align:center; line-height:1.3; }
+#bc-btn:hover { background:#1d4ed8; color:#fff; transform:translateY(-2px); }
+#bc-btn .bc-label { font-size:.65rem; font-weight:400; color:#60a5fa; opacity:.85; }
+
 /* ── Empty state ── */
 .empty-state { text-align:center; padding:4rem 1rem 3rem; }
 .empty-state .empty-icon { font-size:3rem; margin-bottom:1rem; opacity:.4; }
@@ -420,6 +425,11 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 </header>
 
 <div id="toast-container"></div>
+
+<a id="bc-btn" href="https://www.borderconnect.com/app/index.up" target="_blank" rel="noopener">
+  Ready to WACM?
+  <span class="bc-label">Go to BorderConnect →</span>
+</a>
 
 <div class="phase-tabs">
   <div class="phase-tab active" id="tab-prescan" onclick="switchPhase('prescan')">Phase 1 — Physical Receipt<span class="step-label">Scan &amp; confirm parcels on hand</span></div>
@@ -828,6 +838,7 @@ function init(){
   }
   refreshDropdown('prescan');
   refreshDropdown('cbsa');
+  document.getElementById('bc-btn').style.display='flex'; // Phase 1 is default
 }
 async function startSync(){
   await Promise.all([loadOperatorsFromDB(), loadCustomersFromDB()]);
@@ -870,6 +881,7 @@ document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='
 // Phase switching
 // ─────────────────────────────────────────────────────────────────────────────
 function switchPhase(phase){
+  document.getElementById('bc-btn').style.display=phase==='prescan'?'flex':'none';
   ['prescan','cbsa','history'].forEach(p=>{
     document.getElementById(`phase-${p}`).style.display=p===phase?'':'none';
     document.getElementById(`tab-${p}`).classList.toggle('active',p===phase);
