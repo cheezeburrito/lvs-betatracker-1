@@ -493,8 +493,11 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
       </div>
 
       <div class="card" id="prescan-paste-card" style="display:none">
-        <div class="card-title">2 · Paste Batch Scans</div>
-        <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Scan parcels into your Google Doc, then copy and paste the contents below.</p>
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>2 · Paste Batch Scans</span>
+          <span id="scanner-live-badge" style="display:none;font-size:.72rem;font-weight:600;background:#14532d;color:#4ade80;border:1px solid #166534;border-radius:20px;padding:.2rem .65rem;letter-spacing:.03em">📡 Scanner live — <span id="scanner-live-count">0</span> scanned</span>
+        </div>
+        <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Scan parcels into your Google Doc, then copy and paste the contents below. Or use the <strong style="color:#93c5fd">scanner.html</strong> page on the CipherLab gun for real-time scanning.</p>
         <textarea id="prescan-paste" style="min-height:110px" placeholder="Paste scanned tracking IDs here…" oninput="onPasteInput('prescan')"></textarea>
         <p class="kbd-tip">💡 Tip: Press <kbd>Ctrl+Enter</kbd> to process immediately after pasting.</p>
       </div>
@@ -768,6 +771,53 @@ function subscribeRealtime(){
       if(app.sessions[phase]?.[r.id]){delete app.sessions[phase][r.id];saveLocal();refreshDropdown(phase);if(document.getElementById(`${phase}-sel`).value===r.id)loadSession(phase,'');}
     })
     .subscribe(s=>{if(s==='SUBSCRIBED')setSyncStatus('online');});
+  // Real-time scanner gun scans → append to active prescan paste area live
+  sb.channel('scans-live')
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'scans'},({new:r})=>{
+      const activeId=document.getElementById('prescan-sel').value;
+      if(r.session_id!==activeId)return;
+      appendScanToDesktop(r.tracking);
+    })
+    .subscribe();
+}
+
+function appendScanToDesktop(tracking){
+  const normed=norm(tracking);
+  if(!normed)return;
+  const ta=document.getElementById('prescan-paste');
+  const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
+  if(existing.has(normed))return;
+  ta.value=ta.value?ta.value+'\n'+normed:normed;
+  const sess=currentSession('prescan');
+  if(sess){sess.rawPaste=ta.value;saveLocal();}
+  processPaste('prescan');
+  updateScannerBadge();
+}
+
+async function loadScansForSession(sessId){
+  try{
+    const{data}=await sb.from('scans').select('tracking').eq('session_id',sessId).order('scanned_at',{ascending:true});
+    if(!data||!data.length)return;
+    const ta=document.getElementById('prescan-paste');
+    const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
+    const newOnes=data.map(r=>norm(r.tracking)).filter(t=>t&&!existing.has(t));
+    if(!newOnes.length){updateScannerBadge();return;}
+    ta.value=ta.value?ta.value+'\n'+newOnes.join('\n'):newOnes.join('\n');
+    const sess=currentSession('prescan');
+    if(sess){sess.rawPaste=ta.value;saveLocal();}
+    processPaste('prescan');
+    updateScannerBadge();
+  }catch(e){console.warn('loadScansForSession:',e);}
+}
+
+function updateScannerBadge(){
+  const ta=document.getElementById('prescan-paste');
+  const count=ta?[...new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean))].length:0;
+  const badge=document.getElementById('scanner-live-badge');
+  const countEl=document.getElementById('scanner-live-count');
+  if(!badge)return;
+  if(count>0){badge.style.display='';if(countEl)countEl.textContent=count;}
+  else{badge.style.display='none';}
 }
 function onRemoteChange(sess){
   const phase=sess.phase;
@@ -1083,6 +1133,8 @@ function loadSession(phase,id){
   renderSessInfo(phase, sess);
   document.getElementById(`${phase}-paste`).value=sess.rawPaste||'';
   document.getElementById(`${phase}-notes`).value=sess.notes||'';
+  if(phase==='prescan'){loadScansForSession(id);} // merge any gun scans from DB
+  if(phase==='prescan'){updateScannerBadge();}
   if(sess.manifest){
     manifestCache[phase]=sess.manifest;
     const total=Object.values(sess.manifest).reduce((a,c)=>a+c.length,0);
