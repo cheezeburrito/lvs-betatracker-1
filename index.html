@@ -840,8 +840,8 @@ function subscribeRealtime(){
       console.log('[scanner] realtime row:', r);
       const activeId=document.getElementById('prescan-sel').value;
       if(!activeId){console.log('[scanner] no active session, ignoring');return;}
-      if(r.session_id!==activeId){console.log('[scanner] session mismatch:',r.session_id,'vs',activeId);return;}
-      appendScanToDesktop(r.tracking, r.operator);
+      if(r.shipment_id!==activeId){console.log('[scanner] session mismatch:',r.shipment_id,'vs',activeId);return;}
+      appendScanToDesktop(r.tracking, r.device);
     })
     .subscribe((status,err)=>{
       console.log('[scanner] channel status:',status,err||'');
@@ -901,7 +901,7 @@ function addScannerFeedItem(normed, operator, isDup){
 
 async function loadScansForSession(sessId){
   try{
-    const{data}=await sb.from('scans').select('tracking,operator').eq('session_id',sessId);
+    const{data}=await sb.from('scans').select('tracking,device').eq('shipment_id',sessId).order('scanned_at',{ascending:true});
     if(!data||!data.length)return;
     const ta=document.getElementById('prescan-paste');
     const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
@@ -926,12 +926,12 @@ async function loadScansForSession(sessId){
       const el=document.createElement('div');
       el.className='sfi';
       const dotCls=inManifest?'ok':'warn';
-      el.innerHTML=`<div class="sfi-dot ${dotCls}"></div><div class="sfi-val">${norm(r.tracking)}</div>${r.operator?`<div class="sfi-op">${r.operator}</div>`:''}`;
+      el.innerHTML=`<div class="sfi-dot ${dotCls}"></div><div class="sfi-val">${norm(r.tracking)}</div>${r.device?`<div class="sfi-op">${r.device}</div>`:''}`;
       if(listEl)listEl.appendChild(el);
     });
     if(countEl) countEl.textContent=data.length;
     const meta=document.getElementById('scanner-feed-meta');
-    const ops=[...new Set(data.map(r=>r.operator).filter(Boolean))];
+    const ops=[...new Set(data.map(r=>r.device).filter(Boolean))];
     if(meta&&ops.length) meta.textContent='Scanner: '+ops.join(', ');
   }catch(e){console.warn('loadScansForSession:',e);}
 }

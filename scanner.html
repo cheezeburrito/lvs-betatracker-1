@@ -422,9 +422,9 @@ async function handleScan(raw){
 
   // Push to Supabase — fire & forget, never block UI
   sb.from('scans').insert({
-    session_id:activeSess.id,
+    shipment_id:activeSess.id,
     tracking:normed,
-    operator:activeSess.operator,
+    device:activeSess.operator,
     scanned_at:new Date().toISOString()
   }).then(({error})=>{if(error)console.warn('push:',error);});
 }
