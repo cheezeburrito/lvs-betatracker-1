@@ -289,11 +289,52 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 .toast.warn    { border-color:#78350f; background:#1c1400; color:#fbbf24; }
 @keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-@media(max-width:560px){
-  main{padding:1rem}
-  .stat-val{font-size:1.25rem}
-  .file-pair>label{min-width:100%}
-  .cal-day{font-size:.75rem;min-height:36px}
+/* ── Mobile nav dropdown ── */
+.mobile-phase-sel { display:none; }
+@media(max-width:768px){
+  /* Hide desktop tabs, show dropdown */
+  .phase-tabs { display:none !important; }
+  .mobile-phase-sel {
+    display:block;
+    width:100%;
+    background:#0d1424;
+    border:none;
+    border-bottom:1px solid #1f2d45;
+    color:#e2e8f0;
+    font-size:1rem;
+    font-weight:600;
+    padding:.85rem 1rem;
+    position:sticky;
+    top:0;
+    z-index:100;
+    -webkit-appearance:none;
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2394a3b8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 1rem center;
+    cursor:pointer;
+  }
+  /* Hide BorderConnect button on mobile */
+  #bc-btn { display:none !important; }
+  /* Header: hide clock, compress */
+  .header-clock { display:none; }
+  header { grid-template-columns:1fr auto; padding:.6rem 1rem; }
+  .header-right { gap:.4rem; }
+  .admin-btn { font-size:.75rem; padding:.3rem .6rem; }
+  .operator-pill { font-size:.72rem; padding:.28rem .55rem; }
+  /* Main padding */
+  main { padding:.75rem }
+  .stat-val { font-size:1.25rem }
+  .file-pair>label { min-width:100% }
+  .cal-day { font-size:.75rem; min-height:36px }
+  /* Session bar stack on mobile */
+  .session-bar { flex-wrap:wrap; gap:.5rem; }
+  /* Prescan two-column collapses to one */
+  .prescan-layout { grid-template-columns:1fr; }
+  /* Scanner feed panel: not sticky on mobile */
+  .scanner-feed-panel { position:static; }
+  /* Cards full width */
+  .card { padding:1rem; }
 }
 </style>
 </head>
@@ -498,6 +539,11 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
   <div class="phase-tab"        id="tab-cbsa"    onclick="switchPhase('cbsa')">Phase 2 — CBSA Check<span class="step-label">Verify customs clearance status</span></div>
   <div class="phase-tab"        id="tab-history" onclick="switchPhase('history')">History<span class="step-label">Completed shipments</span></div>
 </div>
+<select class="mobile-phase-sel" id="mobile-phase-sel" onchange="switchPhase(this.value)">
+  <option value="prescan">Phase 1 — Physical Receipt</option>
+  <option value="cbsa">Phase 2 — CBSA Check</option>
+  <option value="history">History</option>
+</select>
 
 <main>
 
@@ -1077,11 +1123,14 @@ document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='
 // Phase switching
 // ─────────────────────────────────────────────────────────────────────────────
 function switchPhase(phase){
-  document.getElementById('bc-btn').style.display=phase==='prescan'?'flex':'none';
+  const isMobile=window.innerWidth<=768;
+  document.getElementById('bc-btn').style.display=(phase==='prescan'&&!isMobile)?'flex':'none';
   ['prescan','cbsa','history'].forEach(p=>{
     document.getElementById(`phase-${p}`).style.display=p===phase?'':'none';
     document.getElementById(`tab-${p}`).classList.toggle('active',p===phase);
   });
+  const mobSel=document.getElementById('mobile-phase-sel');
+  if(mobSel) mobSel.value=phase;
   if(phase==='history'){renderCustomerFilters();renderCalendar();}
   if(phase==='cbsa') refreshLinkDropdown();
 }
