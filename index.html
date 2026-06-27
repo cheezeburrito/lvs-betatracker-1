@@ -889,6 +889,12 @@ function subscribeRealtime(){
       if(r.shipment_id!==activeId){console.log('[scanner] session mismatch:',r.shipment_id,'vs',activeId);return;}
       appendScanToDesktop(r.tracking, r.device);
     })
+    .on('postgres_changes',{event:'DELETE',schema:'public',table:'scans'},({old:r})=>{
+      const activeId=document.getElementById('prescan-sel').value;
+      if(!activeId||!r.tracking)return;
+      if(r.shipment_id&&r.shipment_id!==activeId)return;
+      removeScanFromDesktop(r.tracking);
+    })
     .subscribe((status,err)=>{
       console.log('[scanner] channel status:',status,err||'');
       if(status==='SUBSCRIBED') console.log('[scanner] listening for scans ✓');
@@ -940,9 +946,35 @@ function addScannerFeedItem(normed, operator, isDup){
   const dotCls=isDup?'dup':inManifest?'ok':'warn';
   const el=document.createElement('div');
   el.className='sfi';
+  el.dataset.tracking=normed;
   el.innerHTML=`<div class="sfi-dot ${dotCls}"></div><div class="sfi-val">${normed}</div>${operator?`<div class="sfi-op">${operator}</div>`:''}`;
   list.insertBefore(el,list.firstChild);
   while(list.children.length>80)list.removeChild(list.lastChild);
+}
+
+function removeScanFromDesktop(tracking){
+  const normed=norm(tracking);
+  if(!normed)return;
+  // Remove from feed
+  const list=document.getElementById('scanner-feed-list');
+  if(list){
+    const item=list.querySelector(`.sfi[data-tracking="${normed}"]`);
+    if(item){
+      item.remove();
+      const countEl=document.getElementById('scanner-feed-count');
+      if(countEl) countEl.textContent=Math.max(0,parseInt(countEl.textContent||'0')-1);
+    }
+  }
+  // Remove from paste textarea and reprocess
+  const ta=document.getElementById('prescan-paste');
+  if(ta){
+    const lines=ta.value.split(/[\n\r]+/).filter(l=>norm(l)!==normed);
+    ta.value=lines.join('\n');
+    const sess=currentSession('prescan');
+    if(sess){sess.rawPaste=ta.value;saveLocal();}
+    processPaste('prescan');
+    updateScannerBadge();
+  }
 }
 
 async function loadScansForSession(sessId){
