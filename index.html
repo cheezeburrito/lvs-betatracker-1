@@ -557,9 +557,6 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
   <div class="header-clock">
     <span class="clock-time" id="clockTime">00:00:00</span>
     <span class="clock-date" id="clockDate">—</span>
-    <button onclick="copyScanner()" id="scanner-copy-btn" style="margin-top:.4rem;background:#0f1f40;border:1px solid #1e40af;border-radius:7px;color:#93c5fd;font-size:.67rem;font-weight:600;padding:.28rem .55rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;white-space:nowrap;letter-spacing:.01em;transition:all .15s" title="Copy scanner page URL">
-      📋 Copy Scanner Link
-    </button>
   </div>
   <div class="header-center">
     <img src="logoblue.png" alt="GTA GSM">
@@ -567,6 +564,7 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
   </div>
   <div class="header-right">
     <div class="sync-pill sync-offline" id="syncPill"><div class="dot"></div><span id="syncLabel">Connecting…</span></div>
+    <button id="scanner-copy-btn" onclick="copyScanner()" title="Copy scanner gun URL to clipboard" style="background:#0f172a;border:1px solid #1e3a5f;border-radius:8px;color:#7dd3fc;font-size:.72rem;font-weight:600;padding:.3rem .65rem;cursor:pointer;display:flex;align-items:center;gap:.35rem;white-space:nowrap;transition:all .18s;letter-spacing:.01em" onmouseenter="this.style.borderColor='#3b82f6';this.style.color='#bae6fd'" onmouseleave="this.style.borderColor='#1e3a5f';this.style.color='#7dd3fc'">📡 Scanner Link</button>
     <button class="admin-btn" id="adminBtn" onclick="openAdminModal()">⚙ Admin</button>
     <div class="operator-pill" onclick="showNameModal()">Operator: <span id="operatorDisplay">—</span></div>
   </div>
