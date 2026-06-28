@@ -1,0 +1,25 @@
+{
+  "name": "LVS GSM Scanner",
+  "short_name": "LVS Scanner",
+  "description": "LVS-GSM warehouse scanner — Phase 1 real-time sync",
+  "start_url": "/lvs-betatracker-1/scanner.html",
+  "scope": "/lvs-betatracker-1/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060a10",
+  "theme_color": "#0d1424",
+  "icons": [
+    {
+      "src": "scanner-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "scanner-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
