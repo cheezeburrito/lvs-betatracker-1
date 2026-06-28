@@ -557,6 +557,9 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
   <div class="header-clock">
     <span class="clock-time" id="clockTime">00:00:00</span>
     <span class="clock-date" id="clockDate">—</span>
+    <button onclick="copyScanner()" id="scanner-copy-btn" style="margin-top:.4rem;background:#0f1f40;border:1px solid #1e40af;border-radius:7px;color:#93c5fd;font-size:.67rem;font-weight:600;padding:.28rem .55rem;cursor:pointer;display:flex;align-items:center;gap:.3rem;white-space:nowrap;letter-spacing:.01em;transition:all .15s" title="Copy scanner page URL">
+      📋 Copy Scanner Link
+    </button>
   </div>
   <div class="header-center">
     <img src="logoblue.png" alt="GTA GSM">
@@ -1521,6 +1524,16 @@ function refreshLinkDropdown(){
   if(cur) sel.value=cur;
 }
 // ── Toast notifications ──────────────────────────────────────────────────────
+function copyScanner(){
+  const url='https://cheezeburrito.github.io/lvs-betatracker-1/scanner';
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn=document.getElementById('scanner-copy-btn');
+    const orig=btn.innerHTML;
+    btn.innerHTML='✓ Copied!';
+    btn.style.borderColor='#166534';btn.style.color='#4ade80';btn.style.background='#052e16';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.borderColor='';btn.style.color='';btn.style.background='';},2000);
+  }).catch(()=>showToast('Copy failed — URL: https://cheezeburrito.github.io/lvs-betatracker-1/scanner','warn',5000));
+}
 function toggleTips(){
   document.getElementById('tips-overlay').classList.toggle('open');
   document.getElementById('tips-hint').classList.remove('visible');
