@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 HAWB (House Airway Bill) reconciliation web app for LVS-GSM (freight/cargo, Pearson Airport YYZ). Used by warehouse staff to account for all house airway bills within master airway bills (MAWBs) across two distinct workflow phases.
 
-**Live URL:** https://cheezeburrito.github.io/lvs-gsm-tracker/  
+**Live URL:** https://cheezeburrito.github.io/lvs-betatracker-1/  
 **GitHub account:** cheezeburrito
 
 ## Architecture
@@ -75,7 +75,8 @@ The app has two separate interfaces accessible from a top-level tab/mode switche
 - `norm(val)` — strips everything except A-Z0-9, uppercases — used for all matching (tracking ID and CCN)
 - Matching always tries both tracking ID and CCN so either can be scanned
 - localStorage key: `cartonReconcile_v3` — bump version suffix on schema changes
-- Supabase tables needed: `shipments`, `scans`, `actions` — previously partially implemented and rolled back; next implementation should be clean from scratch
+- Supabase tables: `shipments`, `scans`, `actions`, `operators`, `customers`, `admins` — all live and production-ready
+- Admin auth uses bcrypt via `verify_admin()` / `upsert_admin()` / `delete_admin()` / `list_admins()` SECURITY DEFINER RPCs — anon has no direct access to the `admins` table
 
 ## localStorage schema
 
