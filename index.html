@@ -192,9 +192,24 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 @media(max-width:700px){ .history-layout { grid-template-columns:1fr; } .history-side { position:static; } }
 
 /* ── Prescan two-column layout ── */
-.prescan-layout { display:grid; grid-template-columns:230px 1fr; gap:1rem; align-items:start; }
+.prescan-layout { display:grid; grid-template-columns:210px 1fr 190px; gap:1rem; align-items:start; }
 .prescan-main { min-width:0; display:flex; flex-direction:column; gap:1rem; }
-@media(max-width:800px){ .prescan-layout { grid-template-columns:1fr; } }
+@media(max-width:900px){ .prescan-layout { grid-template-columns:1fr; } }
+
+/* ── Stats sidebar panel ── */
+.stats-panel {
+  position:sticky; top:6rem;
+  background:#0d1424; border:1px solid #1f2d45; border-radius:12px;
+  padding:1rem; display:flex; flex-direction:column; gap:.85rem;
+}
+.stats-panel-title { font-size:.72rem; font-weight:700; color:#e2e8f0; text-transform:uppercase; letter-spacing:.05em; }
+.stats-panel-item { display:flex; flex-direction:column; gap:.1rem; }
+.stats-panel-num { font-size:2rem; font-weight:800; font-variant-numeric:tabular-nums; line-height:1; }
+.stats-panel-num.green { color:#22c55e; }
+.stats-panel-num.red   { color:#f87171; }
+.stats-panel-num.amber { color:#fbbf24; }
+.stats-panel-num.white { color:#e2e8f0; }
+.stats-panel-lbl { font-size:.68rem; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
 
 .scanner-feed-panel {
   position:sticky; top:6rem;
@@ -329,10 +344,12 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
   .cal-day { font-size:.75rem; min-height:36px }
   /* Session bar stack on mobile */
   .session-bar { flex-wrap:wrap; gap:.5rem; }
-  /* Prescan two-column collapses to one — workspace first, feed below */
+  /* Prescan collapses to one column on mobile — workspace first */
   .prescan-layout { grid-template-columns:1fr; }
-  .scanner-feed-panel { position:static; order:2; max-height:none; }
   .prescan-main { order:1; }
+  .scanner-feed-panel { position:static; order:3; max-height:none; }
+  .stats-panel { position:static; order:2; flex-direction:row; flex-wrap:wrap; gap:.75rem; }
+  .stats-panel-num { font-size:1.4rem; }
   /* Feed list scrolls naturally on mobile */
   .scanner-feed-list { max-height:320px; }
   /* Cards full width */
@@ -633,6 +650,28 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
         <div class="ccn-list" id="prescan-list"></div>
       </div>
       </div><!-- /prescan-main -->
+
+      <!-- ── RIGHT: Stats panel ── -->
+      <div class="stats-panel" id="prescan-stats-panel">
+        <div class="stats-panel-title">📊 Session Stats</div>
+        <div class="stats-panel-item">
+          <span class="stats-panel-num white" id="sp-mawbs">—</span>
+          <span class="stats-panel-lbl">MAWBs</span>
+        </div>
+        <div class="stats-panel-item">
+          <span class="stats-panel-num white" id="sp-hawbs">—</span>
+          <span class="stats-panel-lbl">Total HAWBs</span>
+        </div>
+        <div class="stats-panel-item">
+          <span class="stats-panel-num green" id="sp-scanned">—</span>
+          <span class="stats-panel-lbl">Scanned</span>
+        </div>
+        <div class="stats-panel-item">
+          <span class="stats-panel-num red" id="sp-missing">—</span>
+          <span class="stats-panel-lbl">Missing</span>
+        </div>
+      </div>
+
       </div><!-- /prescan-layout -->
     </div>
   </div>
@@ -1605,6 +1644,13 @@ function renderResults(phase,results){
     <div class="stat"><div class="stat-val red">${totalHawbs-totalScanned}</div><div class="stat-label">Missing</div></div>`;
   if(phase==='cbsa')stats+=`<div class="stat"><div class="stat-val amber">${totalFlagged}</div><div class="stat-label">Flagged</div></div>`;
   document.getElementById(`${phase}-stats`).innerHTML=stats;
+  if(phase==='prescan'){
+    const sp=v=>document.getElementById(v);
+    if(sp('sp-mawbs'))sp('sp-mawbs').textContent=results.length;
+    if(sp('sp-hawbs'))sp('sp-hawbs').textContent=totalHawbs;
+    if(sp('sp-scanned'))sp('sp-scanned').textContent=totalScanned;
+    if(sp('sp-missing'))sp('sp-missing').textContent=totalHawbs-totalScanned;
+  }
   document.getElementById(`${phase}-prog`).style.width=pct+'%';
   document.getElementById(`${phase}-prog-label`).textContent=`${pct}% scanned (${totalScanned} of ${totalHawbs})`;
   const f=filters[phase];
