@@ -212,22 +212,22 @@ select option{background:#111827;}
 }
 .empty-icon{font-size:2.5rem;margin-bottom:.5rem;}
 
-/* ── CLEAR CONFIRM MODAL ── */
-#clear-modal{
+/* ── SHARED SHEET STYLES ── */
+.modal-overlay{
   display:none;position:fixed;inset:0;z-index:300;
   background:rgba(0,0,0,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
   align-items:flex-end;justify-content:center;padding:1rem;
 }
-#clear-modal.open{display:flex;}
-#clear-sheet{
+.modal-overlay.open{display:flex;}
+.sheet{
   background:#0f1623;border:1px solid var(--border);border-radius:20px;
   padding:1.5rem;width:100%;max-width:420px;
   box-shadow:0 24px 60px rgba(0,0,0,.7);
   animation:sheet-in .22s cubic-bezier(.4,0,.2,1);
 }
 @keyframes sheet-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-#clear-sheet h3{font-size:1rem;font-weight:700;margin-bottom:.4rem;}
-#clear-sheet p{font-size:.82rem;color:var(--muted2);line-height:1.6;margin-bottom:1.25rem;}
+.sheet h3{font-size:1rem;font-weight:700;margin-bottom:.4rem;}
+.sheet p{font-size:.82rem;color:var(--muted2);line-height:1.6;margin-bottom:1rem;}
 .sheet-btns{display:flex;gap:.6rem;}
 .sheet-btn-cancel{
   flex:1;padding:.85rem;border-radius:12px;border:1.5px solid var(--border);
@@ -238,6 +238,17 @@ select option{background:#111827;}
   background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.3);
   color:var(--red);font-size:.9rem;font-weight:700;cursor:pointer;
 }
+
+/* don't-warn checkbox row */
+.sheet-nowarn{
+  display:flex;align-items:center;gap:.55rem;
+  margin-bottom:1.1rem;cursor:pointer;
+}
+.sheet-nowarn input[type=checkbox]{
+  width:18px;height:18px;border-radius:5px;
+  accent-color:var(--accent);cursor:pointer;flex-shrink:0;
+}
+.sheet-nowarn span{font-size:.78rem;color:var(--muted2);}
 
 /* ── TOAST ── */
 #toast{
@@ -341,13 +352,30 @@ select option{background:#111827;}
 </div>
 
 <!-- CLEAR CONFIRM SHEET -->
-<div id="clear-modal">
-  <div id="clear-sheet">
+<div id="clear-modal" class="modal-overlay">
+  <div class="sheet">
     <h3>Clear all scans?</h3>
     <p>This removes all scans for this session from the live feed and the desktop. This cannot be undone.</p>
     <div class="sheet-btns">
       <button class="sheet-btn-cancel" onclick="closeClearModal()">Cancel</button>
       <button class="sheet-btn-clear" onclick="confirmClear()">Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE SINGLE SCAN SHEET -->
+<div id="del-modal" class="modal-overlay">
+  <div class="sheet">
+    <h3>Remove this scan?</h3>
+    <p id="del-modal-val" style="font-family:monospace;font-size:.95rem;color:var(--text);margin-bottom:.5rem;"></p>
+    <p>This will remove it from the live feed and the desktop.</p>
+    <label class="sheet-nowarn">
+      <input type="checkbox" id="del-nowarn-chk">
+      <span>Don't ask again this session</span>
+    </label>
+    <div class="sheet-btns">
+      <button class="sheet-btn-cancel" onclick="closeDelModal()">Cancel</button>
+      <button class="sheet-btn-clear" onclick="confirmDel()">Yes, Remove</button>
     </div>
   </div>
 </div>
@@ -379,10 +407,13 @@ sb.channel('session-watch')
 
 function norm(v){ return String(v||'').replace(/[^A-Z0-9]/gi,'').toUpperCase(); }
 
-let activeSess    = null;
-let seenThisRun   = new Set();
-let scanCount     = 0;
-let sessionsStore = {};
+let activeSess       = null;
+let seenThisRun      = new Set();
+let scanCount        = 0;
+let sessionsStore    = {};
+let skipDeleteConfirm = false;
+let pendingDelEl     = null;
+let pendingDelNormed = null;
 
 function setSynced(on){
   document.getElementById('syncDot').className='sync-dot'+(on?' live':'');
@@ -492,7 +523,7 @@ async function loadExistingScans(sessId){
 }
 
 function exitScanning(){
-  activeSess=null;localStorage.removeItem('scanner_last_sess');
+  activeSess=null;skipDeleteConfirm=false;localStorage.removeItem('scanner_last_sess');
   document.getElementById('scan-screen').style.display='none';
   document.getElementById('setup').style.display='flex';
   document.getElementById('scan-field').value='';
@@ -514,7 +545,7 @@ document.getElementById('scan-field').addEventListener('input',function(){
   }
 });
 document.getElementById('scan-screen').addEventListener('pointerdown',function(e){
-  if(!e.target.closest('button')&&!e.target.closest('#clear-modal')){
+  if(!e.target.closest('button')&&!e.target.closest('.modal-overlay')){
     setTimeout(()=>document.getElementById('scan-field').focus(),0);
   }
 });
@@ -573,6 +604,26 @@ function addFeedItem(normed,isDup,inManifest){
 }
 
 function deleteScanItem(el,normed){
+  if(skipDeleteConfirm){
+    _doDeleteScan(el,normed);
+    return;
+  }
+  pendingDelEl=el;pendingDelNormed=normed;
+  document.getElementById('del-modal-val').textContent=normed;
+  document.getElementById('del-nowarn-chk').checked=false;
+  document.getElementById('del-modal').classList.add('open');
+}
+function closeDelModal(){
+  document.getElementById('del-modal').classList.remove('open');
+  pendingDelEl=null;pendingDelNormed=null;
+}
+function confirmDel(){
+  if(document.getElementById('del-nowarn-chk').checked) skipDeleteConfirm=true;
+  const el=pendingDelEl,normed=pendingDelNormed;
+  closeDelModal();
+  if(el&&normed)_doDeleteScan(el,normed);
+}
+function _doDeleteScan(el,normed){
   const id=el.dataset.id;const sessId=activeSess?.id;
   const wasManifest=el.dataset.manifest==='1';
   el.remove();seenThisRun.delete(normed);
@@ -602,9 +653,11 @@ function confirmClear(){
   }
 }
 
-// Close clear modal on backdrop tap
 document.getElementById('clear-modal').addEventListener('pointerdown',function(e){
   if(e.target===this)closeClearModal();
+});
+document.getElementById('del-modal').addEventListener('pointerdown',function(e){
+  if(e.target===this)closeDelModal();
 });
 
 (async function(){
