@@ -1650,50 +1650,55 @@ async function exportExcel(phase,sess,manifest){
     if(data) data.forEach(r=>{if(r.tracking&&r.device)scanOp[norm(r.tracking)]=r.device;});
   }catch(e){}
 
-  // SpreadsheetML 2003 — full color support in Excel without extra libraries
-  const x=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  const c=(val,sid,type='String')=>`<Cell ss:StyleID="${sid}"><Data ss:Type="${type}">${x(val)}</Data></Cell>`;
-  const r=cells=>`<Row>${cells}</Row>`;
-  const freezeRow=`<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>`;
+  // SpreadsheetML 2003 helpers
+  const ex=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const cell=(val,sid,type='String')=>`<Cell ss:StyleID="${sid}"><Data ss:Type="${type}">${ex(val)}</Data></Cell>`;
+  const row=cells=>`<Row ss:Height="16">${cells}</Row>`;
+  const cols=widths=>widths.map(w=>`<Column ss:Width="${w}"/>`).join('');
+  const freeze=`<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>`;
+  const autofilter=n=>`<AutoFilter x:Range="R1C1:R1C${n}" xmlns="urn:schemas-microsoft-com:office:excel"/>`;
 
-  const styles=`<Styles>
-    <Style ss:ID="Default"><Alignment ss:WrapText="0" ss:Vertical="Center"/></Style>
-    <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/><Interior ss:Color="#1E3A5F" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
-    <Style ss:ID="ok"><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/><Font ss:Color="#276221"/></Style>
-    <Style ss:ID="miss"><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/><Font ss:Color="#9C0006"/></Style>
-    <Style ss:ID="flag"><Interior ss:Color="#FFEB9C" ss:Pattern="Solid"/><Font ss:Color="#9C6500"/></Style>
-    <Style ss:ID="num"><NumberFormat ss:Format="General"/></Style>
-    <Style ss:ID="oknum"><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/><Font ss:Color="#276221"/><NumberFormat ss:Format="General"/></Style>
-    <Style ss:ID="missnum"><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/><Font ss:Color="#9C0006"/><NumberFormat ss:Format="General"/></Style>
-  </Styles>`;
+  const xmlHead=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>`+
+    `<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"`+
+    ` xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"`+
+    ` xmlns:x="urn:schemas-microsoft-com:office:excel"`+
+    ` xmlns:o="urn:schemas-microsoft-com:office:office">`;
+
+  const styles=`<Styles>`+
+    `<Style ss:ID="Default"><Alignment ss:WrapText="0" ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>`+
+    `<Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11" ss:FontName="Calibri"/><Interior ss:Color="#1E3A5F" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>`+
+    `<Style ss:ID="ok"><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/><Font ss:Color="#276221" ss:FontName="Calibri" ss:Size="11"/></Style>`+
+    `<Style ss:ID="miss"><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/><Font ss:Color="#9C0006" ss:FontName="Calibri" ss:Size="11"/></Style>`+
+    `<Style ss:ID="flag"><Interior ss:Color="#FFEB9C" ss:Pattern="Solid"/><Font ss:Color="#9C6500" ss:FontName="Calibri" ss:Size="11"/></Style>`+
+    `<Style ss:ID="okN"><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/><Font ss:Color="#276221" ss:FontName="Calibri" ss:Size="11"/><NumberFormat ss:Format="0"/></Style>`+
+    `<Style ss:ID="missN"><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/><Font ss:Color="#9C0006" ss:FontName="Calibri" ss:Size="11"/><NumberFormat ss:Format="0"/></Style>`+
+    `</Styles>`;
 
   const date=new Date().toISOString().slice(0,10);
 
   // ── Summary sheet ──────────────────────────────────────────────────────────
   const sumHdrs=['MAWB / CCN','Total HAWBs','Scanned','Missing'];
   if(phase==='cbsa')sumHdrs.push('Flagged','RNS Status');
-  let sumRows=r(sumHdrs.map(h=>c(h,'hdr')).join(''));
-  const sumCols=`<Column ss:Width="160"/><Column ss:Width="100"/><Column ss:Width="90"/><Column ss:Width="90"/><Column ss:Width="90"/><Column ss:Width="180"/>`;
+  let sumBody=row(sumHdrs.map(h=>cell(h,'hdr')).join(''));
   Object.entries(manifest).forEach(([ccn,hawbs])=>{
     const sc=hawbs.filter(h=>scanned.has(h.tracking)||scanned.has(h.ccn)).length;
     const miss=hawbs.length-sc;
-    const sid=miss===0?'ok':miss>0?'miss':'num';
-    let cells=c(ccn,sid)+c(hawbs.length,sid+'num'||'num','Number')+c(sc,'oknum','Number')+c(miss,'missnum','Number');
+    const s=miss===0?'ok':'miss';
+    let cells=cell(ccn,s)+cell(hawbs.length,s==='ok'?'okN':'missN','Number')+cell(sc,'okN','Number')+cell(miss,'missN','Number');
     if(phase==='cbsa'){
       const rns=sess.rnsData||rt.cbsa.rns||{};
-      const fl=hawbs.filter(h=>{if(!(scanned.has(h.tracking)||scanned.has(h.ccn)))return false;const s=rns[h.ccn]||rns[ccn]||'';return s&&s.toLowerCase()!=='released';}).length;
-      cells+=c(fl,sid,'Number')+c(rns[ccn]||'',sid);
+      const fl=hawbs.filter(h=>{if(!(scanned.has(h.tracking)||scanned.has(h.ccn)))return false;const st=rns[h.ccn]||rns[ccn]||'';return st&&st.toLowerCase()!=='released';}).length;
+      cells+=cell(fl,s,'Number')+cell(rns[ccn]||'',s);
     }
-    sumRows+=r(cells);
+    sumBody+=row(cells);
   });
-  const sumColCount=phase==='cbsa'?6:4;
-  const sumSheet=`<Worksheet ss:Name="Summary"><Table DefaultRowHeight="18">${sumCols}${sumRows}</Table><AutoFilter x:Range="R1C1:R1C${sumColCount}" xmlns="urn:schemas-microsoft-com:office:excel"/>${freezeRow}</Worksheet>`;
+  const sumColCount=sumHdrs.length;
+  const sumSheet=`<Worksheet ss:Name="Summary"><Table>${cols([160,100,90,90,90,180].slice(0,sumColCount))}${sumBody}</Table>${autofilter(sumColCount)}${freeze}</Worksheet>`;
 
   // ── Detail sheet ───────────────────────────────────────────────────────────
   const detHdrs=['MAWB / CCN','Carton','Tracking ID','Scan Status','Scanned By'];
   if(phase==='cbsa')detHdrs.splice(4,0,'CBSA Status');
   const detColCount=detHdrs.length;
-  const detCols=`<Column ss:Width="160"/><Column ss:Width="80"/><Column ss:Width="200"/><Column ss:Width="90"/><Column ss:Width="130"/><Column ss:Width="180"/>`.split('</Column>').slice(0,detColCount).join('</Column>')+'</Column>';
   let detScanned='',detMissing='';
   Object.entries(manifest).forEach(([ccn,hawbs])=>{
     hawbs.forEach(h=>{
@@ -1704,14 +1709,16 @@ async function exportExcel(phase,sess,manifest){
       if(phase==='cbsa'&&hit&&cbsaStatus&&cbsaStatus.toLowerCase()!=='released')scanStatus='Flagged';
       const sid=scanStatus==='Scanned'?'ok':scanStatus==='Flagged'?'flag':'miss';
       const op=hit?(scanOp[h.tracking]||app.operator||''):'';
-      let cells=c(ccn,sid)+c(h.carton,sid)+c(h.tracking,sid)+c(scanStatus,sid)+c(op,sid);
-      if(phase==='cbsa')cells=c(ccn,sid)+c(h.carton,sid)+c(h.tracking,sid)+c(scanStatus,sid)+c(cbsaStatus,sid)+c(op,sid);
-      const row=r(cells);
-      if(hit)detScanned+=row; else detMissing+=row;
+      const base=[cell(ccn,sid),cell(h.carton,sid),cell(h.tracking,sid),cell(scanStatus,sid)];
+      if(phase==='cbsa')base.push(cell(cbsaStatus,sid));
+      base.push(cell(op,sid));
+      const r=row(base.join(''));
+      if(hit)detScanned+=r; else detMissing+=r;
     });
   });
-  const detHdrRow=r(detHdrs.map(h=>c(h,'hdr')).join(''));
-  const detSheet=`<Worksheet ss:Name="Detail"><Table DefaultRowHeight="18">${detCols}${detHdrRow}${detScanned}${detMissing}</Table><AutoFilter x:Range="R1C1:R1C${detColCount}" xmlns="urn:schemas-microsoft-com:office:excel"/>${freezeRow}</Worksheet>`;
+  const detHdrRow=row(detHdrs.map(h=>cell(h,'hdr')).join(''));
+  const detColWidths=[160,80,200,90,130,180].slice(0,detColCount);
+  const detSheet=`<Worksheet ss:Name="Detail"><Table>${cols(detColWidths)}${detHdrRow}${detScanned}${detMissing}</Table>${autofilter(detColCount)}${freeze}</Worksheet>`;
 
   // ── Not in Manifest sheet ─────────────────────────────────────────────────
   const allTrk=new Set(Object.values(manifest).flat().map(h=>h.tracking));
@@ -1719,17 +1726,16 @@ async function exportExcel(phase,sess,manifest){
   const unexp=tokens.filter(t=>!allTrk.has(t)&&!allCCN.has(t));
   let unexpSheet='';
   if(unexp.length){
-    const uRows=r(c('Scanned — Not in Manifest','hdr'))+unexp.map(t=>r(c(t,'flag'))).join('');
-    unexpSheet=`<Worksheet ss:Name="Not in Manifest"><Table DefaultRowHeight="18"><Column ss:Width="220"/>${uRows}</Table></Worksheet>`;
+    const uBody=row(cell('Scanned — Not in Manifest','hdr'))+unexp.map(t=>row(cell(t,'flag'))).join('');
+    unexpSheet=`<Worksheet ss:Name="Not in Manifest"><Table>${cols([240])}${uBody}</Table></Worksheet>`;
   }
 
   // ── Notes sheet ───────────────────────────────────────────────────────────
   let notesSheet='';
-  if(sess.notes?.trim())notesSheet=`<Worksheet ss:Name="Notes"><Table><Row><Cell><Data ss:Type="String">${x(sess.notes)}</Data></Cell></Row></Table></Worksheet>`;
+  if(sess.notes?.trim())notesSheet=`<Worksheet ss:Name="Notes"><Table><Row><Cell><Data ss:Type="String">${ex(sess.notes)}</Data></Cell></Row></Table></Worksheet>`;
 
-  const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel">${styles}${sumSheet}${detSheet}${unexpSheet}${notesSheet}</Workbook>`;
-
-  const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=UTF-8'});
+  const xml=xmlHead+styles+sumSheet+detSheet+unexpSheet+notesSheet+`</Workbook>`;
+  const blob=new Blob(['﻿'+xml],{type:'application/vnd.ms-excel;charset=UTF-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
   const label=phase==='prescan'?'Receipt':'CBSA';
