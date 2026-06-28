@@ -253,8 +253,13 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 .sfi-dot.ok  { background:#22c55e; }
 .sfi-dot.warn{ background:#f59e0b; }
 .sfi-dot.dup { background:#60a5fa; }
+.sfi-dot.exam{ background:#f59e0b; box-shadow:0 0 5px #f59e0b; }
+.sfi-dot.flag{ background:#06b6d4; box-shadow:0 0 5px #06b6d4; }
 .sfi-val { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#cbd5e1; }
 .sfi-op  { font-size:.65rem; color:#475569; flex-shrink:0; }
+.cbsa-layout { display:grid; grid-template-columns:210px 1fr 190px; gap:1rem; align-items:start; }
+.cbsa-main   { min-width:0; display:flex; flex-direction:column; gap:1rem; }
+@media(max-width:900px){ .cbsa-layout { grid-template-columns:1fr; } }
 
 /* ══════ HISTORY ══════ */
 .cal-nav { display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem; }
@@ -860,6 +865,26 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
     </div>
 
     <div id="cbsa-ws" style="display:none">
+      <div class="cbsa-layout">
+
+      <!-- ── LEFT: Live Scanner Feed ── -->
+      <div class="scanner-feed-panel">
+        <div class="scanner-feed-header">
+          <span>📡 Live Scanner Feed</span>
+          <span class="scanner-feed-dot" id="cbsa-feed-dot"></span>
+        </div>
+        <div class="scanner-feed-meta" id="cbsa-feed-meta">No scanner connected</div>
+        <div class="scanner-feed-count-row">
+          <span class="scanner-feed-count" id="cbsa-feed-count">0</span>
+          <span style="font-size:.72rem;color:#64748b">scans received</span>
+        </div>
+        <div class="scanner-feed-list" id="cbsa-feed-list">
+          <div class="scanner-feed-empty">Waiting for scanner…<br><span style="font-size:.7rem;opacity:.6">Switch to Phase 2 on the CipherLab gun</span></div>
+        </div>
+      </div>
+
+      <!-- ── MIDDLE: Main workspace ── -->
+      <div class="cbsa-main">
       <div class="card">
         <div class="card-title">1 · Upload Files</div>
         <div class="link-banner">
@@ -883,10 +908,16 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
       </div>
 
       <div class="card" id="cbsa-paste-card" style="display:none">
-        <div class="card-title">2 · Paste Batch Scans</div>
-        <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Paste scanned tracking IDs from your Google Doc. Parcels not yet <em>Released</em> will be flagged.</p>
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>2 · Paste Batch Scans</span>
+          <span id="cbsa-scanner-live-badge" style="display:none;font-size:.72rem;font-weight:600;background:#14532d;color:#4ade80;border:1px solid #166534;border-radius:20px;padding:.2rem .65rem;letter-spacing:.03em">📡 Scanner live — <span id="cbsa-scanner-live-count">0</span> scanned</span>
+        </div>
+        <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Live scans from scanner will appear below. Parcels not yet <em>Released</em> will be flagged.</p>
         <textarea id="cbsa-paste" style="min-height:110px" placeholder="Paste scanned tracking IDs here…" oninput="onPasteInput('cbsa')"></textarea>
-        <p class="kbd-tip">💡 Tip: Press <kbd>Ctrl+Enter</kbd> to process immediately after pasting.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.4rem">
+          <p class="kbd-tip" style="margin:0">💡 Tip: Press <kbd>Ctrl+Enter</kbd> to process immediately after pasting.</p>
+          <button class="btn btn-secondary" style="font-size:.72rem;padding:.3rem .7rem" onclick="clearPaste('cbsa')">✕ Clear</button>
+        </div>
       </div>
 
       <div class="card" id="cbsa-notes-card" style="display:none">
@@ -910,7 +941,33 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
         </div>
         <div class="ccn-list" id="cbsa-list"></div>
       </div>
+      </div><!-- /cbsa-main -->
 
+      <!-- ── RIGHT: Stats panel ── -->
+      <div class="stats-panel" id="cbsa-stats-panel">
+        <div class="stats-panel-title">📊 Session Stats</div>
+        <div class="stats-panel-item">
+          <span class="stats-panel-num white" id="cbsa-sp-mawbs">—</span>
+          <span class="stats-panel-lbl">MAWBs</span>
+        </div>
+        <div class="stats-panel-item">
+          <span class="stats-panel-num white" id="cbsa-sp-hawbs">—</span>
+          <span class="stats-panel-lbl">Total HAWBs</span>
+        </div>
+        <div class="stats-panel-item">
+          <span class="stats-panel-num green" id="cbsa-sp-scanned">—</span>
+          <span class="stats-panel-lbl">Scanned</span>
+        </div>
+        <div class="stats-panel-item">
+          <span class="stats-panel-num amber" id="cbsa-sp-flagged">—</span>
+          <span class="stats-panel-lbl">Flagged</span>
+        </div>
+        <div style="border-top:1px solid #1f2d45;padding-top:.75rem;margin-top:.1rem">
+          <button class="btn btn-success" style="width:100%;font-size:.78rem;padding:.55rem" onclick="exportExcel('cbsa')">⬇ Export Report</button>
+        </div>
+      </div>
+
+      </div><!-- /cbsa-layout -->
     </div>
   </div>
 
@@ -1086,37 +1143,51 @@ function subscribeRealtime(){
       if(app.sessions[phase]?.[r.id]){delete app.sessions[phase][r.id];saveLocal();refreshDropdown(phase);if(document.getElementById(`${phase}-sel`).value===r.id)loadSession(phase,'');}
     })
     .subscribe(s=>{if(s==='SUBSCRIBED')setSyncStatus('online');});
-  // Real-time scanner gun scans → append to active prescan paste area live
+  // Real-time scanner gun scans → append to active session paste area live
   sb.channel('scans-live')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'scans'},({new:r})=>{
       console.log('[scanner] realtime row:', r);
-      const activeId=document.getElementById('prescan-sel').value;
-      if(!activeId){console.log('[scanner] no active session, ignoring');return;}
-      if(r.shipment_id!==activeId){console.log('[scanner] session mismatch:',r.shipment_id,'vs',activeId);return;}
-      appendScanToDesktop(r.tracking, r.device);
+      const prescanId=document.getElementById('prescan-sel').value;
+      const cbsaId=document.getElementById('cbsa-sel').value;
+      if(prescanId&&r.shipment_id===prescanId) appendScanToDesktop(r.tracking,r.device);
+      if(cbsaId&&r.shipment_id===cbsaId) appendScanToCbsaDesktop(r.tracking,r.device);
     })
     .on('postgres_changes',{event:'DELETE',schema:'public',table:'scans'},({old:r})=>{
-      const activeId=document.getElementById('prescan-sel').value;
-      if(!activeId||!r.tracking)return;
-      if(r.shipment_id&&r.shipment_id!==activeId)return;
-      removeScanFromDesktop(r.tracking);
+      if(!r.tracking)return;
+      const prescanId=document.getElementById('prescan-sel').value;
+      const cbsaId=document.getElementById('cbsa-sel').value;
+      if(prescanId&&(!r.shipment_id||r.shipment_id===prescanId)) removeScanFromDesktop(r.tracking);
+      if(cbsaId&&r.shipment_id===cbsaId) removeScanFromCbsaDesktop(r.tracking);
     })
     .on('broadcast',{event:'scan_deleted'},({payload:p})=>{
-      const activeId=document.getElementById('prescan-sel').value;
-      if(!activeId||p.shipment_id!==activeId)return;
-      removeScanFromDesktop(p.tracking);
+      const prescanId=document.getElementById('prescan-sel').value;
+      const cbsaId=document.getElementById('cbsa-sel').value;
+      if(prescanId&&p.shipment_id===prescanId) removeScanFromDesktop(p.tracking);
+      if(cbsaId&&p.shipment_id===cbsaId) removeScanFromCbsaDesktop(p.tracking);
     })
     .on('broadcast',{event:'scans_cleared'},({payload:p})=>{
-      const activeId=document.getElementById('prescan-sel').value;
-      if(!activeId||p.shipment_id!==activeId)return;
-      const sess=currentSession('prescan');
-      logAction('scans_cleared', p.shipment_id, sess?.name||p.shipment_id, p.operator||'scanner', {source:'scanner'});
-      const list=document.getElementById('scanner-feed-list');
-      if(list) list.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
-      const countEl=document.getElementById('scanner-feed-count');
-      if(countEl) countEl.textContent='0';
-      const ta=document.getElementById('prescan-paste');
-      if(ta){ta.value='';if(sess){sess.rawPaste='';saveLocal();}processPaste('prescan');updateScannerBadge();}
+      const prescanId=document.getElementById('prescan-sel').value;
+      const cbsaId=document.getElementById('cbsa-sel').value;
+      if(prescanId&&p.shipment_id===prescanId){
+        const sess=currentSession('prescan');
+        logAction('scans_cleared',p.shipment_id,sess?.name||p.shipment_id,p.operator||'scanner',{source:'scanner'});
+        const list=document.getElementById('scanner-feed-list');
+        if(list)list.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
+        const countEl=document.getElementById('scanner-feed-count');
+        if(countEl)countEl.textContent='0';
+        const ta=document.getElementById('prescan-paste');
+        if(ta){ta.value='';if(sess){sess.rawPaste='';saveLocal();}processPaste('prescan');updateScannerBadge();}
+      }
+      if(cbsaId&&p.shipment_id===cbsaId){
+        const sess=currentSession('cbsa');
+        logAction('scans_cleared',p.shipment_id,sess?.name||p.shipment_id,p.operator||'scanner',{source:'scanner'});
+        const list=document.getElementById('cbsa-feed-list');
+        if(list)list.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
+        const countEl=document.getElementById('cbsa-feed-count');
+        if(countEl)countEl.textContent='0';
+        const ta=document.getElementById('cbsa-paste');
+        if(ta){ta.value='';if(sess){sess.rawPaste='';saveLocal();}processPaste('cbsa');updateCbsaScannerBadge();}
+      }
     })
     .subscribe((status,err)=>{
       console.log('[scanner] channel status:',status,err||'');
@@ -1263,6 +1334,124 @@ function updateScannerBadge(){
   if(count>0){badge.style.display='';if(countEl)countEl.textContent=count;}
   else{badge.style.display='none';}
 }
+
+function updateCbsaScannerBadge(){
+  const ta=document.getElementById('cbsa-paste');
+  const count=ta?[...new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean))].length:0;
+  const badge=document.getElementById('cbsa-scanner-live-badge');
+  const countEl=document.getElementById('cbsa-scanner-live-count');
+  if(!badge)return;
+  if(count>0){badge.style.display='';if(countEl)countEl.textContent=count;}
+  else{badge.style.display='none';}
+}
+
+function _getCbsaState(normed){
+  const manifest=manifestCache['cbsa'];
+  const rns=rt.cbsa.rns||currentSession('cbsa')?.rnsData||{};
+  if(!manifest)return'ok';
+  for(const[ccn,items]of Object.entries(manifest)){
+    const arr=Array.isArray(items)?items:[items];
+    if(arr.some(r=>norm(r.tracking||r.ccn||'')===normed)){
+      const s=rns[norm(ccn)]||rns[ccn]||'';
+      if(!s||s==='Released')return'ok';
+      if(s==='Examination Required')return'exam';
+      return'flag';
+    }
+  }
+  return'warn';
+}
+
+function appendScanToCbsaDesktop(tracking,operator){
+  const normed=norm(tracking);if(!normed)return;
+  const ta=document.getElementById('cbsa-paste');
+  const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
+  const isDup=existing.has(normed);
+  if(!isDup){
+    ta.value=ta.value?ta.value+'\n'+normed:normed;
+    const sess=currentSession('cbsa');
+    if(sess){sess.rawPaste=ta.value;saveLocal();}
+    processPaste('cbsa');
+    updateCbsaScannerBadge();
+  }
+  addCbsaScannerFeedItem(normed,operator,isDup);
+}
+
+function addCbsaScannerFeedItem(normed,operator,isDup){
+  const list=document.getElementById('cbsa-feed-list');if(!list)return;
+  const empty=list.querySelector('.scanner-feed-empty');if(empty)empty.remove();
+  const dot=document.getElementById('cbsa-feed-dot');
+  if(dot){dot.classList.add('live');clearTimeout(dot._t);dot._t=setTimeout(()=>dot.classList.remove('live'),3000);}
+  if(operator){const meta=document.getElementById('cbsa-feed-meta');if(meta)meta.textContent='Scanner: '+operator;}
+  const state=isDup?'dup':_getCbsaState(normed);
+  if(state!=='dup'&&state!=='warn'){
+    const countEl=document.getElementById('cbsa-feed-count');
+    if(countEl)countEl.textContent=parseInt(countEl.textContent||'0')+1;
+  }
+  const el=document.createElement('div');
+  el.className='sfi';el.dataset.tracking=normed;
+  el.innerHTML=`<div class="sfi-dot ${state}"></div><div class="sfi-val">${normed}</div>${operator?`<div class="sfi-op">${operator}</div>`:''}`;
+  list.insertBefore(el,list.firstChild);
+  while(list.children.length>80)list.removeChild(list.lastChild);
+}
+
+function removeScanFromCbsaDesktop(tracking){
+  const normed=norm(tracking);if(!normed)return;
+  const list=document.getElementById('cbsa-feed-list');
+  if(list){
+    const item=list.querySelector(`.sfi[data-tracking="${normed}"]`);
+    if(item){
+      item.remove();
+      const countEl=document.getElementById('cbsa-feed-count');
+      if(countEl)countEl.textContent=Math.max(0,parseInt(countEl.textContent||'0')-1);
+    }
+  }
+  const ta=document.getElementById('cbsa-paste');
+  if(ta){
+    const lines=ta.value.split(/[\n\r]+/).filter(l=>norm(l)!==normed);
+    ta.value=lines.join('\n');
+    const sess=currentSession('cbsa');
+    if(sess){sess.rawPaste=ta.value;saveLocal();}
+    processPaste('cbsa');updateCbsaScannerBadge();
+  }
+}
+
+async function loadScansForCbsaSession(sessId){
+  try{
+    const{data}=await sb.from('scans').select('tracking,device').eq('shipment_id',sessId).order('scanned_at',{ascending:true});
+    const listEl=document.getElementById('cbsa-feed-list');
+    const countEl=document.getElementById('cbsa-feed-count');
+    if(listEl)listEl.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
+    if(countEl)countEl.textContent='0';
+    if(!data||!data.length){updateCbsaScannerBadge();return;}
+    const ta=document.getElementById('cbsa-paste');
+    const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
+    const newOnes=data.filter(r=>norm(r.tracking)&&!existing.has(norm(r.tracking)));
+    if(newOnes.length){
+      ta.value=ta.value?ta.value+'\n'+newOnes.map(r=>norm(r.tracking)).join('\n'):newOnes.map(r=>norm(r.tracking)).join('\n');
+      const sess=currentSession('cbsa');
+      if(sess){sess.rawPaste=ta.value;saveLocal();}
+      processPaste('cbsa');
+    }
+    updateCbsaScannerBadge();
+    const seen=new Set();let scanCount=0;
+    if(listEl){const empty=listEl.querySelector('.scanner-feed-empty');if(empty)empty.remove();}
+    ;[...data].reverse().slice(0,80).forEach(r=>{
+      const normed=norm(r.tracking||'');if(!normed)return;
+      const isDup=seen.has(normed);seen.add(normed);
+      const state=isDup?'dup':_getCbsaState(normed);
+      if(state!=='dup'&&state!=='warn')scanCount++;
+      const el=document.createElement('div');
+      el.className='sfi';el.dataset.tracking=normed;
+      el.innerHTML=`<div class="sfi-dot ${state}"></div><div class="sfi-val">${normed}</div>${r.device?`<div class="sfi-op">${r.device}</div>`:''}`;
+      if(listEl)listEl.appendChild(el);
+    });
+    if(countEl)countEl.textContent=scanCount;
+    const meta=document.getElementById('cbsa-feed-meta');
+    const ops=[...new Set(data.map(r=>r.device).filter(Boolean))];
+    if(meta&&ops.length)meta.textContent='Scanner: '+ops.join(', ');
+  }catch(e){console.warn('loadScansForCbsaSession:',e);}
+}
+
 function onRemoteChange(sess){
   const phase=sess.phase;
   refreshDropdown(phase);
@@ -1628,9 +1817,18 @@ function loadSession(phase,id){
     checkReady(phase);
   }
   if(phase==='cbsa'){
+    const cFeedList=document.getElementById('cbsa-feed-list');
+    if(cFeedList)cFeedList.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
+    const cFeedCount=document.getElementById('cbsa-feed-count');
+    if(cFeedCount)cFeedCount.textContent='0';
+    const cFeedMeta=document.getElementById('cbsa-feed-meta');
+    if(cFeedMeta)cFeedMeta.textContent='No scanner connected';
+    const cFeedDot=document.getElementById('cbsa-feed-dot');
+    if(cFeedDot)cFeedDot.classList.remove('live');
     refreshLinkDropdown();
     document.getElementById('cbsa-link-sel').value=sess.linkedPrescanId||'';
     if(sess.linkedPrescanId) linkPrescan(sess.linkedPrescanId,true);
+    loadScansForCbsaSession(id);
   }
   renderCompleteBar(phase,sess);
   joinPresence(phase,id);
@@ -1847,6 +2045,14 @@ function renderResults(phase,results){
     if(sp('sp-hawbs'))sp('sp-hawbs').textContent=totalHawbs;
     if(sp('sp-scanned'))sp('sp-scanned').textContent=totalScanned;
     if(sp('sp-missing'))sp('sp-missing').textContent=totalHawbs-totalScanned;
+  }
+  if(phase==='cbsa'){
+    const sp=v=>document.getElementById(v);
+    if(sp('cbsa-sp-mawbs'))sp('cbsa-sp-mawbs').textContent=results.length;
+    if(sp('cbsa-sp-hawbs'))sp('cbsa-sp-hawbs').textContent=totalHawbs;
+    if(sp('cbsa-sp-scanned'))sp('cbsa-sp-scanned').textContent=totalScanned;
+    if(sp('cbsa-sp-flagged'))sp('cbsa-sp-flagged').textContent=totalFlagged;
+    updateCbsaScannerBadge();
   }
   document.getElementById(`${phase}-prog`).style.width=pct+'%';
   document.getElementById(`${phase}-prog-label`).textContent=`${pct}% scanned (${totalScanned} of ${totalHawbs})`;
