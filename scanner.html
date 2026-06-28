@@ -564,7 +564,7 @@ async function refreshSessions(){
   const isP2 = currentPhase==='cbsa';
   try{
     const{data,error}=await sb.from('shipments')
-      .select('id,name,operator,manifest,completed,phase')
+      .select('id,name,operator,manifest,rns_data,completed,phase')
       .eq('phase',currentPhase).eq('completed',false)
       .order('created_at',{ascending:false});
     if(error)throw error;
@@ -594,22 +594,28 @@ function startScanning(){
 
   const row=sessionsStore[sel.value]||{};
   const manifest=row.manifest||{};
+  const rnsData=row.rns_data||{};   // { [normedCCN]: statusString }
   const isP2 = currentPhase==='cbsa';
 
-  // Build tracking set (phase 1) and status map (phase 2)
+  // Build flat tracking list for phase 1 manifest check
   const allT = Object.values(manifest).flat().map(r=>norm(r.tracking||r.ccn||'')).filter(Boolean);
+
+  // Build statusMap for phase 2: norm(tracking) → RNS status
+  // Join: manifest (tracking→CCN) + rnsData (CCN→status)
   const statusMap = new Map();
   if(isP2){
-    // Map normed tracking AND normed CCN → RNS status
     Object.entries(manifest).forEach(([ccn,items])=>{
       const arr = Array.isArray(items)?items:[items];
-      const status = arr[0]?.status||'';
-      const nc = norm(ccn);
-      if(nc) statusMap.set(nc, status);
+      const normedCcn = norm(ccn);
+      // Look up status by normed CCN key (rnsData is already keyed by normed CCN from desktop)
+      const status = rnsData[normedCcn] || rnsData[ccn] || '';
+      // Map every tracking ID under this CCN → its status
       arr.forEach(r=>{
-        const t=norm(r.tracking||'');
+        const t = norm(r.tracking||'');
         if(t) statusMap.set(t, status);
       });
+      // Also map the CCN itself in case operator scans the CCN barcode
+      if(normedCcn) statusMap.set(normedCcn, status);
     });
   }
 
