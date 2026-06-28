@@ -660,12 +660,15 @@ document.getElementById('del-modal').addEventListener('pointerdown',function(e){
   if(e.target===this)closeDelModal();
 });
 
-// Register service worker — auto-updates the app on every deploy
+// Register service worker — updateViaCache:'none' forces browser to always
+// re-fetch the SW script itself, bypassing HTTP cache
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('scanner-sw.js').catch(e=>console.warn('SW:',e));
-  // When SW_UPDATED fires, reload to get the new version
-  navigator.serviceWorker.addEventListener('message', e => {
-    if(e.data?.type === 'SW_UPDATED') window.location.reload();
+  navigator.serviceWorker.register('scanner-sw.js', { updateViaCache: 'none' })
+    .catch(e => console.warn('SW:', e));
+  // controllerchange fires when a new SW takes over — reload to get fresh HTML
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(!refreshing){ refreshing = true; window.location.reload(); }
   });
 }
 
