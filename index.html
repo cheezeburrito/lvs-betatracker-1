@@ -329,10 +329,12 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
   .cal-day { font-size:.75rem; min-height:36px }
   /* Session bar stack on mobile */
   .session-bar { flex-wrap:wrap; gap:.5rem; }
-  /* Prescan two-column collapses to one */
+  /* Prescan two-column collapses to one — workspace first, feed below */
   .prescan-layout { grid-template-columns:1fr; }
-  /* Scanner feed panel: not sticky on mobile */
-  .scanner-feed-panel { position:static; }
+  .scanner-feed-panel { position:static; order:2; max-height:none; }
+  .prescan-main { order:1; }
+  /* Feed list scrolls naturally on mobile */
+  .scanner-feed-list { max-height:320px; }
   /* Cards full width */
   .card { padding:1rem; }
 }
@@ -948,11 +950,6 @@ function addScannerFeedItem(normed, operator, isDup){
     const meta=document.getElementById('scanner-feed-meta');
     if(meta)meta.textContent='Scanner: '+operator;
   }
-  // Update count — only manifest matches count
-  if(inManifest&&!isDup){
-    const countEl=document.getElementById('scanner-feed-count');
-    if(countEl)countEl.textContent=parseInt(countEl.textContent||'0')+1;
-  }
   // Check manifest match
   const sess=currentSession('prescan');
   const manifest=manifestCache['prescan'];
@@ -960,6 +957,11 @@ function addScannerFeedItem(normed, operator, isDup){
   if(manifest){
     const allT=new Set(Object.values(manifest).flat().map(r=>norm(r.tracking||r.ccn||'')).filter(Boolean));
     inManifest=allT.has(normed);
+  }
+  // Update count — only manifest matches count
+  if(inManifest&&!isDup){
+    const countEl=document.getElementById('scanner-feed-count');
+    if(countEl)countEl.textContent=parseInt(countEl.textContent||'0')+1;
   }
   const dotCls=isDup?'dup':inManifest?'ok':'warn';
   const el=document.createElement('div');
@@ -998,34 +1000,49 @@ function removeScanFromDesktop(tracking){
 async function loadScansForSession(sessId){
   try{
     const{data}=await sb.from('scans').select('tracking,device').eq('shipment_id',sessId).order('scanned_at',{ascending:true});
-    if(!data||!data.length)return;
+
+    // Always rebuild feed from DB — even if paste already has these items
+    const listEl=document.getElementById('scanner-feed-list');
+    const countEl=document.getElementById('scanner-feed-count');
+    if(listEl) listEl.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
+    if(countEl) countEl.textContent='0';
+
+    if(!data||!data.length){updateScannerBadge();return;}
+
+    // Merge new DB scans into textarea (don't overwrite what's already there)
     const ta=document.getElementById('prescan-paste');
     const existing=new Set(ta.value.split(/[\s,;\n\r]+/).map(norm).filter(Boolean));
     const newOnes=data.filter(r=>norm(r.tracking)&&!existing.has(norm(r.tracking)));
-    if(!newOnes.length){updateScannerBadge();return;}
-    ta.value=ta.value?ta.value+'\n'+newOnes.map(r=>norm(r.tracking)).join('\n'):newOnes.map(r=>norm(r.tracking)).join('\n');
-    const sess=currentSession('prescan');
-    if(sess){sess.rawPaste=ta.value;saveLocal();}
-    processPaste('prescan');
+    if(newOnes.length){
+      ta.value=ta.value?ta.value+'\n'+newOnes.map(r=>norm(r.tracking)).join('\n'):newOnes.map(r=>norm(r.tracking)).join('\n');
+      const sess=currentSession('prescan');
+      if(sess){sess.rawPaste=ta.value;saveLocal();}
+      processPaste('prescan');
+    }
     updateScannerBadge();
-    // Populate feed panel with historical scans (oldest first = bottom of feed)
-    const countEl=document.getElementById('scanner-feed-count');
-    if(countEl) countEl.textContent='0';
-    const listEl=document.getElementById('scanner-feed-list');
+
+    // Rebuild feed: newest on top, count only manifest-matched unique scans
+    const manifest=manifestCache['prescan'];
+    const allT=manifest?new Set(Object.values(manifest).flat().map(x=>norm(x.tracking||x.ccn||'')).filter(Boolean)):null;
+    const seen=new Set();
+    let manifestCount=0;
     if(listEl){const empty=listEl.querySelector('.scanner-feed-empty');if(empty)empty.remove();}
-    // Show most recent 40 in feed (data is asc, so reverse for newest-on-top)
-    const recent=[...data].reverse().slice(0,40);
-    recent.forEach(r=>{
-      const manifest=manifestCache['prescan'];
-      let inManifest=true;
-      if(manifest){const allT=new Set(Object.values(manifest).flat().map(x=>norm(x.tracking||x.ccn||'')).filter(Boolean));inManifest=allT.has(norm(r.tracking));}
+    // data is asc; iterate newest-first for feed display
+    ;[...data].reverse().slice(0,80).forEach(r=>{
+      const normed=norm(r.tracking||'');
+      if(!normed)return;
+      const isDup=seen.has(normed);
+      seen.add(normed);
+      const inManifest=!allT||allT.has(normed);
+      if(inManifest&&!isDup) manifestCount++;
       const el=document.createElement('div');
       el.className='sfi';
-      const dotCls=inManifest?'ok':'warn';
-      el.innerHTML=`<div class="sfi-dot ${dotCls}"></div><div class="sfi-val">${norm(r.tracking)}</div>${r.device?`<div class="sfi-op">${r.device}</div>`:''}`;
+      el.dataset.tracking=normed;
+      const dotCls=isDup?'dup':inManifest?'ok':'warn';
+      el.innerHTML=`<div class="sfi-dot ${dotCls}"></div><div class="sfi-val">${normed}</div>${r.device?`<div class="sfi-op">${r.device}</div>`:''}`;
       if(listEl)listEl.appendChild(el);
     });
-    if(countEl) countEl.textContent=data.length;
+    if(countEl) countEl.textContent=manifestCount;
     const meta=document.getElementById('scanner-feed-meta');
     const ops=[...new Set(data.map(r=>r.device).filter(Boolean))];
     if(meta&&ops.length) meta.textContent='Scanner: '+ops.join(', ');
