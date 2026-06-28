@@ -1470,6 +1470,15 @@ async function markComplete(phase){
     switchPhase('history');
   }
 }
+async function unfinishSession(phase,id){
+  const sess=app.sessions[phase]?.[id];
+  if(!sess)return;
+  if(!confirm(`Move "${sess.name}" back to ${phase==='prescan'?'Phase 1':'Phase 2'}?\n\nIt will reappear in the session dropdown and can be edited again.`))return;
+  sess.completed=false; saveLocal(); await pushSession(sess);
+  refreshDropdown(phase);
+  renderCalendar();
+  showToast(`↩ "${sess.name}" moved back to ${phase==='prescan'?'Phase 1':'Phase 2'}.`,'info',4000);
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // norm
@@ -1807,7 +1816,7 @@ function calSelectDay(key){
       <div style="display:flex;align-items:center;gap:.5rem;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
         ${s.operator?`<span class="operator-tag">${s.operator}</span>`:''}
         <span class="phase-tag ${s.phase}">${phase}</span>
-        ${s.completed?'<span class="done-tag">✓ Done</span>':''}
+        ${s.completed?`<span class="done-tag">✓ Done</span><button class="btn btn-secondary" style="font-size:.72rem;padding:.3rem .65rem" onclick="unfinishSession('${s.phase}','${s.id}')">↩ Undo</button>`:''}
       </div>
     </div>`;
   }).join('')||'<div class="empty"><p>No sessions on this day.</p></div>';
