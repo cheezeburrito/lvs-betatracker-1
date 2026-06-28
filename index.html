@@ -305,10 +305,11 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 @keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
 /* ── Tips button & panel ── */
-#tips-btn{position:fixed;right:1.5rem;bottom:1.5rem;z-index:200;width:58px;height:58px;border-radius:50%;background:#1e293b;border:2px solid #334155;color:#fbbf24;font-size:1.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.5);transition:all .18s;}
-#tips-btn:hover{background:#334155;transform:scale(1.08);}
-#tips-hint{position:fixed;right:1.5rem;bottom:5.5rem;z-index:200;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:.45rem .75rem;font-size:.75rem;font-weight:600;color:#e2e8f0;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4);pointer-events:none;opacity:0;transition:opacity .4s;}
-#tips-hint::after{content:'';position:absolute;bottom:-6px;right:20px;width:10px;height:10px;background:#1e293b;border-right:1px solid #334155;border-bottom:1px solid #334155;transform:rotate(45deg);}
+#tips-btn{position:fixed;left:1.5rem;bottom:5rem;z-index:200;width:58px;height:58px;border-radius:50%;background:#1c1f2e;border:2px solid #fbbf24;color:#fbbf24;font-size:1.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(251,191,36,.45),0 0 32px rgba(251,191,36,.2),0 4px 20px rgba(0,0,0,.5);transition:all .2s;animation:bulb-pulse 3s ease-in-out infinite;}
+#tips-btn:hover{transform:scale(1.1);box-shadow:0 0 22px rgba(251,191,36,.7),0 0 48px rgba(251,191,36,.3),0 4px 20px rgba(0,0,0,.5);}
+@keyframes bulb-pulse{0%,100%{box-shadow:0 0 14px rgba(251,191,36,.45),0 0 32px rgba(251,191,36,.2),0 4px 20px rgba(0,0,0,.5);}50%{box-shadow:0 0 22px rgba(251,191,36,.7),0 0 50px rgba(251,191,36,.28),0 4px 20px rgba(0,0,0,.5);}}
+#tips-hint{position:fixed;left:1.5rem;bottom:10rem;z-index:200;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:.45rem .75rem;font-size:.75rem;font-weight:600;color:#e2e8f0;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.4);pointer-events:none;opacity:0;transition:opacity .4s;}
+#tips-hint::after{content:'';position:absolute;bottom:-6px;left:20px;width:10px;height:10px;background:#1e293b;border-right:1px solid #334155;border-bottom:1px solid #334155;transform:rotate(45deg);}
 #tips-hint.visible{opacity:1;}
 #tips-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:flex-end;justify-content:flex-start;}
 #tips-overlay.open{display:flex;}
