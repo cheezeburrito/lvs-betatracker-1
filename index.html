@@ -1052,6 +1052,11 @@ async function deleteSessionRemote(id){
   await sb.from('shipments').delete().eq('id',id);
   setSyncStatus('online');
 }
+function logAction(action, sessId, sessName, operator, detail={}){
+  sb.from('actions').insert({
+    action, shipment_id:sessId, session_name:sessName, operator:operator||app.operator||'unknown', detail
+  }).then(({error})=>{ if(error) console.warn('logAction:', action, error); });
+}
 function mergeRow(row){
   const sess=rowToSession(row);
   if(!app.sessions[sess.phase]) return false;
@@ -1104,13 +1109,14 @@ function subscribeRealtime(){
     .on('broadcast',{event:'scans_cleared'},({payload:p})=>{
       const activeId=document.getElementById('prescan-sel').value;
       if(!activeId||p.shipment_id!==activeId)return;
-      // Wipe the feed and paste area for this session
+      const sess=currentSession('prescan');
+      logAction('scans_cleared', p.shipment_id, sess?.name||p.shipment_id, p.operator||'scanner', {source:'scanner'});
       const list=document.getElementById('scanner-feed-list');
       if(list) list.innerHTML='<div class="scanner-feed-empty">Waiting for scanner…</div>';
       const countEl=document.getElementById('scanner-feed-count');
       if(countEl) countEl.textContent='0';
       const ta=document.getElementById('prescan-paste');
-      if(ta){ta.value='';const sess=currentSession('prescan');if(sess){sess.rawPaste='';saveLocal();}processPaste('prescan');updateScannerBadge();}
+      if(ta){ta.value='';if(sess){sess.rawPaste='';saveLocal();}processPaste('prescan');updateScannerBadge();}
     })
     .subscribe((status,err)=>{
       console.log('[scanner] channel status:',status,err||'');
@@ -1449,6 +1455,7 @@ async function confirmNewSession(){
   const sess={id,name,phase,operator:app.operator,customer,createdAt:Date.now(),rawPaste:'',notes:'',manifest:null,rnsData:{},completed:false,linkedPrescanId:linkedId};
   app.sessions[phase][id]=sess; saveLocal();
   await pushSession(sess);
+  logAction('session_created', id, name, app.operator, {phase, customer});
   closeNewSessModal();
   refreshDropdown(phase);
   document.getElementById(`${phase}-sel`).value=id;
@@ -1632,6 +1639,7 @@ async function deleteSession(phase){
   const id=document.getElementById(`${phase}-sel`).value; if(!id) return;
   const sess=app.sessions[phase][id];
   if(!confirm(`Delete session "${sess.name}"? This cannot be undone.`)) return;
+  logAction('session_deleted', id, sess.name, app.operator, {phase});
   delete app.sessions[phase][id]; saveLocal();
   await deleteSessionRemote(id);
   refreshDropdown(phase); loadSession(phase,'');
@@ -1687,6 +1695,7 @@ async function markComplete(phase){
   const sess=currentSession(phase); if(!sess) return;
   if(confirm('Export a report before marking complete?\n\nOK = Export then complete   Cancel = Complete only')) exportExcel(phase);
   sess.completed=true; saveLocal(); await pushSession(sess);
+  logAction('session_completed', sess.id, sess.name, app.operator, {phase});
   refreshDropdown(phase);
   loadSession(phase,'');
   if(phase==='prescan'){
@@ -1701,6 +1710,7 @@ async function unfinishSession(phase,id){
   if(!sess)return;
   if(!confirm(`Move "${sess.name}" back to ${phase==='prescan'?'Phase 1':'Phase 2'}?\n\nIt will reappear in the session dropdown and can be edited again.`))return;
   sess.completed=false; saveLocal(); await pushSession(sess);
+  logAction('session_reopened', id, sess.name, app.operator, {phase});
   refreshDropdown(phase);
   renderCalendar();
   showToast(`↩ "${sess.name}" moved back to ${phase==='prescan'?'Phase 1':'Phase 2'}.`,'info',4000);
