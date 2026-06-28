@@ -2165,8 +2165,9 @@ async function doAdminLogin(){
   const username=document.getElementById('adminUser').value.trim();
   const password=document.getElementById('adminPass').value;
   const {data,error}=await sb.rpc('verify_admin',{p_username:username,p_password:password});
-  if(data===true){isAdmin=true;adminUser=username;adminPass=password;document.getElementById('adminBtn').classList.add('active');showAdminPanel();}
-  else{document.getElementById('adminLoginErr').style.display='';}
+  console.log('[admin login] data=',data,'error=',error);
+  if(data){isAdmin=true;adminUser=username;adminPass=password;document.getElementById('adminBtn').classList.add('active');showAdminPanel();}
+  else{document.getElementById('adminLoginErr').style.display='';document.getElementById('adminLoginErr').textContent=error?'RPC error: '+error.message:'Incorrect credentials.';}
 }
 function adminLogout(){
   isAdmin=false;adminUser='';adminPass='';
