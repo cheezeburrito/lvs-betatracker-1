@@ -22,6 +22,7 @@
   --red:#f87171;
   --amber:#f59e0b;
   --blue:#60a5fa;
+  --cyan:#06b6d4;
   --text:#e2e8f0;
   --muted:#64748b;
   --muted2:#94a3b8;
@@ -54,18 +55,33 @@ html,body{
 .sync-dot.live{background:var(--green);box-shadow:0 0 8px var(--green);}
 .sync-lbl{font-size:.72rem;color:var(--muted);font-weight:600;}
 
+/* ── PHASE TABS ── */
+.phase-tabs{
+  display:flex;gap:.4rem;
+  background:rgba(0,0,0,.25);border:1.5px solid var(--border);
+  border-radius:14px;padding:.3rem;
+}
+.phase-tab{
+  flex:1;padding:.6rem;border-radius:10px;border:none;
+  font-size:.82rem;font-weight:700;cursor:pointer;
+  background:transparent;color:var(--muted);transition:all .18s;
+  letter-spacing:.01em;
+}
+.phase-tab.active{background:#1e3a5f;color:#93c5fd;}
+.phase-tab.active.p2{background:#1a2a1a;color:#86efac;}
+
 /* ── SETUP SCREEN ── */
 #setup{
-  padding:2rem 1.25rem 1.5rem;
-  display:flex;flex-direction:column;gap:1.1rem;
+  padding:1.5rem 1.25rem;
+  display:flex;flex-direction:column;gap:1rem;
   max-width:480px;margin:0 auto;
 }
 .setup-hero{
-  text-align:center;padding:1.5rem 1rem 1rem;
-  border-bottom:1px solid var(--border);margin-bottom:.5rem;
+  text-align:center;padding:1.25rem 1rem .75rem;
+  border-bottom:1px solid var(--border);margin-bottom:.25rem;
 }
-.setup-hero h1{font-size:1.5rem;font-weight:800;color:#fff;letter-spacing:-.02em;}
-.setup-hero p{font-size:.82rem;color:var(--muted2);margin-top:.4rem;}
+.setup-hero h1{font-size:1.4rem;font-weight:800;color:#fff;letter-spacing:-.02em;}
+.setup-hero p{font-size:.8rem;color:var(--muted2);margin-top:.35rem;}
 .field-group{display:flex;flex-direction:column;gap:.45rem;}
 .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;}
 input,select{
@@ -84,6 +100,7 @@ select option{background:#111827;}
   transition:all .18s;letter-spacing:.01em;
 }
 .btn-start:active{transform:scale(.97);filter:brightness(.9);}
+.btn-start.p2{background:linear-gradient(135deg,#166534,#22c55e);box-shadow:0 4px 20px rgba(34,197,94,.3);}
 .btn-refresh{
   width:100%;padding:.8rem;border-radius:12px;border:1.5px solid var(--border);
   font-size:.88rem;font-weight:600;cursor:pointer;min-height:48px;
@@ -102,6 +119,14 @@ select option{background:#111827;}
   text-align:center;letter-spacing:.01em;
 }
 
+/* phase badge in session strip */
+.phase-badge{
+  font-size:.62rem;font-weight:800;padding:.15rem .5rem;border-radius:99px;
+  letter-spacing:.04em;flex-shrink:0;
+}
+.phase-badge.p1{background:rgba(37,99,235,.2);color:#93c5fd;border:1px solid rgba(37,99,235,.3);}
+.phase-badge.p2{background:rgba(22,163,74,.2);color:#86efac;border:1px solid rgba(22,163,74,.3);}
+
 /* session strip */
 .sess-strip{
   padding:.65rem 1.1rem;
@@ -109,7 +134,8 @@ select option{background:#111827;}
   display:flex;align-items:center;justify-content:space-between;gap:.5rem;
   flex-shrink:0;
 }
-.sess-info{min-width:0;}
+.sess-info{min-width:0;display:flex;align-items:center;gap:.6rem;flex:1;}
+.sess-text{min-width:0;}
 .sess-name{font-size:.95rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .sess-op{font-size:.72rem;color:var(--muted);margin-top:2px;}
 .exit-btn{
@@ -135,30 +161,40 @@ select option{background:#111827;}
   transition:border-color .15s,box-shadow .15s;
 }
 #scan-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
-#scan-field.flash-ok  {border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.2);background:#061410;}
+#scan-field.flash-ok  {border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.2); background:#061410;}
 #scan-field.flash-warn{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.2);background:#140e04;}
-#scan-field.flash-dup {border-color:var(--blue); box-shadow:0 0 0 3px rgba(96,165,250,.2);background:#060e1a;}
+#scan-field.flash-dup {border-color:var(--blue); box-shadow:0 0 0 3px rgba(96,165,250,.2); background:#060e1a;}
+#scan-field.flash-exam{border-color:var(--amber);box-shadow:0 0 0 4px rgba(245,158,11,.3);background:#1a0e00;}
+#scan-field.flash-flag{border-color:var(--cyan); box-shadow:0 0 0 4px rgba(6,182,212,.3);  background:#001a1e;}
 
-/* last scan — full width status card */
+/* last scan card */
 .last-scan{
   border-radius:14px;padding:.85rem 1.1rem;display:none;
-  flex-direction:column;gap:.2rem;border:1.5px solid transparent;
-  transition:all .2s;
+  flex-direction:column;gap:.2rem;border:1.5px solid transparent;transition:all .2s;
 }
 .last-scan.show{display:flex;}
-.last-scan.ok  {background:rgba(5,46,22,.7); border-color:rgba(34,197,94,.3);}
-.last-scan.warn{background:rgba(69,26,3,.7); border-color:rgba(245,158,11,.3);}
-.last-scan.dup {background:rgba(6,16,50,.7); border-color:rgba(96,165,250,.3);}
+.last-scan.ok  {background:rgba(5,46,22,.7);   border-color:rgba(34,197,94,.3);}
+.last-scan.warn{background:rgba(69,26,3,.7);   border-color:rgba(245,158,11,.3);}
+.last-scan.dup {background:rgba(6,16,50,.7);   border-color:rgba(96,165,250,.3);}
+.last-scan.exam{background:rgba(80,30,0,.75);  border-color:rgba(245,158,11,.5);}
+.last-scan.flag{background:rgba(0,40,50,.75);  border-color:rgba(6,182,212,.5);}
 .ls-top{display:flex;align-items:center;gap:.6rem;}
 .ls-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
 .ls-dot.ok  {background:var(--green);}
 .ls-dot.warn{background:var(--amber);}
 .ls-dot.dup {background:var(--blue);}
+.ls-dot.exam{background:var(--amber);box-shadow:0 0 6px var(--amber);}
+.ls-dot.flag{background:var(--cyan); box-shadow:0 0 6px var(--cyan);}
 .ls-val{font-size:1rem;font-family:monospace;font-weight:700;letter-spacing:.04em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ls-lbl{font-size:.72rem;font-weight:600;padding-left:1.6rem;}
 .ls-lbl.ok  {color:var(--green);}
 .ls-lbl.warn{color:var(--amber);}
 .ls-lbl.dup {color:var(--blue);}
+.ls-lbl.exam{color:var(--amber);}
+.ls-lbl.flag{color:var(--cyan);}
+.ls-status{font-size:.78rem;font-weight:700;padding-left:1.6rem;margin-top:.15rem;}
+.ls-status.exam{color:var(--amber);}
+.ls-status.flag{color:var(--cyan);}
 
 /* counter row */
 .counter-row{
@@ -169,6 +205,7 @@ select option{background:#111827;}
 .counter-left{flex:1;}
 .counter{font-size:2.8rem;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;line-height:1;}
 .counter-meta{font-size:.72rem;color:var(--muted);margin-top:.2rem;letter-spacing:.02em;}
+.counter-flags{font-size:.75rem;font-weight:700;color:var(--amber);margin-top:.25rem;display:none;}
 .clear-btn{
   font-size:.78rem;color:var(--muted2);font-weight:600;
   background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);
@@ -178,10 +215,7 @@ select option{background:#111827;}
 .clear-btn:active{background:rgba(248,113,113,.15);}
 
 /* feed */
-.feed-hdr{
-  font-size:.68rem;color:var(--muted);text-transform:uppercase;
-  letter-spacing:.08em;font-weight:700;flex-shrink:0;
-}
+.feed-hdr{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;flex-shrink:0;}
 .feed{
   flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.35rem;
   padding-bottom:.5rem;-webkit-overflow-scrolling:touch;
@@ -192,24 +226,27 @@ select option{background:#111827;}
   background:var(--card2);border:1px solid var(--border);border-radius:10px;
   animation:fi-in .12s ease;flex-shrink:0;
 }
+.fi.fi-exam{background:rgba(30,15,0,.8); border-color:rgba(245,158,11,.25);}
+.fi.fi-flag{background:rgba(0,20,25,.8); border-color:rgba(6,182,212,.25);}
 @keyframes fi-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .fi-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .fi-dot.ok  {background:var(--green);}
 .fi-dot.warn{background:var(--amber);}
 .fi-dot.dup {background:var(--blue);}
+.fi-dot.exam{background:var(--amber);box-shadow:0 0 5px var(--amber);}
+.fi-dot.flag{background:var(--cyan); box-shadow:0 0 5px var(--cyan);}
 .fi-val{flex:1;font-size:.88rem;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cbd5e1;}
 .fi-badge{font-size:.62rem;font-weight:700;padding:.12rem .45rem;border-radius:99px;flex-shrink:0;letter-spacing:.03em;}
-.fi-badge.ok  {background:rgba(5,46,22,.8); color:var(--green);}
-.fi-badge.warn{background:rgba(69,26,3,.8); color:var(--amber);}
-.fi-badge.dup {background:rgba(6,16,50,.8); color:var(--blue);}
+.fi-badge.ok  {background:rgba(5,46,22,.8);  color:var(--green);}
+.fi-badge.warn{background:rgba(69,26,3,.8);  color:var(--amber);}
+.fi-badge.dup {background:rgba(6,16,50,.8);  color:var(--blue);}
+.fi-badge.exam{background:rgba(80,30,0,.9);  color:var(--amber);}
+.fi-badge.flag{background:rgba(0,40,50,.9);  color:var(--cyan);}
 .fi-time{font-size:.65rem;color:var(--muted);flex-shrink:0;}
 .fi-del{font-size:1rem;color:var(--muted);cursor:pointer;padding:.15rem .4rem;border-radius:6px;flex-shrink:0;line-height:1;transition:all .15s;}
 .fi-del:active{color:var(--red);background:rgba(248,113,113,.12);}
 
-.empty-feed{
-  text-align:center;color:var(--muted);
-  padding:3rem 1rem;font-size:.9rem;line-height:2;
-}
+.empty-feed{text-align:center;color:var(--muted);padding:3rem 1rem;font-size:.9rem;line-height:2;}
 .empty-icon{font-size:2.5rem;margin-bottom:.5rem;}
 
 /* ── SHARED SHEET STYLES ── */
@@ -238,8 +275,6 @@ select option{background:#111827;}
   background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.3);
   color:var(--red);font-size:.9rem;font-weight:700;cursor:pointer;
 }
-
-/* don't-warn checkbox row */
 .sheet-nowarn{
   display:flex;align-items:center;gap:.55rem;
   margin-bottom:1.1rem;cursor:pointer;
@@ -269,7 +304,7 @@ select option{background:#111827;}
 <div class="hdr">
   <div class="hdr-brand">
     <div class="hdr-title">LVS · GSM Scanner</div>
-    <div class="hdr-sub">Phase 1 · Real-time sync</div>
+    <div class="hdr-sub" id="hdr-sub">Real-time sync</div>
   </div>
   <div class="sync-pill">
     <div class="sync-dot" id="syncDot"></div>
@@ -281,7 +316,16 @@ select option{background:#111827;}
 <div id="setup">
   <div class="setup-hero">
     <h1>Ready to Scan</h1>
-    <p>Select your session and enter your name to begin.</p>
+    <p>Select phase and session, enter your name to begin.</p>
+  </div>
+
+  <!-- Phase selector -->
+  <div class="field-group">
+    <div class="lbl">Phase</div>
+    <div class="phase-tabs">
+      <button class="phase-tab active" id="tab-p1" onclick="setPhaseTab('prescan')">Phase 1 · Receipt</button>
+      <button class="phase-tab p2"     id="tab-p2" onclick="setPhaseTab('cbsa')">Phase 2 · CBSA</button>
+    </div>
   </div>
 
   <div class="field-group">
@@ -297,7 +341,7 @@ select option{background:#111827;}
     </select>
   </div>
 
-  <button class="btn-start" onclick="startScanning()">▶ &nbsp;Start Scanning</button>
+  <button class="btn-start" id="btn-start" onclick="startScanning()">▶ &nbsp;Start Scanning</button>
   <button class="btn-refresh" onclick="refreshSessions()">↻ &nbsp;Refresh Sessions</button>
 </div>
 
@@ -310,15 +354,18 @@ select option{background:#111827;}
 
   <div class="sess-strip">
     <div class="sess-info">
-      <div class="sess-name" id="strip-name">—</div>
-      <div class="sess-op" id="strip-op">—</div>
+      <div class="sess-text">
+        <div class="sess-name" id="strip-name">—</div>
+        <div class="sess-op" id="strip-op">—</div>
+      </div>
+      <span class="phase-badge" id="strip-phase-badge"></span>
     </div>
     <button class="exit-btn" onclick="exitScanning()">✕ Exit</button>
   </div>
 
   <div class="scan-zone">
 
-    <div class="scan-field-tip">Tap below once — then point the gun and fire</div>
+    <div class="scan-field-tip" id="scan-tip">Tap below once — then point the gun and fire</div>
     <input id="scan-field" type="text"
            placeholder="Ready…"
            autocomplete="off" autocorrect="off" autocapitalize="off"
@@ -330,12 +377,14 @@ select option{background:#111827;}
         <div class="ls-val" id="ls-val">—</div>
       </div>
       <div class="ls-lbl" id="ls-lbl">—</div>
+      <div class="ls-status" id="ls-status" style="display:none;"></div>
     </div>
 
     <div class="counter-row">
       <div class="counter-left">
         <div class="counter" id="scan-count">0</div>
-        <div class="counter-meta">scans matched this session</div>
+        <div class="counter-meta" id="counter-meta">scans this session</div>
+        <div class="counter-flags" id="counter-flags"></div>
       </div>
       <button class="clear-btn" onclick="openClearModal()">🗑 Clear</button>
     </div>
@@ -407,26 +456,51 @@ sb.channel('session-watch')
 
 function norm(v){ return String(v||'').replace(/[^A-Z0-9]/gi,'').toUpperCase(); }
 
-let activeSess       = null;
-let seenThisRun      = new Set();
-let scanCount        = 0;
-let sessionsStore    = {};
+let activeSess        = null;
+let seenThisRun       = new Set();
+let scanCount         = 0;
+let flagCount         = 0;   // phase 2 only: flagged scans
+let sessionsStore     = {};
+let currentPhase      = 'prescan';
 let skipDeleteConfirm = false;
-let pendingDelEl     = null;
-let pendingDelNormed = null;
+let pendingDelEl      = null;
+let pendingDelNormed  = null;
 
+// ── CBSA status helpers ────────────────────────────────────────────────────
+// Returns 'ok' | 'exam' | 'flag' | 'miss'
+function cbsaState(status){
+  if(!status) return 'miss';
+  if(status==='Released') return 'ok';
+  if(status==='Examination Required') return 'exam';
+  return 'flag'; // Arrived, Awaiting CBSA Processing, etc.
+}
+
+// ── PHASE TAB ─────────────────────────────────────────────────────────────
+function setPhaseTab(phase){
+  currentPhase = phase;
+  const isP2 = phase==='cbsa';
+  document.getElementById('tab-p1').className='phase-tab'+(isP2?'':' active');
+  document.getElementById('tab-p2').className='phase-tab p2'+(isP2?' active':'');
+  document.getElementById('btn-start').className='btn-start'+(isP2?' p2':'');
+  refreshSessions();
+}
+
+// ── SYNC ──────────────────────────────────────────────────────────────────
 function setSynced(on){
   document.getElementById('syncDot').className='sync-dot'+(on?' live':'');
   document.getElementById('syncLbl').textContent=on?'live':'offline';
 }
 
+// ── TOAST ─────────────────────────────────────────────────────────────────
 function toast(msg,dur=2500){
   const el=document.getElementById('toast');
   el.textContent=msg;el.classList.add('show');
   clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),dur);
 }
 
+// ── BEEPS ─────────────────────────────────────────────────────────────────
 function alertBeep(){
+  // Triple square-wave — not in manifest (Phase 1)
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     [[880,0,0.18],[660,0.2,0.18],[880,0.4,0.18]].forEach(([freq,start,dur])=>{
@@ -441,6 +515,7 @@ function alertBeep(){
   }catch(e){}
 }
 function dupBeep(){
+  // Single short high pip — duplicate
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     const osc=ctx.createOscillator(),gain=ctx.createGain();
@@ -451,20 +526,51 @@ function dupBeep(){
     osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.09);
   }catch(e){}
 }
+function examBeep(){
+  // Two-tone descending alarm — Examination Required (most urgent)
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [[900,0,0.22],[600,0.28,0.22],[900,0.56,0.22],[600,0.84,0.22]].forEach(([freq,start,dur])=>{
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type='sawtooth';
+      osc.frequency.setValueAtTime(freq,ctx.currentTime+start);
+      gain.gain.setValueAtTime(0.6,ctx.currentTime+start);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+start+dur);
+      osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+start+dur+0.01);
+    });
+  }catch(e){}
+}
+function cbsaFlagBeep(){
+  // Three medium-pitch pips — Arrived / Awaiting CBSA Processing
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [0,0.18,0.36].forEach(start=>{
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type='triangle';osc.frequency.setValueAtTime(660,ctx.currentTime+start);
+      gain.gain.setValueAtTime(0.5,ctx.currentTime+start);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+start+0.12);
+      osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+start+0.13);
+    });
+  }catch(e){}
+}
 
+// ── SESSIONS ──────────────────────────────────────────────────────────────
 async function refreshSessions(){
   const sel=document.getElementById('sessSelect');
   sel.innerHTML='<option value="">Loading…</option>';
   sessionsStore={};
+  const isP2 = currentPhase==='cbsa';
   try{
     const{data,error}=await sb.from('shipments')
       .select('id,name,operator,manifest,completed,phase')
-      .eq('phase','prescan').eq('completed',false)
+      .eq('phase',currentPhase).eq('completed',false)
       .order('created_at',{ascending:false});
     if(error)throw error;
     setSynced(true);
     if(!data||!data.length){
-      sel.innerHTML='<option value="">No active Phase 1 sessions</option>';
+      sel.innerHTML=`<option value="">No active ${isP2?'Phase 2':'Phase 1'} sessions</option>`;
       return;
     }
     data.forEach(s=>sessionsStore[s.id]=s);
@@ -479,24 +585,66 @@ async function refreshSessions(){
   }
 }
 
+// ── START ──────────────────────────────────────────────────────────────────
 function startScanning(){
   const op=document.getElementById('opInput').value.trim();
   const sel=document.getElementById('sessSelect');
   if(!op){toast('Enter your name first');return;}
   if(!sel.value){toast('Select a session first');return;}
+
   const row=sessionsStore[sel.value]||{};
   const manifest=row.manifest||{};
-  const allT=Object.values(manifest).flat().map(r=>norm(r.tracking||r.ccn||'')).filter(Boolean);
-  activeSess={id:sel.value,name:row.name||sel.value,operator:op,normedTracking:new Set(allT)};
+  const isP2 = currentPhase==='cbsa';
+
+  // Build tracking set (phase 1) and status map (phase 2)
+  const allT = Object.values(manifest).flat().map(r=>norm(r.tracking||r.ccn||'')).filter(Boolean);
+  const statusMap = new Map();
+  if(isP2){
+    // Map normed tracking AND normed CCN → RNS status
+    Object.entries(manifest).forEach(([ccn,items])=>{
+      const arr = Array.isArray(items)?items:[items];
+      const status = arr[0]?.status||'';
+      const nc = norm(ccn);
+      if(nc) statusMap.set(nc, status);
+      arr.forEach(r=>{
+        const t=norm(r.tracking||'');
+        if(t) statusMap.set(t, status);
+      });
+    });
+  }
+
+  activeSess={
+    id:sel.value, name:row.name||sel.value, operator:op,
+    phase:currentPhase,
+    normedTracking:new Set(allT),
+    statusMap
+  };
   localStorage.setItem('scanner_op',op);
   localStorage.setItem('scanner_last_sess',sel.value);
+
+  // Update UI
   document.getElementById('strip-name').textContent=activeSess.name;
   document.getElementById('strip-op').textContent='Operator: '+op;
+  const badge=document.getElementById('strip-phase-badge');
+  badge.textContent=isP2?'Phase 2 · CBSA':'Phase 1';
+  badge.className='phase-badge '+(isP2?'p2':'p1');
+  document.getElementById('hdr-sub').textContent=isP2?'CBSA Check · Real-time':'Phase 1 · Real-time';
+  document.getElementById('scan-tip').textContent=isP2
+    ?"Scan tracking IDs — flagged CCNs alert instantly"
+    :"Tap below once — then point the gun and fire";
+  document.getElementById('counter-meta').textContent=isP2?'scans processed':'scans this session';
+
+  const flagEl=document.getElementById('counter-flags');
+  flagEl.style.display='none';flagCount=0;
+
   document.getElementById('setup').style.display='none';
   document.getElementById('scan-screen').style.display='flex';
+  document.getElementById('sess-complete-banner').style.display='none';
+
   seenThisRun.clear();scanCount=0;
   document.getElementById('scan-count').textContent='0';
   document.getElementById('last-scan').className='last-scan';
+  document.getElementById('ls-status').style.display='none';
   document.getElementById('feed').innerHTML=
     '<div class="empty-feed"><div class="empty-icon">📡</div>Tap the field above<br>then point the gun and fire</div>';
   const f=document.getElementById('scan-field');
@@ -510,12 +658,25 @@ async function loadExistingScans(sessId){
       .select('id,tracking,device').eq('shipment_id',sessId)
       .order('scanned_at',{ascending:true});
     if(error||!data||!data.length)return;
+    const isP2=activeSess.phase==='cbsa';
     data.forEach(r=>{
       const normed=norm(r.tracking||'');if(!normed)return;
-      const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
       const isDup=seenThisRun.has(normed);seenThisRun.add(normed);
-      if(inManifest&&!isDup)scanCount++;
-      const el=addFeedItem(normed,isDup,inManifest);
+      if(isDup)return; // don't re-add dups to feed when restoring
+      scanCount++;
+      let state,label,status='';
+      if(isP2){
+        status=activeSess.statusMap.get(normed)||'';
+        state=cbsaState(status);
+        label=state==='ok'?'OK':state==='exam'?'EXAM':'FLAG';
+        if(state!=='ok'&&state!=='miss'){flagCount++;updateFlagCounter();}
+      } else {
+        const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
+        state=inManifest?'ok':'warn';
+        label=inManifest?'OK':'MISS';
+        if(!inManifest) scanCount--;
+      }
+      const el=addFeedItem(normed,state,label,status);
       if(el&&r.id)el.dataset.id=r.id;
     });
     document.getElementById('scan-count').textContent=scanCount;
@@ -523,13 +684,16 @@ async function loadExistingScans(sessId){
 }
 
 function exitScanning(){
-  activeSess=null;skipDeleteConfirm=false;localStorage.removeItem('scanner_last_sess');
+  activeSess=null;skipDeleteConfirm=false;flagCount=0;
+  localStorage.removeItem('scanner_last_sess');
   document.getElementById('scan-screen').style.display='none';
   document.getElementById('setup').style.display='flex';
   document.getElementById('scan-field').value='';
+  document.getElementById('hdr-sub').textContent='Real-time sync';
   refreshSessions();
 }
 
+// ── SCAN INPUT ─────────────────────────────────────────────────────────────
 document.getElementById('scan-field').addEventListener('keydown',function(e){
   if(e.key==='Enter'||e.keyCode===13){
     e.preventDefault();
@@ -540,8 +704,8 @@ document.getElementById('scan-field').addEventListener('keydown',function(e){
 document.getElementById('scan-field').addEventListener('input',function(){
   const val=this.value;
   if(val.includes('\n')||val.includes('\r')){
-    const parts=val.split(/[\r\n]+/).map(s=>s.trim()).filter(Boolean);
-    parts.forEach(p=>handleScan(p));this.value='';
+    val.split(/[\r\n]+/).map(s=>s.trim()).filter(Boolean).forEach(p=>handleScan(p));
+    this.value='';
   }
 });
 document.getElementById('scan-screen').addEventListener('pointerdown',function(e){
@@ -550,64 +714,118 @@ document.getElementById('scan-screen').addEventListener('pointerdown',function(e
   }
 });
 
+// ── HANDLE SCAN ────────────────────────────────────────────────────────────
 async function handleScan(raw){
   if(!activeSess)return;
   const normed=norm(raw);if(!normed)return;
   const isDup=seenThisRun.has(normed);
-  const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
   seenThisRun.add(normed);
-  if(inManifest&&!isDup){
-    scanCount++;document.getElementById('scan-count').textContent=scanCount;
-  }
-  if(!inManifest)alertBeep();
-  else if(isDup)dupBeep();
 
-  // Flash field with state-appropriate color
+  let state,label,statusText='';
+  const isP2=activeSess.phase==='cbsa';
+
+  if(isP2){
+    if(isDup){state='dup';label='DUP';dupBeep();}
+    else{
+      const rawStatus=activeSess.statusMap.get(normed)||'';
+      statusText=rawStatus;
+      state=cbsaState(rawStatus);
+      label=state==='ok'?'OK':state==='exam'?'EXAM':state==='miss'?'MISS':'FLAG';
+      if(state==='exam'){examBeep();}
+      else if(state==='flag'){cbsaFlagBeep();}
+      else if(state==='miss'){alertBeep();}
+      if((state==='exam'||state==='flag')&&!isDup){flagCount++;updateFlagCounter();}
+    }
+  } else {
+    const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
+    if(isDup){state='dup';label='DUP';dupBeep();}
+    else if(inManifest){state='ok';label='OK';}
+    else{state='warn';label='MISS';alertBeep();}
+  }
+
+  // Count (only unique, non-dup scans)
+  if(!isDup){
+    scanCount++;
+    document.getElementById('scan-count').textContent=scanCount;
+  }
+
+  // Flash field
   const f=document.getElementById('scan-field');
-  const flashCls=isDup?'flash-dup':inManifest?'flash-ok':'flash-warn';
+  const flashCls=`flash-${state==='warn'?'warn':state}`;
   f.classList.add(flashCls);
   setTimeout(()=>f.classList.remove(flashCls),220);
 
   // Last scan card
-  const state=isDup?'dup':inManifest?'ok':'warn';
   const ls=document.getElementById('last-scan');
   ls.className='last-scan show '+state;
   document.getElementById('ls-dot').className='ls-dot '+state;
   document.getElementById('ls-val').textContent=normed;
   const lbl=document.getElementById('ls-lbl');
   lbl.className='ls-lbl '+state;
-  lbl.textContent=isDup?'Duplicate — already scanned':inManifest?'✓ Matched in manifest':'⚠ Not in manifest';
+  if(isP2&&!isDup){
+    lbl.textContent=
+      state==='ok'  ?'✓ Released — cleared':
+      state==='exam'?'⚠ Examination Required':
+      state==='flag'?'⚠ '+statusText:
+                     '⚠ Not found in manifest';
+    const statEl=document.getElementById('ls-status');
+    if(state==='exam'||state==='flag'){
+      statEl.textContent=statusText;
+      statEl.className='ls-status '+state;
+      statEl.style.display='block';
+    } else {
+      statEl.style.display='none';
+    }
+  } else {
+    lbl.textContent=isDup?'Duplicate — already scanned':
+      state==='ok'?'✓ Matched in manifest':'⚠ Not in manifest';
+    document.getElementById('ls-status').style.display='none';
+  }
 
-  const feedEl=addFeedItem(normed,isDup,inManifest);
+  addFeedItem(normed,state,label,statusText);
+
+  // Push to Supabase
   sb.from('scans').upsert({
     shipment_id:activeSess.id,tracking:normed,device:activeSess.operator,
     scanned_at:new Date().toISOString()
   },{onConflict:'shipment_id,tracking',ignoreDuplicates:true}).select('id').single().then(({data,error})=>{
     if(error&&error.code!=='23505'){console.warn('push:',error);return;}
-    if(data?.id&&feedEl)feedEl.dataset.id=data.id;
+    const feeds=document.getElementById('feed');
+    const first=feeds.querySelector('.fi');
+    if(data?.id&&first)first.dataset.id=data.id;
   });
 }
 
-function addFeedItem(normed,isDup,inManifest){
+function updateFlagCounter(){
+  const el=document.getElementById('counter-flags');
+  if(flagCount>0){
+    el.textContent=`⚠ ${flagCount} flagged item${flagCount>1?'s':''}`;
+    el.style.display='block';
+  } else {
+    el.style.display='none';
+  }
+}
+
+// ── FEED ───────────────────────────────────────────────────────────────────
+function addFeedItem(normed,state,label,statusText=''){
   const feed=document.getElementById('feed');
   const empty=feed.querySelector('.empty-feed');if(empty)empty.remove();
   const now=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  const state=isDup?'dup':inManifest?'ok':'warn';
-  const label=isDup?'DUP':inManifest?'OK':'MISS';
   const el=document.createElement('div');
-  el.className='fi';el.dataset.manifest=inManifest?'1':'0';
-  el.innerHTML=`<div class="fi-dot ${state}"></div><div class="fi-val">${normed}</div><span class="fi-badge ${state}">${label}</span><div class="fi-time">${now}</div><div class="fi-del" title="Remove">×</div>`;
+  const extraCls=(state==='exam'?' fi-exam':state==='flag'?' fi-flag':'');
+  el.className='fi'+extraCls;
+  el.dataset.manifest=state==='ok'?'1':'0';
+  const title=statusText?` title="${statusText}"`:'';
+  el.innerHTML=`<div class="fi-dot ${state}"></div><div class="fi-val"${title}>${normed}</div><span class="fi-badge ${state}">${label}</span><div class="fi-time">${now}</div><div class="fi-del" title="Remove">×</div>`;
   el.querySelector('.fi-del').addEventListener('click',()=>deleteScanItem(el,normed));
   feed.insertBefore(el,feed.firstChild);
   while(feed.children.length>120)feed.removeChild(feed.lastChild);
   return el;
 }
 
+// ── DELETE ─────────────────────────────────────────────────────────────────
 function deleteScanItem(el,normed){
-  if(skipDeleteConfirm){
-    _doDeleteScan(el,normed);
-    return;
-  }
+  if(skipDeleteConfirm){_doDeleteScan(el,normed);return;}
   pendingDelEl=el;pendingDelNormed=normed;
   document.getElementById('del-modal-val').textContent=normed;
   document.getElementById('del-nowarn-chk').checked=false;
@@ -625,9 +843,16 @@ function confirmDel(){
 }
 function _doDeleteScan(el,normed){
   const id=el.dataset.id;const sessId=activeSess?.id;
-  const wasManifest=el.dataset.manifest==='1';
+  const wasMatched=el.dataset.manifest==='1';
+  const wasFlag=el.classList.contains('fi-exam')||el.classList.contains('fi-flag');
   el.remove();seenThisRun.delete(normed);
-  if(wasManifest){scanCount=Math.max(0,scanCount-1);document.getElementById('scan-count').textContent=scanCount;}
+  if(wasMatched||activeSess?.phase==='cbsa'){
+    scanCount=Math.max(0,scanCount-1);
+    document.getElementById('scan-count').textContent=scanCount;
+  }
+  if(wasFlag&&activeSess?.phase==='cbsa'){
+    flagCount=Math.max(0,flagCount-1);updateFlagCounter();
+  }
   if(id){
     sb.from('scans').delete().eq('id',id).then(({error})=>{if(error)console.warn('del:',error);});
     scanChannel.send({type:'broadcast',event:'scan_deleted',payload:{tracking:normed,shipment_id:sessId}});
@@ -635,13 +860,16 @@ function _doDeleteScan(el,normed){
   }
 }
 
+// ── CLEAR ──────────────────────────────────────────────────────────────────
 function openClearModal(){document.getElementById('clear-modal').classList.add('open');}
 function closeClearModal(){document.getElementById('clear-modal').classList.remove('open');}
 function confirmClear(){
   closeClearModal();
-  seenThisRun.clear();scanCount=0;
+  seenThisRun.clear();scanCount=0;flagCount=0;
   document.getElementById('scan-count').textContent='0';
+  document.getElementById('counter-flags').style.display='none';
   document.getElementById('last-scan').className='last-scan';
+  document.getElementById('ls-status').style.display='none';
   document.getElementById('feed').innerHTML=
     '<div class="empty-feed"><div class="empty-icon">📡</div>Tap the field above<br>then point the gun and fire</div>';
   document.getElementById('scan-field').value='';
@@ -653,25 +881,20 @@ function confirmClear(){
   }
 }
 
-document.getElementById('clear-modal').addEventListener('pointerdown',function(e){
-  if(e.target===this)closeClearModal();
-});
-document.getElementById('del-modal').addEventListener('pointerdown',function(e){
-  if(e.target===this)closeDelModal();
-});
+document.getElementById('clear-modal').addEventListener('pointerdown',function(e){if(e.target===this)closeClearModal();});
+document.getElementById('del-modal').addEventListener('pointerdown',function(e){if(e.target===this)closeDelModal();});
 
-// Register service worker — updateViaCache:'none' forces browser to always
-// re-fetch the SW script itself, bypassing HTTP cache
+// ── SERVICE WORKER ─────────────────────────────────────────────────────────
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('scanner-sw.js', { updateViaCache: 'none' })
-    .catch(e => console.warn('SW:', e));
-  // controllerchange fires when a new SW takes over — reload to get fresh HTML
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if(!refreshing){ refreshing = true; window.location.reload(); }
+  navigator.serviceWorker.register('scanner-sw.js',{updateViaCache:'none'})
+    .catch(e=>console.warn('SW:',e));
+  let refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!refreshing){refreshing=true;window.location.reload();}
   });
 }
 
+// ── INIT ───────────────────────────────────────────────────────────────────
 (async function(){
   const saved=localStorage.getItem('scanner_op');
   if(saved)document.getElementById('opInput').value=saved;
