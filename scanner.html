@@ -217,6 +217,11 @@ select option{background:#111827;}
 <!-- SCAN SCREEN -->
 <div id="scan-screen">
 
+  <!-- Session completed banner — shown when desktop marks session done -->
+  <div id="sess-complete-banner" style="display:none;background:#78350f;border-bottom:2px solid #f59e0b;color:#fde68a;padding:.75rem 1rem;font-size:.88rem;font-weight:600;text-align:center;letter-spacing:.01em">
+    ⚠ This session was marked complete on the desktop. Exit and select a new session.
+  </div>
+
   <div class="sess-strip">
     <div>
       <div class="sess-name" id="strip-name">—</div>
@@ -273,6 +278,16 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 const sb = supabase.createClient(SB_URL, SB_KEY);
 const scanChannel = sb.channel('scans-live').subscribe();
 
+// Watch for session being marked complete on the desktop
+sb.channel('session-watch')
+  .on('postgres_changes',{event:'UPDATE',schema:'public',table:'shipments'},({new:r})=>{
+    if(activeSess&&r.id===activeSess.id&&r.completed){
+      document.getElementById('sess-complete-banner').style.display='block';
+      alertBeep();
+    }
+  })
+  .subscribe();
+
 function norm(v){ return String(v||'').replace(/[^A-Z0-9]/gi,'').toUpperCase(); }
 
 let activeSess    = null;
@@ -294,22 +309,32 @@ function toast(msg,dur=2500){
   el._t=setTimeout(()=>el.classList.remove('show'),dur);
 }
 
-// ── ALERT BEEP ────────────────────────────────────────────────────────────
+// ── BEEPS ─────────────────────────────────────────────────────────────────
 function alertBeep(){
+  // Triple square-wave burst — wrong label / not in manifest
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
-    // Two descending tones — attention-grabbing error pattern
     [[880,0,0.18],[660,0.2,0.18],[880,0.4,0.18]].forEach(([freq,start,dur])=>{
-      const osc=ctx.createOscillator();
-      const gain=ctx.createGain();
-      osc.connect(gain); gain.connect(ctx.destination);
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
       osc.type='square';
       osc.frequency.setValueAtTime(freq,ctx.currentTime+start);
       gain.gain.setValueAtTime(0.7,ctx.currentTime+start);
       gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+start+dur);
-      osc.start(ctx.currentTime+start);
-      osc.stop(ctx.currentTime+start+dur+0.01);
+      osc.start(ctx.currentTime+start);osc.stop(ctx.currentTime+start+dur+0.01);
     });
+  }catch(e){}
+}
+function dupBeep(){
+  // Single short high pip — duplicate scan
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator(),gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.type='sine';osc.frequency.setValueAtTime(1200,ctx.currentTime);
+    gain.gain.setValueAtTime(0.4,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.08);
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.09);
   }catch(e){}
 }
 
@@ -450,8 +475,9 @@ async function handleScan(raw){
     scanCount++;
     document.getElementById('scan-count').textContent=scanCount;
   }
-  // Beep loudly for non-manifest scans (wrong label)
+  // Audio feedback
   if(!inManifest) alertBeep();
+  else if(isDup) dupBeep();
 
   // Flash field
   const f=document.getElementById('scan-field');

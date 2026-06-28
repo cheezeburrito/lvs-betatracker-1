@@ -625,7 +625,10 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
         </div>
         <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Scan parcels into your Google Doc, then copy and paste the contents below. Or use the <strong style="color:#93c5fd">scanner.html</strong> page on the CipherLab gun for real-time scanning.</p>
         <textarea id="prescan-paste" style="min-height:110px" placeholder="Paste scanned tracking IDs here…" oninput="onPasteInput('prescan')"></textarea>
-        <p class="kbd-tip">💡 Tip: Press <kbd>Ctrl+Enter</kbd> to process immediately after pasting.</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.4rem">
+          <p class="kbd-tip" style="margin:0">💡 Tip: Press <kbd>Ctrl+Enter</kbd> to process immediately after pasting.</p>
+          <button class="btn btn-secondary" style="font-size:.72rem;padding:.3rem .7rem" onclick="clearPaste('prescan')">✕ Clear</button>
+        </div>
       </div>
 
       <div class="card" id="prescan-notes-card" style="display:none">
@@ -666,9 +669,12 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
           <span class="stats-panel-num green" id="sp-scanned">—</span>
           <span class="stats-panel-lbl">Scanned</span>
         </div>
-        <div class="stats-panel-item">
+        <div class="stats-panel-item" id="sp-missing-item" onclick="jumpToMissing()" style="cursor:pointer;border-radius:8px;padding:.2rem .3rem;margin:-.2rem -.3rem;transition:background .15s" onmouseenter="this.style.background='#1e2d45'" onmouseleave="this.style.background=''">
           <span class="stats-panel-num red" id="sp-missing">—</span>
-          <span class="stats-panel-lbl">Missing</span>
+          <span class="stats-panel-lbl" style="color:#f87171">↓ Show Missing</span>
+        </div>
+        <div style="border-top:1px solid #1f2d45;padding-top:.75rem;margin-top:.1rem">
+          <button class="btn btn-success" style="width:100%;font-size:.78rem;padding:.55rem" onclick="exportExcel('prescan')">⬇ Export Excel</button>
         </div>
       </div>
 
@@ -1677,6 +1683,20 @@ function setFilter(phase,f,btn){
   filters[phase]=f;
   document.querySelectorAll(`#${phase}-filters .filter-btn`).forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');processPaste(phase);
+}
+function clearPaste(phase){
+  if(!confirm('Clear all scanned IDs from the paste area?\n\nThis removes them from the local view only — Supabase scan records are kept.')) return;
+  const ta=document.getElementById(`${phase}-paste`);
+  ta.value='';
+  const sess=currentSession(phase);
+  if(sess){sess.rawPaste='';saveLocal();}
+  processPaste(phase);
+  updateScannerBadge();
+}
+function jumpToMissing(){
+  const btn=document.querySelector('#prescan-filters .filter-btn:nth-child(2)');
+  if(btn){filters['prescan']='incomplete';document.querySelectorAll('#prescan-filters .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');processPaste('prescan');}
+  document.getElementById('prescan-results')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
