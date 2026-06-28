@@ -5,193 +5,259 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>LVS Scanner</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
   --bg:#060a10;
-  --card:#111827;
-  --border:#1f2d45;
+  --card:#0f1623;
+  --card2:#111827;
+  --border:rgba(31,45,69,.8);
   --accent:#3b82f6;
   --green:#22c55e;
+  --red:#f87171;
   --amber:#f59e0b;
+  --blue:#60a5fa;
   --text:#e2e8f0;
-  --muted:#94a3b8;
-  --input-bg:#0a1020;
+  --muted:#64748b;
+  --muted2:#94a3b8;
 }
 html,body{
-  height:100%;
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  font-size:18px; /* base size for mobile */
-  overscroll-behavior:none;
-  -webkit-text-size-adjust:100%;
+  height:100%;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',sans-serif;
+  font-size:16px;overscroll-behavior:none;
+  -webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased;
 }
 
 /* ── HEADER ── */
 .hdr{
   display:flex;align-items:center;justify-content:space-between;
-  padding:1rem 1.25rem;
-  background:#0d1424;border-bottom:2px solid var(--border);
+  padding:.85rem 1.25rem;
+  background:rgba(13,20,36,.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:50;
 }
-.hdr-title{font-size:1.3rem;font-weight:800;color:#fff;}
-.hdr-sub{font-size:.8rem;color:var(--muted);margin-top:2px;}
-.sync-row{display:flex;align-items:center;gap:.5rem;}
-.sync-dot{width:10px;height:10px;border-radius:50%;background:var(--muted);}
+.hdr-brand{display:flex;flex-direction:column;gap:1px;}
+.hdr-title{font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:-.01em;}
+.hdr-sub{font-size:.72rem;color:var(--muted);letter-spacing:.03em;text-transform:uppercase;}
+.sync-pill{
+  display:flex;align-items:center;gap:.4rem;
+  background:rgba(0,0,0,.3);border:1px solid var(--border);
+  border-radius:99px;padding:.3rem .7rem;
+}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:all .3s;}
 .sync-dot.live{background:var(--green);box-shadow:0 0 8px var(--green);}
-.sync-lbl{font-size:.8rem;color:var(--muted);}
+.sync-lbl{font-size:.72rem;color:var(--muted);font-weight:600;}
 
-/* ── SETUP ── */
+/* ── SETUP SCREEN ── */
 #setup{
-  padding:1.5rem 1.25rem;
-  display:flex;flex-direction:column;gap:1.25rem;
+  padding:2rem 1.25rem 1.5rem;
+  display:flex;flex-direction:column;gap:1.1rem;
   max-width:480px;margin:0 auto;
 }
-.lbl{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem;font-weight:600;}
+.setup-hero{
+  text-align:center;padding:1.5rem 1rem 1rem;
+  border-bottom:1px solid var(--border);margin-bottom:.5rem;
+}
+.setup-hero h1{font-size:1.5rem;font-weight:800;color:#fff;letter-spacing:-.02em;}
+.setup-hero p{font-size:.82rem;color:var(--muted2);margin-top:.4rem;}
+.field-group{display:flex;flex-direction:column;gap:.45rem;}
+.lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700;}
 input,select{
-  width:100%;
-  background:var(--input-bg);
-  border:2px solid var(--border);
-  border-radius:12px;
-  padding:1rem 1.1rem;
-  color:var(--text);
-  font-size:1.1rem;
-  outline:none;
-  appearance:none;-webkit-appearance:none;
+  width:100%;background:#0a1020;border:1.5px solid var(--border);border-radius:12px;
+  padding:.9rem 1rem;color:var(--text);font-size:1rem;outline:none;
+  font-family:inherit;appearance:none;-webkit-appearance:none;
+  transition:border-color .18s,box-shadow .18s;
 }
-input:focus,select:focus{border-color:var(--accent);}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
 select option{background:#111827;}
-.btn{
-  width:100%;padding:1.1rem;
-  border-radius:12px;border:none;
-  font-size:1.1rem;font-weight:700;
-  cursor:pointer;
-  min-height:56px;
+.btn-start{
+  width:100%;padding:1rem;border-radius:14px;border:none;
+  font-size:1rem;font-weight:700;cursor:pointer;min-height:52px;
+  background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;
+  box-shadow:0 4px 20px rgba(37,99,235,.4);
+  transition:all .18s;letter-spacing:.01em;
 }
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-primary:active{filter:brightness(.85);}
-.btn-ghost{background:transparent;border:2px solid var(--border);color:var(--text);}
-.btn-ghost:active{background:#1f2d45;}
+.btn-start:active{transform:scale(.97);filter:brightness(.9);}
+.btn-refresh{
+  width:100%;padding:.8rem;border-radius:12px;border:1.5px solid var(--border);
+  font-size:.88rem;font-weight:600;cursor:pointer;min-height:48px;
+  background:transparent;color:var(--muted2);transition:all .18s;
+}
+.btn-refresh:active{background:rgba(255,255,255,.05);}
 
 /* ── SCAN SCREEN ── */
-#scan-screen{display:none;flex-direction:column;height:calc(100dvh - 70px);}
+#scan-screen{display:none;flex-direction:column;height:calc(100dvh - 57px);overflow:hidden;}
 
+/* session complete banner */
+#sess-complete-banner{
+  display:none;
+  background:rgba(120,53,15,.9);border-bottom:2px solid #f59e0b;
+  color:#fde68a;padding:.7rem 1.1rem;font-size:.82rem;font-weight:700;
+  text-align:center;letter-spacing:.01em;
+}
+
+/* session strip */
 .sess-strip{
-  padding:.75rem 1.25rem;
-  background:#0a1525;border-bottom:2px solid var(--border);
+  padding:.65rem 1.1rem;
+  background:rgba(10,21,37,.9);border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;gap:.5rem;
+  flex-shrink:0;
 }
-.sess-name{font-size:1rem;font-weight:700;color:#fff;}
-.sess-op{font-size:.8rem;color:var(--muted);}
+.sess-info{min-width:0;}
+.sess-name{font-size:.95rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sess-op{font-size:.72rem;color:var(--muted);margin-top:2px;}
 .exit-btn{
-  font-size:.85rem;color:var(--muted);
-  background:transparent;border:1px solid var(--border);
-  border-radius:8px;padding:.5rem .9rem;cursor:pointer;
-  white-space:nowrap;min-height:44px;
+  font-size:.78rem;color:var(--muted2);font-weight:600;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:8px;padding:.45rem .85rem;cursor:pointer;
+  white-space:nowrap;min-height:38px;flex-shrink:0;transition:all .15s;
 }
+.exit-btn:active{background:rgba(255,255,255,.1);}
 
+/* scan zone */
 .scan-zone{
-  padding:1.25rem;
-  flex:1;display:flex;flex-direction:column;gap:1rem;
-  overflow:hidden;
+  flex:1;display:flex;flex-direction:column;gap:.75rem;
+  padding:.9rem 1.1rem;overflow:hidden;
 }
 
-/* The single scan input — clears after each scan, focus never lost */
-.scan-field-wrap{position:relative;}
-.scan-field-tip{font-size:.8rem;color:var(--muted);margin-bottom:.5rem;}
+/* scan field */
+.scan-field-tip{font-size:.72rem;color:var(--muted);letter-spacing:.02em;text-align:center;}
 #scan-field{
-  width:100%;
-  background:var(--input-bg);
-  border:3px solid var(--border);
-  border-radius:14px;
-  padding:1.1rem 1.25rem;
-  color:var(--text);
-  font-size:1.2rem;
-  font-family:monospace;
-  outline:none;
-  letter-spacing:.05em;
-  min-height:64px;
+  width:100%;background:#070d1a;border:2px solid var(--border);border-radius:14px;
+  padding:1rem 1.1rem;color:var(--text);font-size:1.1rem;font-family:monospace;
+  outline:none;letter-spacing:.06em;min-height:56px;text-align:center;
+  transition:border-color .15s,box-shadow .15s;
 }
-#scan-field:focus{border-color:var(--accent);}
-#scan-field.flash{border-color:var(--green);background:#0a1f10;}
+#scan-field:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+#scan-field.flash-ok  {border-color:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.2);background:#061410;}
+#scan-field.flash-warn{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.2);background:#140e04;}
+#scan-field.flash-dup {border-color:var(--blue); box-shadow:0 0 0 3px rgba(96,165,250,.2);background:#060e1a;}
 
-.counter-row{
-  display:flex;align-items:center;justify-content:space-between;
-  background:var(--card);border:1px solid var(--border);border-radius:12px;
-  padding:1rem 1.25rem;
-}
-.counter{font-size:2.5rem;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;line-height:1;}
-.counter-meta{font-size:.8rem;color:var(--muted);margin-top:.25rem;}
-.clear-btn{
-  font-size:.85rem;color:var(--muted);
-  background:transparent;border:1px solid var(--border);
-  border-radius:8px;padding:.6rem 1rem;cursor:pointer;
-  min-height:44px;
-}
-
-/* last scan display */
+/* last scan — full width status card */
 .last-scan{
-  background:var(--card);border:1px solid var(--border);border-radius:12px;
-  padding:.9rem 1.25rem;display:none;
-  align-items:center;gap:.75rem;
+  border-radius:14px;padding:.85rem 1.1rem;display:none;
+  flex-direction:column;gap:.2rem;border:1.5px solid transparent;
+  transition:all .2s;
 }
 .last-scan.show{display:flex;}
-.ls-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
-.ls-val{font-size:1.05rem;font-family:monospace;font-weight:600;flex:1;}
-.ls-lbl{font-size:.75rem;color:var(--muted);}
+.last-scan.ok  {background:rgba(5,46,22,.7); border-color:rgba(34,197,94,.3);}
+.last-scan.warn{background:rgba(69,26,3,.7); border-color:rgba(245,158,11,.3);}
+.last-scan.dup {background:rgba(6,16,50,.7); border-color:rgba(96,165,250,.3);}
+.ls-top{display:flex;align-items:center;gap:.6rem;}
+.ls-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.ls-dot.ok  {background:var(--green);}
+.ls-dot.warn{background:var(--amber);}
+.ls-dot.dup {background:var(--blue);}
+.ls-val{font-size:1rem;font-family:monospace;font-weight:700;letter-spacing:.04em;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ls-lbl{font-size:.72rem;font-weight:600;padding-left:1.6rem;}
+.ls-lbl.ok  {color:var(--green);}
+.ls-lbl.warn{color:var(--amber);}
+.ls-lbl.dup {color:var(--blue);}
+
+/* counter row */
+.counter-row{
+  display:flex;align-items:center;gap:.75rem;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:.85rem 1.1rem;flex-shrink:0;
+}
+.counter-left{flex:1;}
+.counter{font-size:2.8rem;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;line-height:1;}
+.counter-meta{font-size:.72rem;color:var(--muted);margin-top:.2rem;letter-spacing:.02em;}
+.clear-btn{
+  font-size:.78rem;color:var(--muted2);font-weight:600;
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);
+  border-radius:10px;padding:.55rem .9rem;cursor:pointer;
+  min-height:42px;white-space:nowrap;transition:all .18s;
+}
+.clear-btn:active{background:rgba(248,113,113,.15);}
 
 /* feed */
-.feed-hdr{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.feed-hdr{
+  font-size:.68rem;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.08em;font-weight:700;flex-shrink:0;
+}
 .feed{
-  flex:1;overflow-y:auto;
-  display:flex;flex-direction:column;gap:.4rem;
-  padding-bottom:.5rem;
-  -webkit-overflow-scrolling:touch;
+  flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:.35rem;
+  padding-bottom:.5rem;-webkit-overflow-scrolling:touch;
 }
 .fi{
-  display:flex;align-items:center;gap:.75rem;
-  padding:.7rem 1rem;
-  background:var(--card);border:1px solid var(--border);border-radius:10px;
-  animation:fi-in .12s ease;
+  display:flex;align-items:center;gap:.65rem;
+  padding:.6rem .85rem;
+  background:var(--card2);border:1px solid var(--border);border-radius:10px;
+  animation:fi-in .12s ease;flex-shrink:0;
 }
-@keyframes fi-in{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
-.fi-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
-.fi-dot.ok{background:var(--green);}
+@keyframes fi-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.fi-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.fi-dot.ok  {background:var(--green);}
 .fi-dot.warn{background:var(--amber);}
-.fi-dot.dup{background:#60a5fa;}
-.fi-val{flex:1;font-size:.95rem;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.fi-time{font-size:.72rem;color:var(--muted);flex-shrink:0;}
-.fi-del{font-size:1.1rem;color:var(--muted);cursor:pointer;padding:.1rem .4rem;border-radius:6px;flex-shrink:0;line-height:1;transition:color .15s,background .15s;}
-.fi-del:hover{color:#f87171;background:rgba(248,113,113,.12);}
+.fi-dot.dup {background:var(--blue);}
+.fi-val{flex:1;font-size:.88rem;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cbd5e1;}
+.fi-badge{font-size:.62rem;font-weight:700;padding:.12rem .45rem;border-radius:99px;flex-shrink:0;letter-spacing:.03em;}
+.fi-badge.ok  {background:rgba(5,46,22,.8); color:var(--green);}
+.fi-badge.warn{background:rgba(69,26,3,.8); color:var(--amber);}
+.fi-badge.dup {background:rgba(6,16,50,.8); color:var(--blue);}
+.fi-time{font-size:.65rem;color:var(--muted);flex-shrink:0;}
+.fi-del{font-size:1rem;color:var(--muted);cursor:pointer;padding:.15rem .4rem;border-radius:6px;flex-shrink:0;line-height:1;transition:all .15s;}
+.fi-del:active{color:var(--red);background:rgba(248,113,113,.12);}
 
 .empty-feed{
   text-align:center;color:var(--muted);
-  padding:3rem 1rem;font-size:.95rem;line-height:1.8;
+  padding:3rem 1rem;font-size:.9rem;line-height:2;
 }
-.empty-icon{font-size:3rem;margin-bottom:.75rem;}
+.empty-icon{font-size:2.5rem;margin-bottom:.5rem;}
 
-/* toast */
+/* ── CLEAR CONFIRM MODAL ── */
+#clear-modal{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  align-items:flex-end;justify-content:center;padding:1rem;
+}
+#clear-modal.open{display:flex;}
+#clear-sheet{
+  background:#0f1623;border:1px solid var(--border);border-radius:20px;
+  padding:1.5rem;width:100%;max-width:420px;
+  box-shadow:0 24px 60px rgba(0,0,0,.7);
+  animation:sheet-in .22s cubic-bezier(.4,0,.2,1);
+}
+@keyframes sheet-in{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+#clear-sheet h3{font-size:1rem;font-weight:700;margin-bottom:.4rem;}
+#clear-sheet p{font-size:.82rem;color:var(--muted2);line-height:1.6;margin-bottom:1.25rem;}
+.sheet-btns{display:flex;gap:.6rem;}
+.sheet-btn-cancel{
+  flex:1;padding:.85rem;border-radius:12px;border:1.5px solid var(--border);
+  background:transparent;color:var(--text);font-size:.9rem;font-weight:600;cursor:pointer;
+}
+.sheet-btn-clear{
+  flex:1;padding:.85rem;border-radius:12px;border:none;
+  background:rgba(239,68,68,.15);border:1.5px solid rgba(239,68,68,.3);
+  color:var(--red);font-size:.9rem;font-weight:700;cursor:pointer;
+}
+
+/* ── TOAST ── */
 #toast{
   position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);
-  background:#1e293b;border:2px solid var(--border);
-  border-radius:12px;padding:.85rem 1.5rem;
-  font-size:.95rem;font-weight:600;
+  background:rgba(15,22,35,.95);backdrop-filter:blur(12px);
+  border:1px solid var(--border);border-radius:12px;
+  padding:.7rem 1.3rem;font-size:.88rem;font-weight:600;
   white-space:nowrap;opacity:0;pointer-events:none;
-  transition:opacity .2s;z-index:200;
+  transition:opacity .2s;z-index:400;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
 }
 #toast.show{opacity:1;}
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <div class="hdr">
-  <div>
-    <div class="hdr-title">LVS Scanner</div>
-    <div class="hdr-sub">Phase 1 · Real-time</div>
+  <div class="hdr-brand">
+    <div class="hdr-title">LVS · GSM Scanner</div>
+    <div class="hdr-sub">Phase 1 · Real-time sync</div>
   </div>
-  <div class="sync-row">
+  <div class="sync-pill">
     <div class="sync-dot" id="syncDot"></div>
     <span class="sync-lbl" id="syncLbl">offline</span>
   </div>
@@ -199,31 +265,37 @@ select option{background:#111827;}
 
 <!-- SETUP -->
 <div id="setup">
-  <div>
-    <div class="lbl">Your name</div>
+  <div class="setup-hero">
+    <h1>Ready to Scan</h1>
+    <p>Select your session and enter your name to begin.</p>
+  </div>
+
+  <div class="field-group">
+    <div class="lbl">Your Name</div>
     <input id="opInput" type="text" placeholder="e.g. Oscar"
            autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false">
   </div>
-  <div>
+
+  <div class="field-group">
     <div class="lbl">Active Session</div>
     <select id="sessSelect">
       <option value="">Loading…</option>
     </select>
   </div>
-  <button class="btn btn-primary" onclick="startScanning()">▶ Start Scanning</button>
-  <button class="btn btn-ghost" onclick="refreshSessions()">↻ Refresh Sessions</button>
+
+  <button class="btn-start" onclick="startScanning()">▶ &nbsp;Start Scanning</button>
+  <button class="btn-refresh" onclick="refreshSessions()">↻ &nbsp;Refresh Sessions</button>
 </div>
 
 <!-- SCAN SCREEN -->
 <div id="scan-screen">
 
-  <!-- Session completed banner — shown when desktop marks session done -->
-  <div id="sess-complete-banner" style="display:none;background:#78350f;border-bottom:2px solid #f59e0b;color:#fde68a;padding:.75rem 1rem;font-size:.88rem;font-weight:600;text-align:center;letter-spacing:.01em">
+  <div id="sess-complete-banner">
     ⚠ This session was marked complete on the desktop. Exit and select a new session.
   </div>
 
   <div class="sess-strip">
-    <div>
+    <div class="sess-info">
       <div class="sess-name" id="strip-name">—</div>
       <div class="sess-op" id="strip-op">—</div>
     </div>
@@ -232,40 +304,48 @@ select option{background:#111827;}
 
   <div class="scan-zone">
 
-    <div class="scan-field-wrap">
-      <div class="scan-field-tip">Tap below once, then scan — each barcode submits instantly</div>
-      <!-- Single input — clears after every scan, focus held, no DOM flicker -->
-      <input id="scan-field" type="text"
-             placeholder="Ready to scan…"
-             autocomplete="off" autocorrect="off" autocapitalize="off"
-             spellcheck="false" inputmode="none">
-    </div>
+    <div class="scan-field-tip">Tap below once — then point the gun and fire</div>
+    <input id="scan-field" type="text"
+           placeholder="Ready…"
+           autocomplete="off" autocorrect="off" autocapitalize="off"
+           spellcheck="false" inputmode="none">
 
-    <!-- Last scan confirmation -->
     <div class="last-scan" id="last-scan">
-      <div class="ls-dot" id="ls-dot"></div>
-      <div>
+      <div class="ls-top">
+        <div class="ls-dot" id="ls-dot"></div>
         <div class="ls-val" id="ls-val">—</div>
-        <div class="ls-lbl" id="ls-lbl">—</div>
       </div>
+      <div class="ls-lbl" id="ls-lbl">—</div>
     </div>
 
     <div class="counter-row">
-      <div>
+      <div class="counter-left">
         <div class="counter" id="scan-count">0</div>
-        <div class="counter-meta">scans this session</div>
+        <div class="counter-meta">scans matched this session</div>
       </div>
-      <button class="clear-btn" onclick="clearFeed()">Clear</button>
+      <button class="clear-btn" onclick="openClearModal()">🗑 Clear</button>
     </div>
 
-    <div class="feed-hdr">Live feed</div>
+    <div class="feed-hdr">Scan history</div>
     <div class="feed" id="feed">
       <div class="empty-feed">
         <div class="empty-icon">📡</div>
-        Tap the scan field above<br>then point the gun and fire
+        Tap the field above<br>then point the gun and fire
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- CLEAR CONFIRM SHEET -->
+<div id="clear-modal">
+  <div id="clear-sheet">
+    <h3>Clear all scans?</h3>
+    <p>This removes all scans for this session from the live feed and the desktop. This cannot be undone.</p>
+    <div class="sheet-btns">
+      <button class="sheet-btn-cancel" onclick="closeClearModal()">Cancel</button>
+      <button class="sheet-btn-clear" onclick="confirmClear()">Clear All</button>
+    </div>
   </div>
 </div>
 
@@ -276,14 +356,15 @@ select option{background:#111827;}
 const SB_URL = 'https://wzwcfvmhnqwhmfjdcsxj.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6d2Nmdm1obnF3aG1mamRjc3hqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTc4MTksImV4cCI6MjA5NjU5MzgxOX0.4ABH_t8-DG9Sh-Ts293pJKvO4CsO8bCM1pqjt59G5Xc';
 const sb = supabase.createClient(SB_URL, SB_KEY);
+
 function logAction(action, sessId, sessName, operator, detail={}){
   sb.from('actions').insert({
     action, shipment_id:sessId, session_name:sessName, operator:operator||'unknown', detail
   }).then(({error})=>{ if(error) console.warn('logAction:', action, error); });
 }
+
 const scanChannel = sb.channel('scans-live').subscribe();
 
-// Watch for session being marked complete on the desktop
 sb.channel('session-watch')
   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'shipments'},({new:r})=>{
     if(activeSess&&r.id===activeSess.id&&r.completed){
@@ -300,23 +381,18 @@ let seenThisRun   = new Set();
 let scanCount     = 0;
 let sessionsStore = {};
 
-// ── SYNC ──────────────────────────────────────────────────────────────────
 function setSynced(on){
-  document.getElementById('syncDot').className = 'sync-dot'+(on?' live':'');
-  document.getElementById('syncLbl').textContent = on?'live':'offline';
+  document.getElementById('syncDot').className='sync-dot'+(on?' live':'');
+  document.getElementById('syncLbl').textContent=on?'live':'offline';
 }
 
-// ── TOAST ─────────────────────────────────────────────────────────────────
 function toast(msg,dur=2500){
   const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  clearTimeout(el._t);
-  el._t=setTimeout(()=>el.classList.remove('show'),dur);
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),dur);
 }
 
-// ── BEEPS ─────────────────────────────────────────────────────────────────
 function alertBeep(){
-  // Triple square-wave burst — wrong label / not in manifest
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     [[880,0,0.18],[660,0.2,0.18],[880,0.4,0.18]].forEach(([freq,start,dur])=>{
@@ -331,7 +407,6 @@ function alertBeep(){
   }catch(e){}
 }
 function dupBeep(){
-  // Single short high pip — duplicate scan
   try{
     const ctx=new(window.AudioContext||window.webkitAudioContext)();
     const osc=ctx.createOscillator(),gain=ctx.createGain();
@@ -343,19 +418,16 @@ function dupBeep(){
   }catch(e){}
 }
 
-// ── SESSIONS ──────────────────────────────────────────────────────────────
 async function refreshSessions(){
   const sel=document.getElementById('sessSelect');
   sel.innerHTML='<option value="">Loading…</option>';
   sessionsStore={};
   try{
-    const{data,error}=await sb
-      .from('shipments')
+    const{data,error}=await sb.from('shipments')
       .select('id,name,operator,manifest,completed,phase')
-      .eq('phase','prescan')
-      .eq('completed',false)
+      .eq('phase','prescan').eq('completed',false)
       .order('created_at',{ascending:false});
-    if(error) throw error;
+    if(error)throw error;
     setSynced(true);
     if(!data||!data.length){
       sel.innerHTML='<option value="">No active Phase 1 sessions</option>';
@@ -369,168 +441,128 @@ async function refreshSessions(){
     else if(data.length===1) sel.value=data[0].id;
   }catch(e){
     sel.innerHTML='<option value="">Error — tap Refresh</option>';
-    setSynced(false);
-    console.warn(e);
+    setSynced(false);console.warn(e);
   }
 }
 
-// ── START ──────────────────────────────────────────────────────────────────
 function startScanning(){
   const op=document.getElementById('opInput').value.trim();
   const sel=document.getElementById('sessSelect');
   if(!op){toast('Enter your name first');return;}
   if(!sel.value){toast('Select a session first');return;}
-
   const row=sessionsStore[sel.value]||{};
   const manifest=row.manifest||{};
   const allT=Object.values(manifest).flat().map(r=>norm(r.tracking||r.ccn||'')).filter(Boolean);
-
-  activeSess={id:sel.value, name:row.name||sel.value, operator:op, normedTracking:new Set(allT)};
+  activeSess={id:sel.value,name:row.name||sel.value,operator:op,normedTracking:new Set(allT)};
   localStorage.setItem('scanner_op',op);
   localStorage.setItem('scanner_last_sess',sel.value);
-
   document.getElementById('strip-name').textContent=activeSess.name;
   document.getElementById('strip-op').textContent='Operator: '+op;
   document.getElementById('setup').style.display='none';
   document.getElementById('scan-screen').style.display='flex';
-
-  seenThisRun.clear(); scanCount=0;
+  seenThisRun.clear();scanCount=0;
   document.getElementById('scan-count').textContent='0';
   document.getElementById('last-scan').className='last-scan';
   document.getElementById('feed').innerHTML=
-    '<div class="empty-feed"><div class="empty-icon">📡</div>Tap the scan field above<br>then point the gun and fire</div>';
-
+    '<div class="empty-feed"><div class="empty-icon">📡</div>Tap the field above<br>then point the gun and fire</div>';
   const f=document.getElementById('scan-field');
-  f.value='';
-  f.focus();
-
-  // Load existing scans from Supabase for this session
+  f.value='';f.focus();
   loadExistingScans(activeSess.id);
 }
 
 async function loadExistingScans(sessId){
   try{
     const{data,error}=await sb.from('scans')
-      .select('id,tracking,device')
-      .eq('shipment_id',sessId)
+      .select('id,tracking,device').eq('shipment_id',sessId)
       .order('scanned_at',{ascending:true});
     if(error||!data||!data.length)return;
     data.forEach(r=>{
-      const normed=norm(r.tracking||'');
-      if(!normed)return;
+      const normed=norm(r.tracking||'');if(!normed)return;
       const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
-      const isDup=seenThisRun.has(normed);
-      seenThisRun.add(normed);
-      if(inManifest&&!isDup) scanCount++;
+      const isDup=seenThisRun.has(normed);seenThisRun.add(normed);
+      if(inManifest&&!isDup)scanCount++;
       const el=addFeedItem(normed,isDup,inManifest);
-      if(el&&r.id) el.dataset.id=r.id;
+      if(el&&r.id)el.dataset.id=r.id;
     });
     document.getElementById('scan-count').textContent=scanCount;
   }catch(e){console.warn('loadExistingScans:',e);}
 }
 
 function exitScanning(){
-  activeSess=null;
-  localStorage.removeItem('scanner_last_sess');
+  activeSess=null;localStorage.removeItem('scanner_last_sess');
   document.getElementById('scan-screen').style.display='none';
   document.getElementById('setup').style.display='flex';
   document.getElementById('scan-field').value='';
   refreshSessions();
 }
 
-// ── SCAN INPUT ─────────────────────────────────────────────────────────────
-// Primary method: keydown Enter (keyboard-wedge fires Enter after barcode)
 document.getElementById('scan-field').addEventListener('keydown',function(e){
   if(e.key==='Enter'||e.keyCode===13){
     e.preventDefault();
     const val=this.value.trim();
-    if(val){
-      handleScan(val);
-      this.value=''; // clear immediately — focus stays, ready for next scan
-    }
+    if(val){handleScan(val);this.value='';}
   }
 });
-
-// Fallback: some scanner configs emit the barcode as a paste or rapid input
-// ending with \n — catch that too
 document.getElementById('scan-field').addEventListener('input',function(){
   const val=this.value;
-  // If the value contains a newline the scanner appended Enter mid-paste
   if(val.includes('\n')||val.includes('\r')){
     const parts=val.split(/[\r\n]+/).map(s=>s.trim()).filter(Boolean);
-    parts.forEach(p=>handleScan(p));
-    this.value='';
+    parts.forEach(p=>handleScan(p));this.value='';
   }
 });
-
-// Keep focus if user taps anywhere in the scan zone (not a button)
 document.getElementById('scan-screen').addEventListener('pointerdown',function(e){
-  if(!e.target.closest('button')){
+  if(!e.target.closest('button')&&!e.target.closest('#clear-modal')){
     setTimeout(()=>document.getElementById('scan-field').focus(),0);
   }
 });
 
-// ── HANDLE SCAN ────────────────────────────────────────────────────────────
 async function handleScan(raw){
   if(!activeSess)return;
-  const normed=norm(raw);
-  if(!normed)return;
-
+  const normed=norm(raw);if(!normed)return;
   const isDup=seenThisRun.has(normed);
   const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
   seenThisRun.add(normed);
-  // Only count unique manifest matches toward the total
   if(inManifest&&!isDup){
-    scanCount++;
-    document.getElementById('scan-count').textContent=scanCount;
+    scanCount++;document.getElementById('scan-count').textContent=scanCount;
   }
-  // Audio feedback
-  if(!inManifest) alertBeep();
-  else if(isDup) dupBeep();
+  if(!inManifest)alertBeep();
+  else if(isDup)dupBeep();
 
-  // Flash field
+  // Flash field with state-appropriate color
   const f=document.getElementById('scan-field');
-  f.classList.add('flash');
-  setTimeout(()=>f.classList.remove('flash'),200);
+  const flashCls=isDup?'flash-dup':inManifest?'flash-ok':'flash-warn';
+  f.classList.add(flashCls);
+  setTimeout(()=>f.classList.remove(flashCls),220);
 
-  // Last scan strip
+  // Last scan card
+  const state=isDup?'dup':inManifest?'ok':'warn';
   const ls=document.getElementById('last-scan');
-  const lsDot=document.getElementById('ls-dot');
-  const lsVal=document.getElementById('ls-val');
-  const lsLbl=document.getElementById('ls-lbl');
-  ls.className='last-scan show';
-  lsDot.className='ls-dot '+(isDup?'dup':inManifest?'ok':'warn');
-  lsVal.textContent=normed;
-  lsLbl.textContent=isDup?'Duplicate — already scanned':inManifest?'✓ Matched in manifest':'⚠ Not found in manifest';
+  ls.className='last-scan show '+state;
+  document.getElementById('ls-dot').className='ls-dot '+state;
+  document.getElementById('ls-val').textContent=normed;
+  const lbl=document.getElementById('ls-lbl');
+  lbl.className='ls-lbl '+state;
+  lbl.textContent=isDup?'Duplicate — already scanned':inManifest?'✓ Matched in manifest':'⚠ Not in manifest';
 
-  // Add to feed immediately, then attach UUID when insert resolves
   const feedEl=addFeedItem(normed,isDup,inManifest);
-
-  // Push to Supabase — capture UUID for per-item delete
   sb.from('scans').upsert({
-    shipment_id:activeSess.id,
-    tracking:normed,
-    device:activeSess.operator,
+    shipment_id:activeSess.id,tracking:normed,device:activeSess.operator,
     scanned_at:new Date().toISOString()
   },{onConflict:'shipment_id,tracking',ignoreDuplicates:true}).select('id').single().then(({data,error})=>{
     if(error&&error.code!=='23505'){console.warn('push:',error);return;}
-    if(data?.id&&feedEl) feedEl.dataset.id=data.id;
+    if(data?.id&&feedEl)feedEl.dataset.id=data.id;
   });
 }
 
-// ── FEED ───────────────────────────────────────────────────────────────────
 function addFeedItem(normed,isDup,inManifest){
   const feed=document.getElementById('feed');
-  const empty=feed.querySelector('.empty-feed');
-  if(empty)empty.remove();
-
+  const empty=feed.querySelector('.empty-feed');if(empty)empty.remove();
   const now=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-  const dotCls=isDup?'dup':inManifest?'ok':'warn';
-
+  const state=isDup?'dup':inManifest?'ok':'warn';
+  const label=isDup?'DUP':inManifest?'OK':'MISS';
   const el=document.createElement('div');
-  el.className='fi';
-  el.dataset.manifest=inManifest?'1':'0';
-  el.innerHTML=`<div class="fi-dot ${dotCls}"></div><div class="fi-val">${normed}</div><div class="fi-time">${now}</div><div class="fi-del" title="Remove scan">×</div>`;
+  el.className='fi';el.dataset.manifest=inManifest?'1':'0';
+  el.innerHTML=`<div class="fi-dot ${state}"></div><div class="fi-val">${normed}</div><span class="fi-badge ${state}">${label}</span><div class="fi-time">${now}</div><div class="fi-del" title="Remove">×</div>`;
   el.querySelector('.fi-del').addEventListener('click',()=>deleteScanItem(el,normed));
   feed.insertBefore(el,feed.firstChild);
   while(feed.children.length>120)feed.removeChild(feed.lastChild);
@@ -538,39 +570,40 @@ function addFeedItem(normed,isDup,inManifest){
 }
 
 function deleteScanItem(el,normed){
-  const id=el.dataset.id;
-  const sessId=activeSess?.id;
+  const id=el.dataset.id;const sessId=activeSess?.id;
   const wasManifest=el.dataset.manifest==='1';
-  el.remove();
-  seenThisRun.delete(normed);
-  if(wasManifest){
-    scanCount=Math.max(0,scanCount-1);
-    document.getElementById('scan-count').textContent=scanCount;
-  }
+  el.remove();seenThisRun.delete(normed);
+  if(wasManifest){scanCount=Math.max(0,scanCount-1);document.getElementById('scan-count').textContent=scanCount;}
   if(id){
     sb.from('scans').delete().eq('id',id).then(({error})=>{if(error)console.warn('del:',error);});
     scanChannel.send({type:'broadcast',event:'scan_deleted',payload:{tracking:normed,shipment_id:sessId}});
-    logAction('scan_deleted', sessId, activeSess?.name||sessId, activeSess?.operator, {tracking:normed});
+    logAction('scan_deleted',sessId,activeSess?.name||sessId,activeSess?.operator,{tracking:normed});
   }
 }
 
-function clearFeed(){
-  if(!confirm('Clear all scans for this session?\n\nThis will remove all scans from the desktop as well.')) return;
-  seenThisRun.clear(); scanCount=0;
+function openClearModal(){document.getElementById('clear-modal').classList.add('open');}
+function closeClearModal(){document.getElementById('clear-modal').classList.remove('open');}
+function confirmClear(){
+  closeClearModal();
+  seenThisRun.clear();scanCount=0;
   document.getElementById('scan-count').textContent='0';
   document.getElementById('last-scan').className='last-scan';
   document.getElementById('feed').innerHTML=
-    '<div class="empty-feed"><div class="empty-icon">📡</div>Tap the scan field above<br>then point the gun and fire</div>';
+    '<div class="empty-feed"><div class="empty-icon">📡</div>Tap the field above<br>then point the gun and fire</div>';
   document.getElementById('scan-field').value='';
   document.getElementById('scan-field').focus();
   if(activeSess){
     sb.from('scans').delete().eq('shipment_id',activeSess.id).then(({error})=>{if(error)console.warn('clear:',error);});
     scanChannel.send({type:'broadcast',event:'scans_cleared',payload:{shipment_id:activeSess.id,operator:activeSess.operator}});
-    logAction('scans_cleared', activeSess.id, activeSess.name, activeSess.operator, {source:'scanner'});
+    logAction('scans_cleared',activeSess.id,activeSess.name,activeSess.operator,{source:'scanner'});
   }
 }
 
-// ── INIT ───────────────────────────────────────────────────────────────────
+// Close clear modal on backdrop tap
+document.getElementById('clear-modal').addEventListener('pointerdown',function(e){
+  if(e.target===this)closeClearModal();
+});
+
 (async function(){
   const saved=localStorage.getItem('scanner_op');
   if(saved)document.getElementById('opInput').value=saved;
