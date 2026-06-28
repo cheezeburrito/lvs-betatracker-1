@@ -776,7 +776,7 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
           <span>2 · Paste Batch Scans</span>
           <span id="scanner-live-badge" style="display:none;font-size:.72rem;font-weight:600;background:#14532d;color:#4ade80;border:1px solid #166534;border-radius:20px;padding:.2rem .65rem;letter-spacing:.03em">📡 Scanner live — <span id="scanner-live-count">0</span> scanned</span>
         </div>
-        <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Scan parcels into your Google Doc, then copy and paste the contents below. Or use the <strong style="color:#93c5fd">scanner.html</strong> page on the CipherLab gun for real-time scanning.</p>
+        <p style="font-size:.82rem;color:#94a3b8;margin-bottom:.75rem">Live scans from scanner will appear below. Click the <strong style="color:#93c5fd">Scanner Link</strong> button in the header and send to CipherLab guns.</p>
         <textarea id="prescan-paste" style="min-height:110px" placeholder="Paste scanned tracking IDs here…" oninput="onPasteInput('prescan')"></textarea>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.4rem">
           <p class="kbd-tip" style="margin:0">💡 Tip: Press <kbd>Ctrl+Enter</kbd> to process immediately after pasting.</p>
@@ -1048,6 +1048,7 @@ async function pushSession(sess){
 }
 async function deleteSessionRemote(id){
   setSyncStatus('syncing');
+  await sb.from('scans').delete().eq('shipment_id',id);
   await sb.from('shipments').delete().eq('id',id);
   setSyncStatus('online');
 }

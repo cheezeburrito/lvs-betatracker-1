@@ -359,7 +359,9 @@ async function refreshSessions(){
     data.forEach(s=>sessionsStore[s.id]=s);
     sel.innerHTML='<option value="">— select session —</option>'+
       data.map(s=>`<option value="${s.id}">${s.name}${s.operator?' · '+s.operator:''}</option>`).join('');
-    if(data.length===1) sel.value=data[0].id;
+    const lastSess=localStorage.getItem('scanner_last_sess');
+    if(lastSess&&sessionsStore[lastSess]) sel.value=lastSess;
+    else if(data.length===1) sel.value=data[0].id;
   }catch(e){
     sel.innerHTML='<option value="">Error — tap Refresh</option>';
     setSynced(false);
@@ -380,6 +382,7 @@ function startScanning(){
 
   activeSess={id:sel.value, name:row.name||sel.value, operator:op, normedTracking:new Set(allT)};
   localStorage.setItem('scanner_op',op);
+  localStorage.setItem('scanner_last_sess',sel.value);
 
   document.getElementById('strip-name').textContent=activeSess.name;
   document.getElementById('strip-op').textContent='Operator: '+op;
@@ -423,6 +426,7 @@ async function loadExistingScans(sessId){
 
 function exitScanning(){
   activeSess=null;
+  localStorage.removeItem('scanner_last_sess');
   document.getElementById('scan-screen').style.display='none';
   document.getElementById('setup').style.display='flex';
   document.getElementById('scan-field').value='';
