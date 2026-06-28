@@ -997,7 +997,7 @@ let knownOperators = [];
 let knownCustomers = [];
 
 // Admin state
-let isAdmin = false, adminUser = '';
+let isAdmin = false, adminUser = '', adminPass = '';
 
 // Calendar
 let calYear=new Date().getFullYear(), calMonth=new Date().getMonth(), calSelected=null, calDaySessions=[];
@@ -2164,12 +2164,12 @@ function closeAdminModal(){document.getElementById('adminModal').classList.add('
 async function doAdminLogin(){
   const username=document.getElementById('adminUser').value.trim();
   const password=document.getElementById('adminPass').value;
-  const {data}=await sb.from('admins').select('username').eq('username',username).eq('password',password).single();
-  if(data){isAdmin=true;adminUser=username;document.getElementById('adminBtn').classList.add('active');showAdminPanel();}
+  const {data,error}=await sb.rpc('verify_admin',{p_username:username,p_password:password});
+  if(data===true){isAdmin=true;adminUser=username;adminPass=password;document.getElementById('adminBtn').classList.add('active');showAdminPanel();}
   else{document.getElementById('adminLoginErr').style.display='';}
 }
 function adminLogout(){
-  isAdmin=false;adminUser='';
+  isAdmin=false;adminUser='';adminPass='';
   document.getElementById('adminBtn').classList.remove('active');
   closeAdminModal();
 }
@@ -2294,7 +2294,8 @@ async function saveEditSession(){
 }
 async function renderAdminAdmins(){
   const el=document.getElementById('adminAdminList');
-  const {data}=await sb.from('admins').select('username,created_at').order('created_at');
+  const {data,error}=await sb.rpc('list_admins',{p_auth_username:adminUser,p_auth_password:adminPass});
+  if(error){el.innerHTML='<p style="font-size:.82rem;color:#f87171">Error loading admins.</p>';return;}
   el.innerHTML=(data||[]).map(a=>`<div class="admin-item">
     <div class="admin-item-left"><h4>${a.username}</h4><p>${new Date(a.created_at).toLocaleDateString('en-CA')}</p></div>
     <div class="admin-item-actions">
@@ -2307,15 +2308,16 @@ async function adminAddAdmin(){
   const password=document.getElementById('newAdminPass').value;
   const errEl=document.getElementById('newAdminErr');
   if(!username||!password){errEl.textContent='Username and password required.';errEl.style.display='';return;}
-  const {error}=await sb.from('admins').upsert({username,password});
-  if(error){errEl.textContent='Error: '+error.message;errEl.style.display='';return;}
+  const {data,error}=await sb.rpc('upsert_admin',{p_auth_username:adminUser,p_auth_password:adminPass,p_new_username:username,p_new_password:password});
+  if(error||data===false){errEl.textContent=error?'Error: '+error.message:'Authentication failed.';errEl.style.display='';return;}
   errEl.style.display='none';
   document.getElementById('newAdminUser').value='';document.getElementById('newAdminPass').value='';
   renderAdminAdmins();
 }
 async function adminDeleteAdmin(username){
   if(!confirm(`Remove admin "${username}"?`))return;
-  await sb.from('admins').delete().eq('username',username);
+  const {data,error}=await sb.rpc('delete_admin',{p_auth_username:adminUser,p_auth_password:adminPass,p_target_username:username});
+  if(error||data===false){showToast('Failed to delete admin.','warn',3000);return;}
   renderAdminAdmins();
 }
 
