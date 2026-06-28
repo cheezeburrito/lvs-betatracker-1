@@ -660,6 +660,15 @@ document.getElementById('del-modal').addEventListener('pointerdown',function(e){
   if(e.target===this)closeDelModal();
 });
 
+// Register service worker — auto-updates the app on every deploy
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('scanner-sw.js').catch(e=>console.warn('SW:',e));
+  // When SW_UPDATED fires, reload to get the new version
+  navigator.serviceWorker.addEventListener('message', e => {
+    if(e.data?.type === 'SW_UPDATED') window.location.reload();
+  });
+}
+
 (async function(){
   const saved=localStorage.getItem('scanner_op');
   if(saved)document.getElementById('opInput').value=saved;
