@@ -1627,16 +1627,34 @@ function setFilter(phase,f,btn){
 // ─────────────────────────────────────────────────────────────────────────────
 // Export Excel
 // ─────────────────────────────────────────────────────────────────────────────
-function exportExcel(phase,sess,manifest){
+async function exportExcel(phase,sess,manifest){
   sess=sess||currentSession(phase); manifest=manifest||manifestCache[phase];
   if(!sess||!manifest){alert('Upload files and paste scans before exporting.');return;}
   const raw=(document.getElementById(`${phase}-paste`)?.value)||sess.rawPaste||'';
   const tokens=raw.split(/[\s,;\n\r]+/).map(norm).filter(Boolean);
   const scanned=new Set(tokens);
+
+  // Fetch scan→operator mapping from Supabase
+  const scanOp={};
+  try{
+    const{data}=await sb.from('scans').select('tracking,device').eq('shipment_id',sess.id);
+    if(data) data.forEach(r=>{if(r.tracking&&r.device)scanOp[norm(r.tracking)]=r.device;});
+  }catch(e){}
+
+  // Style helpers
+  const hdrStyle={font:{bold:true,color:{rgb:'FFFFFF'},sz:11},fill:{patternType:'solid',fgColor:{rgb:'1E3A5F'}},alignment:{horizontal:'center',wrapText:false},border:{bottom:{style:'medium',color:{rgb:'FFFFFF'}}}};
+  const scannedStyle={fill:{patternType:'solid',fgColor:{rgb:'C6EFCE'}},font:{color:{rgb:'276221'}}};
+  const missingStyle={fill:{patternType:'solid',fgColor:{rgb:'FFC7CE'}},font:{color:{rgb:'9C0006'}}};
+  const flaggedStyle={fill:{patternType:'solid',fgColor:{rgb:'FFEB9C'}},font:{color:{rgb:'9C6500'}}};
+  function styleRow(ws,rowIdx,cols,style){cols.forEach(c=>{const addr=XLSX.utils.encode_cell({r:rowIdx,c});if(ws[addr])ws[addr].s=style;});}
+  function styleCell(ws,rowIdx,colIdx,style){const addr=XLSX.utils.encode_cell({r:rowIdx,c:colIdx});if(ws[addr])ws[addr].s=style;}
+
   const wb=XLSX.utils.book_new(),date=new Date().toISOString().slice(0,10);
+
+  // ── Summary sheet ──────────────────────────────────────────────────────────
   const sumHdr=['MAWB / CCN','Total HAWBs','Scanned','Missing'];
   if(phase==='cbsa')sumHdr.push('Flagged','RNS Status');
-  const sumRows=[sumHdr];
+  const sumData=[];
   Object.entries(manifest).forEach(([ccn,hawbs])=>{
     const sc=hawbs.filter(h=>scanned.has(h.tracking)||scanned.has(h.ccn)).length;
     const row=[ccn,hawbs.length,sc,hawbs.length-sc];
@@ -1645,12 +1663,23 @@ function exportExcel(phase,sess,manifest){
       const fl=hawbs.filter(h=>{if(!(scanned.has(h.tracking)||scanned.has(h.ccn)))return false;const s=rns[h.ccn]||rns[ccn]||'';return s&&s.toLowerCase()!=='released';}).length;
       row.push(fl,rns[ccn]||'');
     }
-    sumRows.push(row);
+    sumData.push(row);
   });
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sumRows),'Summary');
-  const detHdr=['MAWB / CCN','Carton','Tracking ID','Scan Status'];
-  if(phase==='cbsa')detHdr.push('CBSA Status');
-  const detRows=[detHdr];
+  const sumWs=XLSX.utils.aoa_to_sheet([sumHdr,...sumData]);
+  sumWs['!cols']=[{wch:18},{wch:14},{wch:12},{wch:12},{wch:12},{wch:24}];
+  sumWs['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:sumData.length,c:sumHdr.length-1}})};
+  sumHdr.forEach((_,c)=>styleCell(sumWs,0,c,hdrStyle));
+  sumData.forEach((row,i)=>{
+    const missing=row[3]>0,scannedAll=row[3]===0;
+    const style=scannedAll?scannedStyle:missing?missingStyle:null;
+    if(style) styleRow(sumWs,i+1,sumHdr.map((_,c)=>c),style);
+  });
+  XLSX.utils.book_append_sheet(wb,sumWs,'Summary');
+
+  // ── Detail sheet ───────────────────────────────────────────────────────────
+  const detHdr=['MAWB / CCN','Carton','Tracking ID','Scan Status','Scanned By'];
+  if(phase==='cbsa')detHdr.splice(4,0,'CBSA Status');
+  const scannedRows=[],missingRows=[];
   Object.entries(manifest).forEach(([ccn,hawbs])=>{
     hawbs.forEach(h=>{
       const hit=scanned.has(h.tracking)||scanned.has(h.ccn);
@@ -1658,10 +1687,25 @@ function exportExcel(phase,sess,manifest){
       const cbsaStatus=phase==='cbsa'?(rns[h.ccn]||rns[ccn]||''):'';
       let scanStatus=hit?'Scanned':'Missing';
       if(phase==='cbsa'&&hit&&cbsaStatus&&cbsaStatus.toLowerCase()!=='released')scanStatus='Flagged';
-      const row=[ccn,h.carton,h.tracking,scanStatus];if(phase==='cbsa')row.push(cbsaStatus);detRows.push(row);
+      const operator=hit?(scanOp[h.tracking]||app.operator||''):'';
+      const row=[ccn,h.carton,h.tracking,scanStatus,operator];
+      if(phase==='cbsa')row.splice(4,0,cbsaStatus);
+      (hit?scannedRows:missingRows).push({row,scanStatus});
     });
   });
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(detRows),'Detail');
+  // Scanned first, then Missing — makes visual grouping obvious
+  const allDetail=[...scannedRows,...missingRows];
+  const detWs=XLSX.utils.aoa_to_sheet([detHdr,...allDetail.map(x=>x.row)]);
+  const colCount=detHdr.length;
+  detWs['!cols']=[{wch:18},{wch:10},{wch:24},{wch:12},{wch:18},{wch:26}].slice(0,colCount);
+  detWs['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:allDetail.length,c:colCount-1}})};
+  detHdr.forEach((_,c)=>styleCell(detWs,0,c,hdrStyle));
+  allDetail.forEach(({scanStatus},i)=>{
+    const style=scanStatus==='Scanned'?scannedStyle:scanStatus==='Flagged'?flaggedStyle:missingStyle;
+    styleRow(detWs,i+1,detHdr.map((_,c)=>c),style);
+  });
+  XLSX.utils.book_append_sheet(wb,detWs,'Detail');
+
   if(sess.notes?.trim())XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Notes'],[sess.notes]]),'Notes');
   const allTrk=new Set(Object.values(manifest).flat().map(h=>h.tracking));
   const allCCN=new Set(Object.keys(manifest));
