@@ -1641,45 +1641,51 @@ async function exportExcel(phase,sess,manifest){
     if(data) data.forEach(r=>{if(r.tracking&&r.device)scanOp[norm(r.tracking)]=r.device;});
   }catch(e){}
 
-  // Style helpers
-  const hdrStyle={font:{bold:true,color:{rgb:'FFFFFF'},sz:11},fill:{patternType:'solid',fgColor:{rgb:'1E3A5F'}},alignment:{horizontal:'center',wrapText:false},border:{bottom:{style:'medium',color:{rgb:'FFFFFF'}}}};
-  const scannedStyle={fill:{patternType:'solid',fgColor:{rgb:'C6EFCE'}},font:{color:{rgb:'276221'}}};
-  const missingStyle={fill:{patternType:'solid',fgColor:{rgb:'FFC7CE'}},font:{color:{rgb:'9C0006'}}};
-  const flaggedStyle={fill:{patternType:'solid',fgColor:{rgb:'FFEB9C'}},font:{color:{rgb:'9C6500'}}};
-  function styleRow(ws,rowIdx,cols,style){cols.forEach(c=>{const addr=XLSX.utils.encode_cell({r:rowIdx,c});if(ws[addr])ws[addr].s=style;});}
-  function styleCell(ws,rowIdx,colIdx,style){const addr=XLSX.utils.encode_cell({r:rowIdx,c:colIdx});if(ws[addr])ws[addr].s=style;}
+  // SpreadsheetML 2003 — full color support in Excel without extra libraries
+  const x=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const c=(val,sid,type='String')=>`<Cell ss:StyleID="${sid}"><Data ss:Type="${type}">${x(val)}</Data></Cell>`;
+  const r=cells=>`<Row>${cells}</Row>`;
+  const freezeRow=`<WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane></WorksheetOptions>`;
 
-  const wb=XLSX.utils.book_new(),date=new Date().toISOString().slice(0,10);
+  const styles=`<Styles>
+    <Style ss:ID="Default"><Alignment ss:WrapText="0" ss:Vertical="Center"/></Style>
+    <Style ss:ID="hdr"><Font ss:Bold="1" ss:Color="#FFFFFF" ss:Size="11"/><Interior ss:Color="#1E3A5F" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
+    <Style ss:ID="ok"><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/><Font ss:Color="#276221"/></Style>
+    <Style ss:ID="miss"><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/><Font ss:Color="#9C0006"/></Style>
+    <Style ss:ID="flag"><Interior ss:Color="#FFEB9C" ss:Pattern="Solid"/><Font ss:Color="#9C6500"/></Style>
+    <Style ss:ID="num"><NumberFormat ss:Format="General"/></Style>
+    <Style ss:ID="oknum"><Interior ss:Color="#C6EFCE" ss:Pattern="Solid"/><Font ss:Color="#276221"/><NumberFormat ss:Format="General"/></Style>
+    <Style ss:ID="missnum"><Interior ss:Color="#FFC7CE" ss:Pattern="Solid"/><Font ss:Color="#9C0006"/><NumberFormat ss:Format="General"/></Style>
+  </Styles>`;
+
+  const date=new Date().toISOString().slice(0,10);
 
   // ── Summary sheet ──────────────────────────────────────────────────────────
-  const sumHdr=['MAWB / CCN','Total HAWBs','Scanned','Missing'];
-  if(phase==='cbsa')sumHdr.push('Flagged','RNS Status');
-  const sumData=[];
+  const sumHdrs=['MAWB / CCN','Total HAWBs','Scanned','Missing'];
+  if(phase==='cbsa')sumHdrs.push('Flagged','RNS Status');
+  let sumRows=r(sumHdrs.map(h=>c(h,'hdr')).join(''));
+  const sumCols=`<Column ss:Width="160"/><Column ss:Width="100"/><Column ss:Width="90"/><Column ss:Width="90"/><Column ss:Width="90"/><Column ss:Width="180"/>`;
   Object.entries(manifest).forEach(([ccn,hawbs])=>{
     const sc=hawbs.filter(h=>scanned.has(h.tracking)||scanned.has(h.ccn)).length;
-    const row=[ccn,hawbs.length,sc,hawbs.length-sc];
+    const miss=hawbs.length-sc;
+    const sid=miss===0?'ok':miss>0?'miss':'num';
+    let cells=c(ccn,sid)+c(hawbs.length,sid+'num'||'num','Number')+c(sc,'oknum','Number')+c(miss,'missnum','Number');
     if(phase==='cbsa'){
       const rns=sess.rnsData||rt.cbsa.rns||{};
       const fl=hawbs.filter(h=>{if(!(scanned.has(h.tracking)||scanned.has(h.ccn)))return false;const s=rns[h.ccn]||rns[ccn]||'';return s&&s.toLowerCase()!=='released';}).length;
-      row.push(fl,rns[ccn]||'');
+      cells+=c(fl,sid,'Number')+c(rns[ccn]||'',sid);
     }
-    sumData.push(row);
+    sumRows+=r(cells);
   });
-  const sumWs=XLSX.utils.aoa_to_sheet([sumHdr,...sumData]);
-  sumWs['!cols']=[{wch:18},{wch:14},{wch:12},{wch:12},{wch:12},{wch:24}];
-  sumWs['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:sumData.length,c:sumHdr.length-1}})};
-  sumHdr.forEach((_,c)=>styleCell(sumWs,0,c,hdrStyle));
-  sumData.forEach((row,i)=>{
-    const missing=row[3]>0,scannedAll=row[3]===0;
-    const style=scannedAll?scannedStyle:missing?missingStyle:null;
-    if(style) styleRow(sumWs,i+1,sumHdr.map((_,c)=>c),style);
-  });
-  XLSX.utils.book_append_sheet(wb,sumWs,'Summary');
+  const sumColCount=phase==='cbsa'?6:4;
+  const sumSheet=`<Worksheet ss:Name="Summary"><Table DefaultRowHeight="18">${sumCols}${sumRows}</Table><AutoFilter x:Range="R1C1:R1C${sumColCount}" xmlns="urn:schemas-microsoft-com:office:excel"/>${freezeRow}</Worksheet>`;
 
   // ── Detail sheet ───────────────────────────────────────────────────────────
-  const detHdr=['MAWB / CCN','Carton','Tracking ID','Scan Status','Scanned By'];
-  if(phase==='cbsa')detHdr.splice(4,0,'CBSA Status');
-  const scannedRows=[],missingRows=[];
+  const detHdrs=['MAWB / CCN','Carton','Tracking ID','Scan Status','Scanned By'];
+  if(phase==='cbsa')detHdrs.splice(4,0,'CBSA Status');
+  const detColCount=detHdrs.length;
+  const detCols=`<Column ss:Width="160"/><Column ss:Width="80"/><Column ss:Width="200"/><Column ss:Width="90"/><Column ss:Width="130"/><Column ss:Width="180"/>`.split('</Column>').slice(0,detColCount).join('</Column>')+'</Column>';
+  let detScanned='',detMissing='';
   Object.entries(manifest).forEach(([ccn,hawbs])=>{
     hawbs.forEach(h=>{
       const hit=scanned.has(h.tracking)||scanned.has(h.ccn);
@@ -1687,33 +1693,40 @@ async function exportExcel(phase,sess,manifest){
       const cbsaStatus=phase==='cbsa'?(rns[h.ccn]||rns[ccn]||''):'';
       let scanStatus=hit?'Scanned':'Missing';
       if(phase==='cbsa'&&hit&&cbsaStatus&&cbsaStatus.toLowerCase()!=='released')scanStatus='Flagged';
-      const operator=hit?(scanOp[h.tracking]||app.operator||''):'';
-      const row=[ccn,h.carton,h.tracking,scanStatus,operator];
-      if(phase==='cbsa')row.splice(4,0,cbsaStatus);
-      (hit?scannedRows:missingRows).push({row,scanStatus});
+      const sid=scanStatus==='Scanned'?'ok':scanStatus==='Flagged'?'flag':'miss';
+      const op=hit?(scanOp[h.tracking]||app.operator||''):'';
+      let cells=c(ccn,sid)+c(h.carton,sid)+c(h.tracking,sid)+c(scanStatus,sid)+c(op,sid);
+      if(phase==='cbsa')cells=c(ccn,sid)+c(h.carton,sid)+c(h.tracking,sid)+c(scanStatus,sid)+c(cbsaStatus,sid)+c(op,sid);
+      const row=r(cells);
+      if(hit)detScanned+=row; else detMissing+=row;
     });
   });
-  // Scanned first, then Missing — makes visual grouping obvious
-  const allDetail=[...scannedRows,...missingRows];
-  const detWs=XLSX.utils.aoa_to_sheet([detHdr,...allDetail.map(x=>x.row)]);
-  const colCount=detHdr.length;
-  detWs['!cols']=[{wch:18},{wch:10},{wch:24},{wch:12},{wch:18},{wch:26}].slice(0,colCount);
-  detWs['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:allDetail.length,c:colCount-1}})};
-  detHdr.forEach((_,c)=>styleCell(detWs,0,c,hdrStyle));
-  allDetail.forEach(({scanStatus},i)=>{
-    const style=scanStatus==='Scanned'?scannedStyle:scanStatus==='Flagged'?flaggedStyle:missingStyle;
-    styleRow(detWs,i+1,detHdr.map((_,c)=>c),style);
-  });
-  XLSX.utils.book_append_sheet(wb,detWs,'Detail');
+  const detHdrRow=r(detHdrs.map(h=>c(h,'hdr')).join(''));
+  const detSheet=`<Worksheet ss:Name="Detail"><Table DefaultRowHeight="18">${detCols}${detHdrRow}${detScanned}${detMissing}</Table><AutoFilter x:Range="R1C1:R1C${detColCount}" xmlns="urn:schemas-microsoft-com:office:excel"/>${freezeRow}</Worksheet>`;
 
-  if(sess.notes?.trim())XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Notes'],[sess.notes]]),'Notes');
+  // ── Not in Manifest sheet ─────────────────────────────────────────────────
   const allTrk=new Set(Object.values(manifest).flat().map(h=>h.tracking));
   const allCCN=new Set(Object.keys(manifest));
   const unexp=tokens.filter(t=>!allTrk.has(t)&&!allCCN.has(t));
-  if(unexp.length)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Scanned — Not in Manifest'],...unexp.map(t=>[t])]),'Not in Manifest');
+  let unexpSheet='';
+  if(unexp.length){
+    const uRows=r(c('Scanned — Not in Manifest','hdr'))+unexp.map(t=>r(c(t,'flag'))).join('');
+    unexpSheet=`<Worksheet ss:Name="Not in Manifest"><Table DefaultRowHeight="18"><Column ss:Width="220"/>${uRows}</Table></Worksheet>`;
+  }
+
+  // ── Notes sheet ───────────────────────────────────────────────────────────
+  let notesSheet='';
+  if(sess.notes?.trim())notesSheet=`<Worksheet ss:Name="Notes"><Table><Row><Cell><Data ss:Type="String">${x(sess.notes)}</Data></Cell></Row></Table></Worksheet>`;
+
+  const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<?mso-application progid="Excel.Sheet"?>\n<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel">${styles}${sumSheet}${detSheet}${unexpSheet}${notesSheet}</Workbook>`;
+
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel;charset=UTF-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
   const label=phase==='prescan'?'Receipt':'CBSA';
   const customer=sess.customer?`_${sess.customer}`:'';
-  XLSX.writeFile(wb,`LVS-GSM_${label}${customer}_${sess.name}_${date}_${app.operator}.xlsx`.replace(/[/\\:*?"<>|]/g,'-'));
+  a.download=`LVS-GSM_${label}${customer}_${sess.name}_${date}_${app.operator}.xls`.replace(/[/\\:*?"<>|]/g,'-');
+  a.href=url; a.click(); URL.revokeObjectURL(url);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
