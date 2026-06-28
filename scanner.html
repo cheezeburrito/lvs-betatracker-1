@@ -294,6 +294,25 @@ function toast(msg,dur=2500){
   el._t=setTimeout(()=>el.classList.remove('show'),dur);
 }
 
+// ── ALERT BEEP ────────────────────────────────────────────────────────────
+function alertBeep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    // Two descending tones — attention-grabbing error pattern
+    [[880,0,0.18],[660,0.2,0.18],[880,0.4,0.18]].forEach(([freq,start,dur])=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type='square';
+      osc.frequency.setValueAtTime(freq,ctx.currentTime+start);
+      gain.gain.setValueAtTime(0.7,ctx.currentTime+start);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+start+dur);
+      osc.start(ctx.currentTime+start);
+      osc.stop(ctx.currentTime+start+dur+0.01);
+    });
+  }catch(e){}
+}
+
 // ── SESSIONS ──────────────────────────────────────────────────────────────
 async function refreshSessions(){
   const sel=document.getElementById('sessSelect');
@@ -369,7 +388,7 @@ async function loadExistingScans(sessId){
       const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
       const isDup=seenThisRun.has(normed);
       seenThisRun.add(normed);
-      scanCount++;
+      if(inManifest&&!isDup) scanCount++;
       const el=addFeedItem(normed,isDup,inManifest);
       if(el&&r.id) el.dataset.id=r.id;
     });
@@ -426,8 +445,13 @@ async function handleScan(raw){
   const isDup=seenThisRun.has(normed);
   const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
   seenThisRun.add(normed);
-  scanCount++;
-  document.getElementById('scan-count').textContent=scanCount;
+  // Only count unique manifest matches toward the total
+  if(inManifest&&!isDup){
+    scanCount++;
+    document.getElementById('scan-count').textContent=scanCount;
+  }
+  // Beep loudly for non-manifest scans (wrong label)
+  if(!inManifest) alertBeep();
 
   // Flash field
   const f=document.getElementById('scan-field');
@@ -470,6 +494,7 @@ function addFeedItem(normed,isDup,inManifest){
 
   const el=document.createElement('div');
   el.className='fi';
+  el.dataset.manifest=inManifest?'1':'0';
   el.innerHTML=`<div class="fi-dot ${dotCls}"></div><div class="fi-val">${normed}</div><div class="fi-time">${now}</div><div class="fi-del" title="Remove scan">×</div>`;
   el.querySelector('.fi-del').addEventListener('click',()=>deleteScanItem(el,normed));
   feed.insertBefore(el,feed.firstChild);
@@ -480,10 +505,13 @@ function addFeedItem(normed,isDup,inManifest){
 function deleteScanItem(el,normed){
   const id=el.dataset.id;
   const sessId=activeSess?.id;
+  const wasManifest=el.dataset.manifest==='1';
   el.remove();
   seenThisRun.delete(normed);
-  scanCount=Math.max(0,scanCount-1);
-  document.getElementById('scan-count').textContent=scanCount;
+  if(wasManifest){
+    scanCount=Math.max(0,scanCount-1);
+    document.getElementById('scan-count').textContent=scanCount;
+  }
   if(id){
     sb.from('scans').delete().eq('id',id).then(({error})=>{if(error)console.warn('del:',error);});
     // Broadcast so desktop removes it immediately without needing REPLICA IDENTITY FULL

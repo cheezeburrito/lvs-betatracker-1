@@ -948,9 +948,11 @@ function addScannerFeedItem(normed, operator, isDup){
     const meta=document.getElementById('scanner-feed-meta');
     if(meta)meta.textContent='Scanner: '+operator;
   }
-  // Update count
-  const countEl=document.getElementById('scanner-feed-count');
-  if(countEl)countEl.textContent=parseInt(countEl.textContent||'0')+1;
+  // Update count — only manifest matches count
+  if(inManifest&&!isDup){
+    const countEl=document.getElementById('scanner-feed-count');
+    if(countEl)countEl.textContent=parseInt(countEl.textContent||'0')+1;
+  }
   // Check manifest match
   const sess=currentSession('prescan');
   const manifest=manifestCache['prescan'];
