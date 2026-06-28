@@ -1857,7 +1857,7 @@ function linkPrescan(prescanId,silent=false){
   if(!prescanId){sess.linkedPrescanId=null;manifestCache.cbsa=sess.manifest||null;saveLocal();pushSession(sess);checkReady('cbsa');return;}
   const prescan=app.sessions.prescan[prescanId];
   if(!prescan?.manifest){if(!silent)alert('That Phase 1 session has no manifest yet.');return;}
-  sess.linkedPrescanId=prescanId; manifestCache.cbsa=prescan.manifest; saveLocal(); pushSession(sess);
+  sess.linkedPrescanId=prescanId; sess.manifest=prescan.manifest; manifestCache.cbsa=prescan.manifest; saveLocal(); pushSession(sess);
   const total=Object.values(prescan.manifest).reduce((a,c)=>a+c.length,0);
   setFileOK('cbsa-decon-drop','cbsa-decon-fname',`Linked from "${prescan.name}" — ${Object.keys(prescan.manifest).length} MAWBs, ${total} HAWBs`);
   checkReady('cbsa');
