@@ -304,6 +304,25 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 .toast.warn    { border-color:#78350f; background:#1c1400; color:#fbbf24; }
 @keyframes slideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
+/* ── Tips button & panel ── */
+#tips-btn{position:fixed;left:1.2rem;bottom:1.5rem;z-index:200;width:44px;height:44px;border-radius:50%;background:#1e293b;border:1px solid #334155;color:#fbbf24;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:all .18s;}
+#tips-btn:hover{background:#334155;transform:scale(1.08);}
+#tips-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:flex-end;justify-content:flex-start;}
+#tips-overlay.open{display:flex;}
+#tips-panel{background:#0d1424;border:1px solid #1f2d45;border-radius:16px;width:360px;max-height:80vh;display:flex;flex-direction:column;margin:0 0 5rem 1.2rem;box-shadow:0 12px 40px rgba(0,0,0,.6);overflow:hidden;animation:tips-in .18s ease;}
+@keyframes tips-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+#tips-panel-head{padding:1rem 1.1rem .75rem;border-bottom:1px solid #1f2d45;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+#tips-panel-head h3{font-size:.95rem;font-weight:700;color:#e2e8f0;margin:0;}
+#tips-close{background:none;border:none;color:#64748b;font-size:1.2rem;cursor:pointer;line-height:1;padding:.1rem .3rem;}
+#tips-close:hover{color:#e2e8f0;}
+#tips-list{overflow-y:auto;padding:.75rem 1.1rem 1.1rem;display:flex;flex-direction:column;gap:.55rem;}
+.tip-item{background:#111827;border:1px solid #1f2d45;border-radius:10px;padding:.65rem .85rem;display:flex;gap:.7rem;align-items:flex-start;}
+.tip-icon{font-size:1.05rem;flex-shrink:0;margin-top:.05rem;}
+.tip-title{font-size:.77rem;font-weight:700;color:#e2e8f0;margin-bottom:.18rem;}
+.tip-desc{font-size:.71rem;color:#94a3b8;line-height:1.55;}
+.tip-section{font-size:.63rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.07em;margin:.45rem 0 .05rem;}
+@media(max-width:768px){#tips-panel{width:calc(100vw - 2rem);margin:0 1rem 5rem 1rem;}}
+
 /* ── Mobile nav dropdown ── */
 .mobile-phase-sel { display:none; }
 @media(max-width:768px){
@@ -547,6 +566,126 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
 </header>
 
 <div id="toast-container"></div>
+
+<button id="tips-btn" onclick="toggleTips()" title="Tips & Features">💡</button>
+
+<div id="tips-overlay" onclick="if(event.target===this)toggleTips()">
+  <div id="tips-panel">
+    <div id="tips-panel-head">
+      <h3>💡 Tips &amp; Features</h3>
+      <button id="tips-close" onclick="toggleTips()">✕</button>
+    </div>
+    <div id="tips-list">
+
+      <div class="tip-section">Phase 1 — Scanning</div>
+
+      <div class="tip-item">
+        <span class="tip-icon">📡</span>
+        <div><div class="tip-title">Real-time scanner sync</div>
+        <div class="tip-desc">Open <strong style="color:#93c5fd">scanner.html</strong> on the CipherLab gun. Scans appear live on the desktop without any manual pasting.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🔴</span>
+        <div><div class="tip-title">Click "Missing" to jump to incomplete items</div>
+        <div class="tip-desc">Tap the red <strong>Missing</strong> number in the Session Stats panel — it instantly filters the results list to show only incomplete CCNs.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">⌨️</span>
+        <div><div class="tip-title">Ctrl+Enter to process paste immediately</div>
+        <div class="tip-desc">After pasting tracking IDs into the batch scan box, press <strong>Ctrl+Enter</strong> to process without clicking anything.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">✕</span>
+        <div><div class="tip-title">Clear paste to reset scans</div>
+        <div class="tip-desc">The <strong>✕ Clear</strong> button next to the paste box removes all scanned IDs from the local view. Supabase scan records are kept.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🟢</span>
+        <div><div class="tip-title">Scan dot colours</div>
+        <div class="tip-desc"><strong style="color:#22c55e">Green</strong> = matched in manifest · <strong style="color:#60a5fa">Blue</strong> = duplicate already scanned · <strong style="color:#f59e0b">Amber</strong> = not found in manifest.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🔔</span>
+        <div><div class="tip-title">Audio alerts on the scanner gun</div>
+        <div class="tip-desc">Wrong label (not in manifest) = <strong>3 loud beeps</strong>. Duplicate scan = <strong>1 short pip</strong>. No sound = good scan.</div></div>
+      </div>
+
+      <div class="tip-section">Exporting</div>
+
+      <div class="tip-item">
+        <span class="tip-icon">⬇</span>
+        <div><div class="tip-title">Export Excel from the stats panel</div>
+        <div class="tip-desc">The <strong>Export Excel</strong> button lives in the Session Stats panel on the right — always visible while you scroll. Rows are colour-coded: green = Scanned, red = Missing.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">👤</span>
+        <div><div class="tip-title">Scanned By column in the export</div>
+        <div class="tip-desc">The exported file shows which operator scanned each tracking ID, pulled from the live scan records.</div></div>
+      </div>
+
+      <div class="tip-section">Navigation</div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🛃</span>
+        <div><div class="tip-title">Ready to WACM?</div>
+        <div class="tip-desc">The blue <strong>Ready to WACM?</strong> button (bottom-right, Phase 1 only) opens BorderConnect directly so you can submit the WACM without switching tabs.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🕐</span>
+        <div><div class="tip-title">History tab</div>
+        <div class="tip-desc">Completed sessions appear on a calendar in the <strong>History</strong> tab. Click any day to see that day's sessions and export a report.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">↩</span>
+        <div><div class="tip-title">Undo Complete</div>
+        <div class="tip-desc">Accidentally finished a session? In the <strong>History</strong> tab each completed session has an <strong>↩ Undo</strong> button that moves it back to Phase 1 or Phase 2.</div></div>
+      </div>
+
+      <div class="tip-section">Multiple Operators</div>
+
+      <div class="tip-item">
+        <span class="tip-icon">👥</span>
+        <div><div class="tip-title">Multiple operators can scan simultaneously</div>
+        <div class="tip-desc">Each device sets its own operator name. All scans sync in real-time — the desktop shows who scanned what and the scanner feed labels each entry.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">⚠️</span>
+        <div><div class="tip-title">Session complete alert on the gun</div>
+        <div class="tip-desc">If the desktop marks a session complete while the gun operator is still scanning, an amber banner appears on the scanner screen so they know to stop.</div></div>
+      </div>
+
+      <div class="tip-section">General</div>
+
+      <div class="tip-item">
+        <span class="tip-icon">📋</span>
+        <div><div class="tip-title">Click any CCN card to expand</div>
+        <div class="tip-desc">In the results list, click a CCN/MAWB header to expand it and see exactly which tracking IDs are scanned vs missing.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">📝</span>
+        <div><div class="tip-title">Session notes</div>
+        <div class="tip-desc">Add notes to any session — they're visible to all operators and included in the exported Excel file on a separate Notes sheet.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">⚙</span>
+        <div><div class="tip-title">Admin panel</div>
+        <div class="tip-desc">The <strong>Admin</strong> button in the top-right lets supervisors manage operators, customers, and view all sessions across all devices.</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
 <a id="bc-btn" href="https://www.borderconnect.com/app/index.up" target="_blank" rel="noopener">
   Ready to WACM?
@@ -1377,6 +1516,9 @@ function refreshLinkDropdown(){
   if(cur) sel.value=cur;
 }
 // ── Toast notifications ──────────────────────────────────────────────────────
+function toggleTips(){
+  document.getElementById('tips-overlay').classList.toggle('open');
+}
 function showToast(msg, type='info', duration=4000){
   const c=document.getElementById('toast-container');
   const t=document.createElement('div');
