@@ -596,18 +596,24 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
     </div>
     <div id="tips-list">
 
-      <div class="tip-section">Phase 1 — Scanning</div>
+      <div class="tip-section">Phase 1 — Physical Receipt</div>
 
       <div class="tip-item">
         <span class="tip-icon">📡</span>
         <div><div class="tip-title">Real-time scanner sync</div>
-        <div class="tip-desc">Open <strong style="color:#93c5fd">scanner.html</strong> on the CipherLab gun. Scans appear live on the desktop without any manual pasting.</div></div>
+        <div class="tip-desc">Open <strong style="color:#93c5fd">scanner.html</strong> on the CipherLab gun and select a Phase 1 session. Scans stream to the desktop live feed — no pasting needed.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🖥</span>
+        <div><div class="tip-title">Live scanner feed panel</div>
+        <div class="tip-desc">The left panel in Phase 1 shows every scan as it arrives — green dot = matched, amber = not in manifest, blue = duplicate. The right panel shows live MAWBs / HAWBs / Scanned / Missing counts.</div></div>
       </div>
 
       <div class="tip-item">
         <span class="tip-icon">🔴</span>
-        <div><div class="tip-title">Click "Missing" to jump to incomplete items</div>
-        <div class="tip-desc">Tap the red <strong>Missing</strong> number in the Session Stats panel — it instantly filters the results list to show only incomplete CCNs.</div></div>
+        <div><div class="tip-title">Click "Missing" to jump to incomplete CCNs</div>
+        <div class="tip-desc">Tap the red <strong>Missing</strong> number in the Session Stats panel — instantly filters the results list to incomplete CCNs only.</div></div>
       </div>
 
       <div class="tip-item">
@@ -617,43 +623,101 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
       </div>
 
       <div class="tip-item">
-        <span class="tip-icon">✕</span>
-        <div><div class="tip-title">Clear paste to reset scans</div>
-        <div class="tip-desc">The <strong>✕ Clear</strong> button next to the paste box removes all scanned IDs from the local view. Supabase scan records are kept.</div></div>
-      </div>
-
-      <div class="tip-item">
-        <span class="tip-icon">🟢</span>
-        <div><div class="tip-title">Scan dot colours</div>
-        <div class="tip-desc"><strong style="color:#22c55e">Green</strong> = matched in manifest · <strong style="color:#60a5fa">Blue</strong> = duplicate already scanned · <strong style="color:#f59e0b">Amber</strong> = not found in manifest.</div></div>
-      </div>
-
-      <div class="tip-item">
         <span class="tip-icon">🔔</span>
-        <div><div class="tip-title">Audio alerts on the scanner gun</div>
-        <div class="tip-desc">Wrong label (not in manifest) = <strong>3 loud beeps</strong>. Duplicate scan = <strong>1 short pip</strong>. No sound = good scan.</div></div>
+        <div><div class="tip-title">Phase 1 audio alerts (scanner gun)</div>
+        <div class="tip-desc"><strong>Not in manifest</strong> = 3 loud beeps. <strong>Duplicate</strong> = 1 short pip. <strong>No sound</strong> = good scan matched in manifest.</div></div>
+      </div>
+
+      <div class="tip-section">Phase 2 — CBSA Check</div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🔗</span>
+        <div><div class="tip-title">Link a Phase 1 session</div>
+        <div class="tip-desc">Use the <strong>Link Phase 1 session</strong> dropdown to pull the deconsolidated manifest from an existing Phase 1 session — no need to re-upload the XLSX.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🛃</span>
+        <div><div class="tip-title">Upload the RNS CSV from BorderConnect</div>
+        <div class="tip-desc">After running BorderConnect, export the RNS report and upload it in Phase 2. The app joins CCN statuses to each tracking ID automatically.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">📡</span>
+        <div><div class="tip-title">Phase 2 scanner feed</div>
+        <div class="tip-desc">Switch the gun to <strong>Phase 2</strong> and select a CBSA session. The desktop live feed and stats panel work the same as Phase 1 — green = Released, amber = Examination Required, cyan = Arrived/Awaiting.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🔊</span>
+        <div><div class="tip-title">Phase 2 audio alerts (scanner gun)</div>
+        <div class="tip-desc"><strong>Released</strong> = silent (no beep). <strong>Examination Required</strong> = 4-tone alarm. <strong>Arrived / Awaiting CBSA</strong> = 3 triangle pips. <strong>Not in manifest</strong> = 3 loud beeps. <strong>Duplicate</strong> = 1 pip.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🚩</span>
+        <div><div class="tip-title">Flagged count in stats panel</div>
+        <div class="tip-desc">The amber <strong>Flagged</strong> number in Phase 2 stats shows how many scanned parcels have a non-Released CBSA status. Use <strong>Flagged Only</strong> filter to isolate them.</div></div>
       </div>
 
       <div class="tip-section">Exporting</div>
 
       <div class="tip-item">
         <span class="tip-icon">⬇</span>
-        <div><div class="tip-title">Export Excel from the stats panel</div>
-        <div class="tip-desc">The <strong>Export Excel</strong> button lives in the Session Stats panel on the right — always visible while you scroll. Rows are colour-coded: green = Scanned, red = Missing.</div></div>
+        <div><div class="tip-title">Export from the stats panel</div>
+        <div class="tip-desc">The <strong>Export Report</strong> button in the right stats panel is always visible as you scroll. Phase 1 export is colour-coded Scanned/Missing; Phase 2 export highlights flagged CCNs.</div></div>
       </div>
 
       <div class="tip-item">
         <span class="tip-icon">👤</span>
         <div><div class="tip-title">Scanned By column in the export</div>
-        <div class="tip-desc">The exported file shows which operator scanned each tracking ID, pulled from the live scan records.</div></div>
+        <div class="tip-desc">The exported file includes which operator scanned each tracking ID, pulled from the live Supabase scan records.</div></div>
       </div>
 
-      <div class="tip-section">Navigation</div>
+      <div class="tip-section">Scanner Gun (CipherLab)</div>
+
+      <div class="tip-item">
+        <span class="tip-icon">📲</span>
+        <div><div class="tip-title">Install the scanner as a home screen app</div>
+        <div class="tip-desc">On the CipherLab, open <strong>scanner.html</strong> in Chrome, tap the menu → <em>Add to Home Screen</em>. It installs as a standalone app — no browser UI, full screen.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🔄</span>
+        <div><div class="tip-title">Phase tab on the gun</div>
+        <div class="tip-desc">The gun app has a <strong>Phase 1 / Phase 2</strong> toggle at the top. Each phase shows only sessions for that phase. Switch before selecting a session.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">🗑</span>
+        <div><div class="tip-title">Delete individual scans on the gun</div>
+        <div class="tip-desc">Long-press a scan entry in the feed to delete it. A confirmation sheet appears — check <em>"Don't ask again this session"</em> to skip confirmations for the rest of the session.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">⚠️</span>
+        <div><div class="tip-title">Session complete banner on the gun</div>
+        <div class="tip-desc">If the desktop marks a session complete while the gun operator is still scanning, an amber banner appears on the scanner screen telling them to stop.</div></div>
+      </div>
+
+      <div class="tip-section">Navigation &amp; General</div>
 
       <div class="tip-item">
         <span class="tip-icon">🛃</span>
         <div><div class="tip-title">Ready to WACM?</div>
-        <div class="tip-desc">The blue <strong>Ready to WACM?</strong> button (bottom-right, Phase 1 only) opens BorderConnect directly so you can submit the WACM without switching tabs.</div></div>
+        <div class="tip-desc">The blue <strong>Ready to WACM?</strong> button (bottom-right, Phase 1) opens BorderConnect in a new tab so you can submit the WACM immediately.</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">📋</span>
+        <div><div class="tip-title">Click any CCN card to expand</div>
+        <div class="tip-desc">In the results list, click a CCN/MAWB row to expand it and see exactly which tracking IDs are scanned vs missing (or flagged in Phase 2).</div></div>
+      </div>
+
+      <div class="tip-item">
+        <span class="tip-icon">✕</span>
+        <div><div class="tip-title">Clear paste</div>
+        <div class="tip-desc">The <strong>✕ Clear</strong> button next to the paste box removes all scanned IDs from the local view. Supabase scan records are not deleted.</div></div>
       </div>
 
       <div class="tip-item">
@@ -665,41 +729,25 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
       <div class="tip-item">
         <span class="tip-icon">↩</span>
         <div><div class="tip-title">Undo Complete</div>
-        <div class="tip-desc">Accidentally finished a session? In the <strong>History</strong> tab each completed session has an <strong>↩ Undo</strong> button that moves it back to Phase 1 or Phase 2.</div></div>
+        <div class="tip-desc">Accidentally finished a session? Each completed session in the History tab has an <strong>↩ Undo</strong> button that moves it back to Phase 1 or Phase 2.</div></div>
       </div>
-
-      <div class="tip-section">Multiple Operators</div>
 
       <div class="tip-item">
         <span class="tip-icon">👥</span>
-        <div><div class="tip-title">Multiple operators can scan simultaneously</div>
-        <div class="tip-desc">Each device sets its own operator name. All scans sync in real-time — the desktop shows who scanned what and the scanner feed labels each entry.</div></div>
-      </div>
-
-      <div class="tip-item">
-        <span class="tip-icon">⚠️</span>
-        <div><div class="tip-title">Session complete alert on the gun</div>
-        <div class="tip-desc">If the desktop marks a session complete while the gun operator is still scanning, an amber banner appears on the scanner screen so they know to stop.</div></div>
-      </div>
-
-      <div class="tip-section">General</div>
-
-      <div class="tip-item">
-        <span class="tip-icon">📋</span>
-        <div><div class="tip-title">Click any CCN card to expand</div>
-        <div class="tip-desc">In the results list, click a CCN/MAWB header to expand it and see exactly which tracking IDs are scanned vs missing.</div></div>
+        <div><div class="tip-title">Multiple operators simultaneously</div>
+        <div class="tip-desc">Each device sets its own operator name. All scans sync in real-time — the live feed labels each scan by operator.</div></div>
       </div>
 
       <div class="tip-item">
         <span class="tip-icon">📝</span>
         <div><div class="tip-title">Session notes</div>
-        <div class="tip-desc">Add notes to any session — they're visible to all operators and included in the exported Excel file on a separate Notes sheet.</div></div>
+        <div class="tip-desc">Add notes to any session — synced to all operators and included in the exported Excel file on a separate Notes sheet.</div></div>
       </div>
 
       <div class="tip-item">
         <span class="tip-icon">⚙</span>
         <div><div class="tip-title">Admin panel</div>
-        <div class="tip-desc">The <strong>Admin</strong> button in the top-right lets supervisors manage operators, customers, and view all sessions across all devices.</div></div>
+        <div class="tip-desc">The <strong>Admin</strong> button (top-right) lets supervisors manage operators, customers, and view session activity across all devices.</div></div>
       </div>
 
     </div>
@@ -1467,8 +1515,18 @@ function onRemoteChange(sess){
   if(sess.manifest&&!manifestCache[phase]){
     manifestCache[phase]=sess.manifest;
     const total=Object.values(sess.manifest).reduce((a,c)=>a+c.length,0);
-    setFileOK(`${phase}-decon-drop`,`${phase}-decon-fname`,`${sess.name} — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
+    if(phase==='cbsa'&&sess.linkedPrescanId){
+      const prescan=app.sessions.prescan[sess.linkedPrescanId];
+      setFileOK('cbsa-decon-drop','cbsa-decon-fname',`Linked from "${prescan?.name||sess.linkedPrescanId}" — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
+    } else {
+      setFileOK(`${phase}-decon-drop`,`${phase}-decon-fname`,`${sess.name} — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
+    }
     checkReady(phase);
+  }
+  if(phase==='cbsa'&&sess.rnsData&&Object.keys(sess.rnsData).length&&!rt.cbsa.rns){
+    rt.cbsa.rns=sess.rnsData;
+    setFileOK('cbsa-rns-drop','cbsa-rns-fname',`Session RNS — ${Object.keys(sess.rnsData).length} CCNs`);
+    checkReady('cbsa');
   }
 }
 
@@ -1813,8 +1871,18 @@ function loadSession(phase,id){
   if(sess.manifest){
     manifestCache[phase]=sess.manifest;
     const total=Object.values(sess.manifest).reduce((a,c)=>a+c.length,0);
-    setFileOK(`${phase}-decon-drop`,`${phase}-decon-fname`,`${sess.name} — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
+    if(phase==='cbsa'&&sess.linkedPrescanId){
+      const prescan=app.sessions.prescan[sess.linkedPrescanId];
+      setFileOK('cbsa-decon-drop','cbsa-decon-fname',`Linked from "${prescan?.name||sess.linkedPrescanId}" — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
+    } else {
+      setFileOK(`${phase}-decon-drop`,`${phase}-decon-fname`,`${sess.name} — ${Object.keys(sess.manifest).length} MAWBs, ${total} HAWBs`);
+    }
     checkReady(phase);
+  }
+  if(phase==='cbsa'&&sess.rnsData&&Object.keys(sess.rnsData).length){
+    rt.cbsa.rns=sess.rnsData;
+    setFileOK('cbsa-rns-drop','cbsa-rns-fname',`Session RNS — ${Object.keys(sess.rnsData).length} CCNs`);
+    checkReady('cbsa');
   }
   if(phase==='cbsa'){
     const cFeedList=document.getElementById('cbsa-feed-list');
