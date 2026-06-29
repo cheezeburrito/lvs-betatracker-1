@@ -105,6 +105,7 @@ select { cursor: pointer; }
 .file-drop { border:2px dashed #2d3448;border-radius:12px;padding:1.1rem;text-align:center;cursor:pointer;transition:all .2s ease;font-size:.84rem;color:#94a3b8;display:block; }
 .file-drop:hover { border-color:#3b82f6;color:#e2e8f0;background:rgba(59,130,246,.04); }
 .file-drop.loaded { border-color:#059669;border-style:solid;background:rgba(5,150,105,.04); }
+.file-drop.drag-over { border-color:#3b82f6;border-style:solid;background:rgba(59,130,246,.08);color:#e2e8f0; }
 .file-drop input { display:none; }
 .file-drop .fname { font-size:.76rem;margin-top:.35rem; }
 .file-drop .fname.ok { color:#34d399; }
@@ -819,7 +820,7 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
         <div class="card-title">1 · Upload Deconsolidated File</div>
         <label class="file-drop" id="prescan-decon-drop">
           <input type="file" accept=".xlsx,.csv" onchange="loadDecon('prescan',this)">
-          <div>Click to upload <strong>Deconsolidated XLSX</strong></div>
+          <div>Drop or click — <strong>Deconsolidated XLSX</strong></div>
           <div class="fname" id="prescan-decon-fname">No file selected</div>
         </label>
       </div>
@@ -944,12 +945,12 @@ kbd { display:inline-block; background:#0a1020; border:1px solid #2d3f5a; border
         <div class="file-pair">
           <label class="file-drop" id="cbsa-decon-drop">
             <input type="file" accept=".xlsx,.csv" onchange="loadDecon('cbsa',this)">
-            <div>Deconsolidated XLSX</div>
+            <div>Drop or click — <strong>Deconsolidated XLSX</strong></div>
             <div class="fname" id="cbsa-decon-fname">No file selected — or link Phase 1 above</div>
           </label>
           <label class="file-drop" id="cbsa-rns-drop">
             <input type="file" accept=".csv,.xlsx" onchange="loadRNS(this)">
-            <div>RNS CSV — BorderConnect</div>
+            <div>Drop or click — <strong>RNS CSV</strong></div>
             <div class="fname" id="cbsa-rns-fname">No file selected</div>
           </label>
         </div>
@@ -1589,6 +1590,22 @@ function renderActiveUsers(phase,users){
 // ─────────────────────────────────────────────────────────────────────────────
 // Operator modal
 // ─────────────────────────────────────────────────────────────────────────────
+function initDropZones(){
+  const zones=[
+    {id:'prescan-decon-drop', handler:el=>loadDecon('prescan',el)},
+    {id:'cbsa-decon-drop',    handler:el=>loadDecon('cbsa',el)},
+    {id:'cbsa-rns-drop',      handler:el=>loadRNS(el)},
+  ];
+  zones.forEach(({id,handler})=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('drag-over');});
+    el.addEventListener('dragleave',e=>{if(!el.contains(e.relatedTarget))el.classList.remove('drag-over');});
+    el.addEventListener('drop',e=>{
+      e.preventDefault();el.classList.remove('drag-over');
+      const file=e.dataTransfer.files[0];if(file)handler(file);
+    });
+  });
+}
 function init(){
   if(!app.operator){
     showNameModal();
@@ -1600,6 +1617,7 @@ function init(){
   refreshDropdown('prescan');
   refreshDropdown('cbsa');
   document.getElementById('bc-btn').style.display='flex'; // Phase 1 is default
+  initDropZones();
 }
 async function startSync(){
   await Promise.all([loadOperatorsFromDB(), loadCustomersFromDB()]);
@@ -2019,7 +2037,7 @@ function buildRNS(rows){
   return Object.keys(map).length?map:null;
 }
 async function loadDecon(phase,input){
-  const file=input.files[0];if(!file)return;input.value='';
+  const file=input.files?input.files[0]:input;if(!file)return;if(input.value!==undefined)input.value='';
   try{
     const rows=await readWorkbook(file),manifest=buildManifest(rows);
     if(!manifest){alert('Could not detect CCN / Reference columns.');return;}
@@ -2032,7 +2050,7 @@ async function loadDecon(phase,input){
   }catch(e){alert('Error reading file: '+e.message);}
 }
 async function loadRNS(input){
-  const file=input.files[0];if(!file)return;input.value='';
+  const file=input.files?input.files[0]:input;if(!file)return;if(input.value!==undefined)input.value='';
   try{
     const rows=await readWorkbook(file),rns=buildRNS(rows);
     if(!rns){alert('Could not detect CCN / Status columns.');return;}
