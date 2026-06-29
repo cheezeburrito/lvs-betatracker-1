@@ -586,13 +586,28 @@ async function refreshSessions(){
 }
 
 // ── START ──────────────────────────────────────────────────────────────────
-function startScanning(){
+async function startScanning(){
   const op=document.getElementById('opInput').value.trim();
   const sel=document.getElementById('sessSelect');
   if(!op){toast('Enter your name first');return;}
   if(!sel.value){toast('Select a session first');return;}
 
-  const row=sessionsStore[sel.value]||{};
+  // Always fetch fresh from Supabase so we get latest manifest+rns_data
+  // even if the session dropdown was loaded before the desktop uploaded files
+  toast('Loading session…');
+  let row;
+  try{
+    const{data,error}=await sb.from('shipments')
+      .select('id,name,operator,manifest,rns_data,completed,phase')
+      .eq('id',sel.value).single();
+    if(error)throw error;
+    row=data||{};
+    sessionsStore[row.id]=row; // update cache
+  }catch(e){
+    row=sessionsStore[sel.value]||{};
+    console.warn('startScanning fetch failed, using cache:',e);
+  }
+
   const manifest=row.manifest||{};
   const rnsData=row.rns_data||{};   // { [normedCCN]: statusString }
   const isP2 = currentPhase==='cbsa';
