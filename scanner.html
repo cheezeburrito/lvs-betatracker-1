@@ -672,10 +672,14 @@ async function loadExistingScans(sessId){
       scanCount++;
       let state,label,status='';
       if(isP2){
-        status=activeSess.statusMap.get(normed)||'';
-        state=cbsaState(status);
-        label=state==='ok'?'OK':state==='exam'?'EXAM':'FLAG';
-        if(state!=='ok'&&state!=='miss'){flagCount++;updateFlagCounter();}
+        const inManifest=activeSess.statusMap.has(normed)||activeSess.normedTracking.has(normed);
+        if(!inManifest){state='warn';label='MISS';}
+        else{
+          status=activeSess.statusMap.get(normed)||'';
+          if(!status||status==='Released'){state='ok';label='OK';}
+          else if(status==='Examination Required'){state='exam';label='EXAM';flagCount++;updateFlagCounter();}
+          else{state='flag';label='FLAG';flagCount++;updateFlagCounter();}
+        }
       } else {
         const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
         state=inManifest?'ok':'warn';
@@ -733,14 +737,22 @@ async function handleScan(raw){
   if(isP2){
     if(isDup){state='dup';label='DUP';dupBeep();}
     else{
-      const rawStatus=activeSess.statusMap.get(normed)||'';
-      statusText=rawStatus;
-      state=cbsaState(rawStatus);
-      label=state==='ok'?'OK':state==='exam'?'EXAM':state==='miss'?'MISS':'FLAG';
-      if(state==='exam'){examBeep();}
-      else if(state==='flag'){cbsaFlagBeep();}
-      else if(state==='miss'){alertBeep();}
-      if((state==='exam'||state==='flag')&&!isDup){flagCount++;updateFlagCounter();}
+      // Use .has() to distinguish "in manifest with no status" from "not in manifest at all"
+      const inManifest=activeSess.statusMap.has(normed)||activeSess.normedTracking.has(normed);
+      if(!inManifest){
+        state='warn';label='MISS';alertBeep();
+      } else {
+        const rawStatus=activeSess.statusMap.get(normed)||'';
+        statusText=rawStatus;
+        if(!rawStatus||rawStatus==='Released'){
+          state='ok';label='OK';
+          // Released → no beep
+        } else if(rawStatus==='Examination Required'){
+          state='exam';label='EXAM';examBeep();flagCount++;updateFlagCounter();
+        } else {
+          state='flag';label='FLAG';cbsaFlagBeep();flagCount++;updateFlagCounter();
+        }
+      }
     }
   } else {
     const inManifest=!activeSess.normedTracking.size||activeSess.normedTracking.has(normed);
